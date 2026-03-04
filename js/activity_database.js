@@ -82,41 +82,41 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية.",
-            "link": "https://drive.google.com/file/d/12EMBERpkJe9RVvOTnp_jkpD-7v7X0Vet/view?usp=sharing"
+            "link": "guides/قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية..pdf"
         },
         {
             "name": "قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية",
-            "link": "https://drive.google.com/file/d/1UsM6B0mpnwcaqtV0dBVghp-2XZ533zWZ/view?usp=sharing"
+            "link": "guides/قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية.pdf"
         },
         {
             "name": "اللائحة التنفيذية قرار 1082 لسنة 2017 بشأن قانون تيسير إجراءات منح تراخيص المنشآت ",
-            "link": "https://drive.google.com/file/d/1FdckKL2xjx1f6NjNn7V8QoIpkhZQD42u/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية قرار 1082 لسنة 2017 بشأن قانون تيسير إجراءات منح تراخيص المنشآت.pdf"
         },
         {
             "name": "دليل خدمات التنمية الصناعية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%ae%d8%af%d9%85%d8%a7%d8%aa+%d8%a7%d9%84%d8%aa%d9%86%d9%85%d9%8a%d8%a9+%d8%a7%d9%84%d8%b5%d9%86%d8%a7%d8%b9%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل خدمات التنمية الصناعية.pdf"
         },
 
              {
             "name": "القرار الوزاري رقم 144 لسنة 1996 بشأن تراخيص مصانع مستحضرات التجميل ",
-            "link": "https://drive.google.com/file/d/1xtX9Itj4hxBVUA7zmoRVjsvel8ydCLTU/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 144 لسنة 1996 بشأن تراخيص مصانع مستحضرات التجميل.pdf"
         },
              {
             "name": "قرار رئيس هيئة الدواء المصرية رقم 273 لسنة 2021 بشأن إدراج اختبار الكفاءة الفنية ضمن آليات تقييم الأداء المعملي الجيد لمعامل مراقبة الجودة بمصانع شركات المستحضرات الصيدلية.",
-            "link": "https://drive.google.com/file/d/1zOXkojgup31BaZ2iQVUGu55znAr6naYk/view?usp=sharing"
+            "link": "guides/قرار رئيس هيئة الدواء المصرية رقم 273 لسنة 2021 بشأن إدراج اختبار الكفاءة الفنية ضمن آليات تقييم الأداء المعملي الجيد لمعامل مراقبة الجودة بمصانع شركات المستحضرات الصيدلية..pdf"
         },
              {
             "name": "دليل اتحاد الصناعات المصرية",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%a7%d8%aa%d8%ad%d8%a7%d8%af+%d8%a7%d9%84%d8%b5%d9%86%d8%a7%d8%b9%d8%a7%d8%aa+%d8%a7%d9%84%d9%85%d8%b5%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل اتحاد الصناعات المصرية.pdf"
         },
              {
             "name": "دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%aa%d9%82%d9%8a%d9%8a%d9%85+%d8%a7%d9%84%d8%aa%d8%a3%d8%ab%d9%8a%d8%b1+%d8%a7%d9%84%d8%a8%d9%8a%d8%a6%d9%89+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5+%d8%a8%d8%a7%d9%84%d8%a7%d9%86%d8%b4%d8%b7%d9%87+%d8%a7%d9%84%d8%a7%d8%b3%d8%aa%d8%ab%d9%85%d8%a7%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية.pdf"
         },
 
         {
             "name": "الدليل التنظيمي الخاص بإجراءات العمل بالإدارة العامة لتراخيص المصانع - هيئة الدواء المصرية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%a7%d8%ac%d8%b1%d8%a7%d8%a1%d8%a7%d8%aa+%d8%a7%d9%84%d8%b9%d9%85%d9%84+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5%d8%a9+%d8%a8%d8%a7%d9%84%d8%a7%d8%af%d8%a7%d8%b1%d8%a9+%d8%a7%d9%84%d8%b9%d8%a7%d9%85%d8%a9+%d9%84%d8%aa%d8%b1%d8%a7%d8%ae%d9%8a%d8%b5+%d8%a7%d9%84%d9%85%d8%b5%d8%a7%d9%86%d8%b9.pdf"
+            "link": "guides/الدليل التنظيمي الخاص بإجراءات العمل بالإدارة العامة لتراخيص المصانع - هيئة الدواء المصرية.pdf"
         }
     ]
 }, 
@@ -236,41 +236,41 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية.",
-            "link": "https://drive.google.com/file/d/12EMBERpkJe9RVvOTnp_jkpD-7v7X0Vet/view?usp=sharing"
+            "link": "guides/قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية..pdf"
         },
         {
             "name": "قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية",
-            "link": "https://drive.google.com/file/d/1UsM6B0mpnwcaqtV0dBVghp-2XZ533zWZ/view?usp=sharing"
+            "link": "guides/قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية.pdf"
         },
         {
             "name": "اللائحة التنفيذية قرار 1082 لسنة 2017 بشأن قانون تيسير إجراءات منح تراخيص المنشآت ",
-            "link": "https://drive.google.com/file/d/1FdckKL2xjx1f6NjNn7V8QoIpkhZQD42u/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية قرار 1082 لسنة 2017 بشأن قانون تيسير إجراءات منح تراخيص المنشآت.pdf"
         },
         {
             "name": "دليل خدمات التنمية الصناعية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%ae%d8%af%d9%85%d8%a7%d8%aa+%d8%a7%d9%84%d8%aa%d9%86%d9%85%d9%8a%d8%a9+%d8%a7%d9%84%d8%b5%d9%86%d8%a7%d8%b9%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل خدمات التنمية الصناعية.pdf"
         },
 
              {
             "name": "القرار الوزاري رقم 265 لسنة 1981 بشأن الاشتراطات الواجب توافرها في مصانع الأدوية ",
-            "link": "https://drive.google.com/file/d/1iZX94gRhJULw9foFz6dHAr1Cl4ouTb4d/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 265 لسنة 1981 بشأن الاشتراطات الواجب توافرها في مصانع الأدوية.pdf"
         },
              {
             "name": "قرار رئيس هيئة الدواء المصرية رقم 273 لسنة 2021 بشأن إدراج اختبار الكفاءة الفنية ضمن آليات تقييم الأداء المعملي الجيد لمعامل مراقبة الجودة بمصانع شركات المستحضرات الصيدلية.",
-            "link": "https://drive.google.com/file/d/1zOXkojgup31BaZ2iQVUGu55znAr6naYk/view?usp=sharing"
+            "link": "guides/قرار رئيس هيئة الدواء المصرية رقم 273 لسنة 2021 بشأن إدراج اختبار الكفاءة الفنية ضمن آليات تقييم الأداء المعملي الجيد لمعامل مراقبة الجودة بمصانع شركات المستحضرات الصيدلية..pdf"
         },
              {
             "name": "دليل اتحاد الصناعات المصرية",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%a7%d8%aa%d8%ad%d8%a7%d8%af+%d8%a7%d9%84%d8%b5%d9%86%d8%a7%d8%b9%d8%a7%d8%aa+%d8%a7%d9%84%d9%85%d8%b5%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل اتحاد الصناعات المصرية.pdf"
         },
              {
             "name": "دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%aa%d9%82%d9%8a%d9%8a%d9%85+%d8%a7%d9%84%d8%aa%d8%a3%d8%ab%d9%8a%d8%b1+%d8%a7%d9%84%d8%a8%d9%8a%d8%a6%d9%89+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5+%d8%a8%d8%a7%d9%84%d8%a7%d9%86%d8%b4%d8%b7%d9%87+%d8%a7%d9%84%d8%a7%d8%b3%d8%aa%d8%ab%d9%85%d8%a7%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية.pdf"
         },
 
         {
             "name": "الدليل التنظيمي الخاص بإجراءات العمل بالإدارة العامة لتراخيص المصانع - هيئة الدواء المصرية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%a7%d8%ac%d8%b1%d8%a7%d8%a1%d8%a7%d8%aa+%d8%a7%d9%84%d8%b9%d9%85%d9%84+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5%d8%a9+%d8%a8%d8%a7%d9%84%d8%a7%d8%af%d8%a7%d8%b1%d8%a9+%d8%a7%d9%84%d8%b9%d8%a7%d9%85%d8%a9+%d9%84%d8%aa%d8%b1%d8%a7%d8%ae%d9%8a%d8%b5+%d8%a7%d9%84%d9%85%d8%b5%d8%a7%d9%86%d8%b9.pdf"
+            "link": "guides/الدليل التنظيمي الخاص بإجراءات العمل بالإدارة العامة لتراخيص المصانع - هيئة الدواء المصرية.pdf"
         }
     ]
 }, 
@@ -385,41 +385,41 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية.",
-            "link": "https://drive.google.com/file/d/12EMBERpkJe9RVvOTnp_jkpD-7v7X0Vet/view?usp=sharing"
+            "link": "guides/قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية..pdf"
         },
         {
             "name": "قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية",
-            "link": "https://drive.google.com/file/d/1UsM6B0mpnwcaqtV0dBVghp-2XZ533zWZ/view?usp=sharing"
+            "link": "guides/قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية.pdf"
         },
         {
             "name": "اللائحة التنفيذية قرار 1082 لسنة 2017 بشأن قانون تيسير إجراءات منح تراخيص المنشآت ",
-            "link": "https://drive.google.com/file/d/1FdckKL2xjx1f6NjNn7V8QoIpkhZQD42u/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية قرار 1082 لسنة 2017 بشأن قانون تيسير إجراءات منح تراخيص المنشآت.pdf"
         },
         {
             "name": "دليل خدمات التنمية الصناعية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%ae%d8%af%d9%85%d8%a7%d8%aa+%d8%a7%d9%84%d8%aa%d9%86%d9%85%d9%8a%d8%a9+%d8%a7%d9%84%d8%b5%d9%86%d8%a7%d8%b9%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل خدمات التنمية الصناعية.pdf"
         },
 
              {
             "name": "القرار الوزاري رقم 265 لسنة 1981 بشأن الاشتراطات الواجب توافرها في مصانع الأدوية ",
-            "link": "https://drive.google.com/file/d/1iZX94gRhJULw9foFz6dHAr1Cl4ouTb4d/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 265 لسنة 1981 بشأن الاشتراطات الواجب توافرها في مصانع الأدوية.pdf"
         },
              {
             "name": "قرار رئيس هيئة الدواء المصرية رقم 273 لسنة 2021 بشأن إدراج اختبار الكفاءة الفنية ضمن آليات تقييم الأداء المعملي الجيد لمعامل مراقبة الجودة بمصانع شركات المستحضرات الصيدلية.",
-            "link": "https://drive.google.com/file/d/1zOXkojgup31BaZ2iQVUGu55znAr6naYk/view?usp=sharing"
+            "link": "guides/قرار رئيس هيئة الدواء المصرية رقم 273 لسنة 2021 بشأن إدراج اختبار الكفاءة الفنية ضمن آليات تقييم الأداء المعملي الجيد لمعامل مراقبة الجودة بمصانع شركات المستحضرات الصيدلية..pdf"
         },
              {
             "name": "دليل اتحاد الصناعات المصرية",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%a7%d8%aa%d8%ad%d8%a7%d8%af+%d8%a7%d9%84%d8%b5%d9%86%d8%a7%d8%b9%d8%a7%d8%aa+%d8%a7%d9%84%d9%85%d8%b5%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل اتحاد الصناعات المصرية.pdf"
         },
              {
             "name": "دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%aa%d9%82%d9%8a%d9%8a%d9%85+%d8%a7%d9%84%d8%aa%d8%a3%d8%ab%d9%8a%d8%b1+%d8%a7%d9%84%d8%a8%d9%8a%d8%a6%d9%89+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5+%d8%a8%d8%a7%d9%84%d8%a7%d9%86%d8%b4%d8%b7%d9%87+%d8%a7%d9%84%d8%a7%d8%b3%d8%aa%d8%ab%d9%85%d8%a7%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية.pdf"
         },
 
         {
             "name": "الدليل التنظيمي الخاص بإجراءات العمل بالإدارة العامة لتراخيص المصانع - هيئة الدواء المصرية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%a7%d8%ac%d8%b1%d8%a7%d8%a1%d8%a7%d8%aa+%d8%a7%d9%84%d8%b9%d9%85%d9%84+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5%d8%a9+%d8%a8%d8%a7%d9%84%d8%a7%d8%af%d8%a7%d8%b1%d8%a9+%d8%a7%d9%84%d8%b9%d8%a7%d9%85%d8%a9+%d9%84%d8%aa%d8%b1%d8%a7%d8%ae%d9%8a%d8%b5+%d8%a7%d9%84%d9%85%d8%b5%d8%a7%d9%86%d8%b9.pdf"
+            "link": "guides/الدليل التنظيمي الخاص بإجراءات العمل بالإدارة العامة لتراخيص المصانع - هيئة الدواء المصرية.pdf"
         }
     ]
 }, 
@@ -511,41 +511,41 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية.",
-            "link": "https://drive.google.com/file/d/12EMBERpkJe9RVvOTnp_jkpD-7v7X0Vet/view?usp=sharing"
+            "link": "guides/قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية..pdf"
         },
         {
             "name": "قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية",
-            "link": "https://drive.google.com/file/d/1UsM6B0mpnwcaqtV0dBVghp-2XZ533zWZ/view?usp=sharing"
+            "link": "guides/قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية.pdf"
         },
         {
             "name": "اللائحة التنفيذية قرار 1082 لسنة 2017 بشأن قانون تيسير إجراءات منح تراخيص المنشآت ",
-            "link": "https://drive.google.com/file/d/1FdckKL2xjx1f6NjNn7V8QoIpkhZQD42u/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية قرار 1082 لسنة 2017 بشأن قانون تيسير إجراءات منح تراخيص المنشآت.pdf"
         },
         {
             "name": "دليل خدمات التنمية الصناعية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%ae%d8%af%d9%85%d8%a7%d8%aa+%d8%a7%d9%84%d8%aa%d9%86%d9%85%d9%8a%d8%a9+%d8%a7%d9%84%d8%b5%d9%86%d8%a7%d8%b9%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل خدمات التنمية الصناعية.pdf"
         },
 
              {
             "name": "القرار الوزاري رقم 265 لسنة 1981 بشأن الاشتراطات الواجب توافرها في مصانع الأدوية ",
-            "link": "https://drive.google.com/file/d/1iZX94gRhJULw9foFz6dHAr1Cl4ouTb4d/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 265 لسنة 1981 بشأن الاشتراطات الواجب توافرها في مصانع الأدوية.pdf"
         },
              {
             "name": "قرار وزير الصحة والسكان رقم 435 لسنة 2006 بشأن المدونة المصرية لأساليب التصنيع الجيد للمستحضرات الحيوية والأمصال واللقاحات.",
-            "link": "https://drive.google.com/file/d/1GmyZ2NXSBDCFv7Rg6QTAxOHTiknrL7rg/view?usp=sharing"
+            "link": "guides/قرار وزير الصحة والسكان رقم 435 لسنة 2006 بشأن المدونة المصرية لأساليب التصنيع الجيد للمستحضرات الحيوية والأمصال واللقاحات..pdf"
         },
              {
             "name": "دليل اتحاد الصناعات المصرية",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%a7%d8%aa%d8%ad%d8%a7%d8%af+%d8%a7%d9%84%d8%b5%d9%86%d8%a7%d8%b9%d8%a7%d8%aa+%d8%a7%d9%84%d9%85%d8%b5%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل اتحاد الصناعات المصرية.pdf"
         },
              {
             "name": "دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%aa%d9%82%d9%8a%d9%8a%d9%85+%d8%a7%d9%84%d8%aa%d8%a3%d8%ab%d9%8a%d8%b1+%d8%a7%d9%84%d8%a8%d9%8a%d8%a6%d9%89+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5+%d8%a8%d8%a7%d9%84%d8%a7%d9%86%d8%b4%d8%b7%d9%87+%d8%a7%d9%84%d8%a7%d8%b3%d8%aa%d8%ab%d9%85%d8%a7%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية.pdf"
         },
 
         {
             "name": "الدليل التنظيمي الخاص بإجراءات العمل بالإدارة العامة لتراخيص المصانع - هيئة الدواء المصرية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%a7%d8%ac%d8%b1%d8%a7%d8%a1%d8%a7%d8%aa+%d8%a7%d9%84%d8%b9%d9%85%d9%84+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5%d8%a9+%d8%a8%d8%a7%d9%84%d8%a7%d8%af%d8%a7%d8%b1%d8%a9+%d8%a7%d9%84%d8%b9%d8%a7%d9%85%d8%a9+%d9%84%d8%aa%d8%b1%d8%a7%d8%ae%d9%8a%d8%b5+%d8%a7%d9%84%d9%85%d8%b5%d8%a7%d9%86%d8%b9.pdf"
+            "link": "guides/الدليل التنظيمي الخاص بإجراءات العمل بالإدارة العامة لتراخيص المصانع - هيئة الدواء المصرية.pdf"
         }
     ]
 }, 
@@ -659,41 +659,41 @@ const masterActivityDB = [
         "leg": "- قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية.\n- قانون رقم 127 لسنة 1955 بشأن مزاولة مهنة الصيدلة.\n- قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية.\n- القرارات المنظمة لتسجيل المستحضرات العشبية الصادرة من هيئة الدواء.","guides":[
         {
             "name": "قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية.",
-            "link": "https://drive.google.com/file/d/12EMBERpkJe9RVvOTnp_jkpD-7v7X0Vet/view?usp=sharing"
+            "link": "guides/قانون رقم 151 لسنة 2019 بشأن إنشاء هيئة الدواء المصرية..pdf"
         },
         {
             "name": "قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية",
-            "link": "https://drive.google.com/file/d/1UsM6B0mpnwcaqtV0dBVghp-2XZ533zWZ/view?usp=sharing"
+            "link": "guides/قانون رقم 15 لسنة 2017 بشأن تيسير إجراءات منح تراخيص المنشآت الصناعية.pdf"
         },
         {
             "name": "اللائحة التنفيذية قرار 1082 لسنة 2017 بشأن قانون تيسير إجراءات منح تراخيص المنشآت ",
-            "link": "https://drive.google.com/file/d/1FdckKL2xjx1f6NjNn7V8QoIpkhZQD42u/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية قرار 1082 لسنة 2017 بشأن قانون تيسير إجراءات منح تراخيص المنشآت.pdf"
         },
         {
             "name": "دليل خدمات التنمية الصناعية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%ae%d8%af%d9%85%d8%a7%d8%aa+%d8%a7%d9%84%d8%aa%d9%86%d9%85%d9%8a%d8%a9+%d8%a7%d9%84%d8%b5%d9%86%d8%a7%d8%b9%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل خدمات التنمية الصناعية.pdf"
         },
 
              {
             "name": "القرار الوزاري رقم 265 لسنة 1981 بشأن الاشتراطات الواجب توافرها في مصانع الأدوية ",
-            "link": "https://drive.google.com/file/d/1iZX94gRhJULw9foFz6dHAr1Cl4ouTb4d/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 265 لسنة 1981 بشأن الاشتراطات الواجب توافرها في مصانع الأدوية.pdf"
         },
              {
             "name": "قانون رقم 127 لسنة 1955 بشأن مزاولة مهنة الصيدلة.",
-            "link": "https://drive.google.com/file/d/18uEYCz1eW02ZXEEvd65oomCTVghtOW1p/view?usp=sharing"
+            "link": "guides/قانون رقم 127 لسنة 1955 بشأن مزاولة مهنة الصيدلة..pdf"
         },
              {
             "name": "دليل اتحاد الصناعات المصرية",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%a7%d8%aa%d8%ad%d8%a7%d8%af+%d8%a7%d9%84%d8%b5%d9%86%d8%a7%d8%b9%d8%a7%d8%aa+%d8%a7%d9%84%d9%85%d8%b5%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل اتحاد الصناعات المصرية.pdf"
         },
              {
             "name": "دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%aa%d9%82%d9%8a%d9%8a%d9%85+%d8%a7%d9%84%d8%aa%d8%a3%d8%ab%d9%8a%d8%b1+%d8%a7%d9%84%d8%a8%d9%8a%d8%a6%d9%89+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5+%d8%a8%d8%a7%d9%84%d8%a7%d9%86%d8%b4%d8%b7%d9%87+%d8%a7%d9%84%d8%a7%d8%b3%d8%aa%d8%ab%d9%85%d8%a7%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية.pdf"
         },
 
         {
             "name": "الدليل التنظيمي الخاص بإجراءات العمل بالإدارة العامة لتراخيص المصانع - هيئة الدواء المصرية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%a7%d8%ac%d8%b1%d8%a7%d8%a1%d8%a7%d8%aa+%d8%a7%d9%84%d8%b9%d9%85%d9%84+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5%d8%a9+%d8%a8%d8%a7%d9%84%d8%a7%d8%af%d8%a7%d8%b1%d8%a9+%d8%a7%d9%84%d8%b9%d8%a7%d9%85%d8%a9+%d9%84%d8%aa%d8%b1%d8%a7%d8%ae%d9%8a%d8%b5+%d8%a7%d9%84%d9%85%d8%b5%d8%a7%d9%86%d8%b9.pdf"
+            "link": "guides/الدليل التنظيمي الخاص بإجراءات العمل بالإدارة العامة لتراخيص المصانع - هيئة الدواء المصرية.pdf"
         }
     ]
 }, 
@@ -6871,27 +6871,27 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قرار رئيس الوزراء رقم 2091 لسنة 2024",
-            "link": "https://drive.google.com/file/d/1tAGET5GiyV0BgnPeyEipUDkjUlK_vbvL/view?usp=sharing"
+            "link": "guides/قرار رئيس الوزراء رقم 2091 لسنة 2024.pdf"
         },
         {
             "name": "قانون المحال العامة رقم 154 لسنة 2019",
-            "link": "https://drive.google.com/file/d/14e1klP2ETnDapVCyUki-2yDnIVEzTAcw/view?usp=sharing"
+            "link": "guides/قانون المحال العامة رقم 154 لسنة 2019.pdf"
         },
         {
             "name": "اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019 ",
-            "link": "https://drive.google.com/file/d/1eP7h7AjoQqOTyS4KZGhaFLqqq4mR7UKa/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019.pdf"
         },
              {
             "name": "قانون البيئة رقم 4 لسنة 1994 والمعدل بالقانون رقم 9 لسنة 2009 ",
-            "link": "https://drive.google.com/file/d/1qMAfcK6W0x-eSZm4r6VFVGv5EgA-MYcp/view?usp=sharing"
+            "link": "guides/قانون البيئة رقم 4 لسنة 1994 والمعدل بالقانون رقم 9 لسنة 2009.pdf"
         },
              {
             "name": "اتفاقية التجارة الدولية في الأنواع المهددة بالانقراض (سايتس CITES) ",
-            "link": "https://drive.google.com/file/d/1ph1cRstYuYRRjEa-2HhqIA8uTyu-hKx2/view?usp=sharing"
+            "link": "guides/اتفاقية التجارة الدولية في الأنواع المهددة بالانقراض (سايتس CITES).pdf"
         },
              {
             "name": "القرار الوزاري رقم 1150 لسنة 1999 ",
-            "link": "https://drive.google.com/file/d/1ntPPWQSoh2mlWPevfnAB_MK3xZVWaxdv/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 1150 لسنة 1999.pdf"
         }
 
 
@@ -7214,23 +7214,23 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قرار رئيس الوزراء رقم 2091 لسنة 2024",
-            "link": "https://drive.google.com/file/d/1tAGET5GiyV0BgnPeyEipUDkjUlK_vbvL/view?usp=sharing"
+            "link": "guides/قرار رئيس الوزراء رقم 2091 لسنة 2024.pdf"
         },
         {
             "name": "قانون المحال العامة رقم 154 لسنة 2019",
-            "link": "https://drive.google.com/file/d/14e1klP2ETnDapVCyUki-2yDnIVEzTAcw/view?usp=sharing"
+            "link": "guides/قانون المحال العامة رقم 154 لسنة 2019.pdf"
         },
         {
             "name": "اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019 ",
-            "link": "https://drive.google.com/file/d/1eP7h7AjoQqOTyS4KZGhaFLqqq4mR7UKa/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019.pdf"
         },
              {
             "name": "القرار الوزاري رقم 368 لسنة 2017  ",
-            "link": "https://drive.google.com/file/d/12dsrDmkJEheaanboLkAwaIqOjQVMlzPT/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 368 لسنة 2017.pdf"
         },
         {
             "name": "القرار الوزاري رقم 773 لسنة 2017 ",
-            "link": "https://drive.google.com/file/d/10u-QOejRYm15PEbXNmfn-P6RAHjGkL75/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 773 لسنة 2017.pdf"
         }
 
     ]
@@ -7342,35 +7342,35 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قرار رئيس الوزراء رقم 2091 لسنة 2024",
-            "link": "https://drive.google.com/file/d/1tAGET5GiyV0BgnPeyEipUDkjUlK_vbvL/view?usp=sharing"
+            "link": "guides/قرار رئيس الوزراء رقم 2091 لسنة 2024.pdf"
         },
         {
             "name": "قانون المحال العامة رقم 154 لسنة 2019",
-            "link": "https://drive.google.com/file/d/14e1klP2ETnDapVCyUki-2yDnIVEzTAcw/view?usp=sharing"
+            "link": "guides/قانون المحال العامة رقم 154 لسنة 2019.pdf"
         },
         {
             "name": "اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019 ",
-            "link": "https://drive.google.com/file/d/1eP7h7AjoQqOTyS4KZGhaFLqqq4mR7UKa/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019.pdf"
         },
              {
             "name": "القرار الوزاري رقم 368 لسنة 2017  ",
-            "link": "https://drive.google.com/file/d/12dsrDmkJEheaanboLkAwaIqOjQVMlzPT/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 368 لسنة 2017.pdf"
         },
         {
             "name": "القرار الوزاري رقم 773 لسنة 2017 ",
-            "link": "https://drive.google.com/file/d/10u-QOejRYm15PEbXNmfn-P6RAHjGkL75/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 773 لسنة 2017.pdf"
         },
         {
             "name": "  قانون الهيئة القومية لسلامة الغذاء رقم 1 لسنة 2017. ",
-            "link": "https://drive.google.com/file/d/1FszA68ATY8wuL-lTIlfL2_FcgvaMqYtv/view?usp=sharing"
+            "link": "guides/قانون الهيئة القومية لسلامة الغذاء رقم 1 لسنة 2017..pdf"
         },
         {
             "name": "  دليل الهيئة العامة للخدمات البيطرية. ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%a7%d9%84%d9%87%d9%8a%d8%a6%d8%a9+%d8%a7%d9%84%d8%b9%d8%a7%d9%85%d8%a9+%d9%84%d9%84%d8%ae%d8%af%d9%85%d8%a7%d8%aa+%d8%a7%d9%84%d8%a8%d9%8a%d8%b7%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل الهيئة العامة للخدمات البيطرية..pdf"
         },
         {
             "name": "  دليل قطاع تنميه الثروة الحيوانية والداجنة. ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d9%82%d8%b7%d8%a7%d8%b9+%d8%aa%d9%86%d9%85%d9%8a%d9%87+%d8%a7%d9%84%d8%ab%d8%b1%d9%88%d8%a9+%d8%a7%d9%84%d8%ad%d9%8a%d9%88%d8%a7%d9%86%d9%8a%d8%a9+%d9%88%d8%a7%d9%84%d8%af%d8%a7%d8%ac%d9%86%d9%87.pdf"
+            "link": "guides/دليل قطاع تنميه الثروة الحيوانية والداجنة..pdf"
         }
     ]
 }, 
@@ -7477,27 +7477,27 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قرار رئيس الوزراء رقم 2091 لسنة 2024",
-            "link": "https://drive.google.com/file/d/1tAGET5GiyV0BgnPeyEipUDkjUlK_vbvL/view?usp=sharing"
+            "link": "guides/قرار رئيس الوزراء رقم 2091 لسنة 2024.pdf"
         },
         {
             "name": "قانون المحال العامة رقم 154 لسنة 2019",
-            "link": "https://drive.google.com/file/d/14e1klP2ETnDapVCyUki-2yDnIVEzTAcw/view?usp=sharing"
+            "link": "guides/قانون المحال العامة رقم 154 لسنة 2019.pdf"
         },
         {
             "name": "اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019 ",
-            "link": "https://drive.google.com/file/d/1eP7h7AjoQqOTyS4KZGhaFLqqq4mR7UKa/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019.pdf"
         },
              {
             "name": "القرار الوزاري رقم 368 لسنة 2017  ",
-            "link": "https://drive.google.com/file/d/12dsrDmkJEheaanboLkAwaIqOjQVMlzPT/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 368 لسنة 2017.pdf"
         },
         {
             "name": "القرار الوزاري رقم 773 لسنة 2017 ",
-            "link": "https://drive.google.com/file/d/10u-QOejRYm15PEbXNmfn-P6RAHjGkL75/view?usp=sharing"
+            "link": "guides/القرار الوزاري رقم 773 لسنة 2017.pdf"
         },
         {
             "name": "  قانون الهيئة القومية لسلامة الغذاء رقم 1 لسنة 2017. ",
-            "link": "https://drive.google.com/file/d/1FszA68ATY8wuL-lTIlfL2_FcgvaMqYtv/view?usp=sharing"
+            "link": "guides/قانون الهيئة القومية لسلامة الغذاء رقم 1 لسنة 2017..pdf"
         }
     ]
 }, 
@@ -7590,15 +7590,15 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قرار رئيس الوزراء رقم 2091 لسنة 2024",
-            "link": "https://drive.google.com/file/d/1tAGET5GiyV0BgnPeyEipUDkjUlK_vbvL/view?usp=sharing"
+            "link": "guides/قرار رئيس الوزراء رقم 2091 لسنة 2024.pdf"
         },
         {
             "name": "قانون المحال العامة رقم 154 لسنة 2019",
-            "link": "https://drive.google.com/file/d/14e1klP2ETnDapVCyUki-2yDnIVEzTAcw/view?usp=sharing"
+            "link": "guides/قانون المحال العامة رقم 154 لسنة 2019.pdf"
         },
         {
             "name": "اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019 ",
-            "link": "https://drive.google.com/file/d/1eP7h7AjoQqOTyS4KZGhaFLqqq4mR7UKa/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019.pdf"
         }
     ]
 }, 
@@ -7693,27 +7693,27 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قرار رئيس الوزراء رقم 2091 لسنة 2024",
-            "link": "https://drive.google.com/file/d/1tAGET5GiyV0BgnPeyEipUDkjUlK_vbvL/view?usp=sharing"
+            "link": "guides/قرار رئيس الوزراء رقم 2091 لسنة 2024.pdf"
         },
         {
             "name": "قانون المحال العامة رقم 154 لسنة 2019",
-            "link": "https://drive.google.com/file/d/14e1klP2ETnDapVCyUki-2yDnIVEzTAcw/view?usp=sharing"
+            "link": "guides/قانون المحال العامة رقم 154 لسنة 2019.pdf"
         },
         {
             "name": "اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019 ",
-            "link": "https://drive.google.com/file/d/1eP7h7AjoQqOTyS4KZGhaFLqqq4mR7UKa/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019.pdf"
         },
              {
             "name": "قانون البيئة رقم 4 لسنة 1994",
-            "link": "https://drive.google.com/file/d/14wWpnK4fRJ9KRfmI297g90eS4JJq3xAo/view?usp=sharing"
+            "link": "guides/قانون البيئة رقم 4 لسنة 1994.pdf"
         },
         {
             "name": " دليل تقييم التأثير البيئي الخاص بالأنشطة الاستثمارية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%aa%d9%82%d9%8a%d9%8a%d9%85+%d8%a7%d9%84%d8%aa%d8%a3%d8%ab%d9%8a%d8%b1+%d8%a7%d9%84%d8%a8%d9%8a%d8%a6%d9%89+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5+%d8%a8%d8%a7%d9%84%d8%a7%d9%86%d8%b4%d8%b7%d9%87+%d8%a7%d9%84%d8%a7%d8%b3%d8%aa%d8%ab%d9%85%d8%a7%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل تقييم التأثير البيئي الخاص بالأنشطة الاستثمارية.pdf"
         },
         {
             "name": "  دليل خدمات المواطنين بهيئة المجتمعات العمرانية الجديدة. ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%ae%d8%af%d9%85%d8%a7%d8%aa+%d8%a7%d9%84%d9%85%d9%88%d8%a7%d8%b7%d9%86%d9%8a%d9%86+%d8%a8%d9%87%d9%8a%d8%a6%d8%a9+%d8%a7%d9%84%d9%85%d8%ac%d8%aa%d9%85%d8%b9%d8%a7%d8%aa+%d8%a7%d9%84%d8%b9%d9%85%d8%b1%d8%a7%d9%86%d9%8a%d8%a9+%d8%a7%d9%84%d8%ac%d8%af%d9%8a%d8%af%d8%a9.pdf"
+            "link": "guides/دليل خدمات المواطنين بهيئة المجتمعات العمرانية الجديدة..pdf"
         }
     ]
 }, 
@@ -7802,27 +7802,27 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قرار رئيس الوزراء رقم 2091 لسنة 2024",
-            "link": "https://drive.google.com/file/d/1tAGET5GiyV0BgnPeyEipUDkjUlK_vbvL/view?usp=sharing"
+            "link": "guides/قرار رئيس الوزراء رقم 2091 لسنة 2024.pdf"
         },
         {
             "name": "قانون المحال العامة رقم 154 لسنة 2019",
-            "link": "https://drive.google.com/file/d/14e1klP2ETnDapVCyUki-2yDnIVEzTAcw/view?usp=sharing"
+            "link": "guides/قانون المحال العامة رقم 154 لسنة 2019.pdf"
         },
         {
             "name": "اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019 ",
-            "link": "https://drive.google.com/file/d/1eP7h7AjoQqOTyS4KZGhaFLqqq4mR7UKa/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019.pdf"
         },
              {
             "name": "قانون البيئة رقم 4 لسنة 1994",
-            "link": "https://drive.google.com/file/d/14wWpnK4fRJ9KRfmI297g90eS4JJq3xAo/view?usp=sharing"
+            "link": "guides/قانون البيئة رقم 4 لسنة 1994.pdf"
         },
         {
             "name": " دليل تقييم التأثير البيئي الخاص بالأنشطة الاستثمارية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%aa%d9%82%d9%8a%d9%8a%d9%85+%d8%a7%d9%84%d8%aa%d8%a3%d8%ab%d9%8a%d8%b1+%d8%a7%d9%84%d8%a8%d9%8a%d8%a6%d9%89+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5+%d8%a8%d8%a7%d9%84%d8%a7%d9%86%d8%b4%d8%b7%d9%87+%d8%a7%d9%84%d8%a7%d8%b3%d8%aa%d8%ab%d9%85%d8%a7%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل تقييم التأثير البيئي الخاص بالأنشطة الاستثمارية.pdf"
         },
         {
             "name": "  دليل خدمات المواطنين بهيئة المجتمعات العمرانية الجديدة. ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%ae%d8%af%d9%85%d8%a7%d8%aa+%d8%a7%d9%84%d9%85%d9%88%d8%a7%d8%b7%d9%86%d9%8a%d9%86+%d8%a8%d9%87%d9%8a%d8%a6%d8%a9+%d8%a7%d9%84%d9%85%d8%ac%d8%aa%d9%85%d8%b9%d8%a7%d8%aa+%d8%a7%d9%84%d8%b9%d9%85%d8%b1%d8%a7%d9%86%d9%8a%d8%a9+%d8%a7%d9%84%d8%ac%d8%af%d9%8a%d8%af%d8%a9.pdf"
+            "link": "guides/دليل خدمات المواطنين بهيئة المجتمعات العمرانية الجديدة..pdf"
         }
     ]
 }, 
@@ -7917,27 +7917,27 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قرار رئيس الوزراء رقم 2091 لسنة 2024",
-            "link": "https://drive.google.com/file/d/1tAGET5GiyV0BgnPeyEipUDkjUlK_vbvL/view?usp=sharing"
+            "link": "guides/قرار رئيس الوزراء رقم 2091 لسنة 2024.pdf"
         },
         {
             "name": "قانون المحال العامة رقم 154 لسنة 2019",
-            "link": "https://drive.google.com/file/d/14e1klP2ETnDapVCyUki-2yDnIVEzTAcw/view?usp=sharing"
+            "link": "guides/قانون المحال العامة رقم 154 لسنة 2019.pdf"
         },
         {
             "name": "اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019 ",
-            "link": "https://drive.google.com/file/d/1eP7h7AjoQqOTyS4KZGhaFLqqq4mR7UKa/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019.pdf"
         },
              {
             "name": "قانون البيئة رقم 4 لسنة 1994",
-            "link": "https://drive.google.com/file/d/14wWpnK4fRJ9KRfmI297g90eS4JJq3xAo/view?usp=sharing"
+            "link": "guides/قانون البيئة رقم 4 لسنة 1994.pdf"
         },
         {
             "name": " دليل تقييم التأثير البيئي الخاص بالأنشطة الاستثمارية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%aa%d9%82%d9%8a%d9%8a%d9%85+%d8%a7%d9%84%d8%aa%d8%a3%d8%ab%d9%8a%d8%b1+%d8%a7%d9%84%d8%a8%d9%8a%d8%a6%d9%89+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5+%d8%a8%d8%a7%d9%84%d8%a7%d9%86%d8%b4%d8%b7%d9%87+%d8%a7%d9%84%d8%a7%d8%b3%d8%aa%d8%ab%d9%85%d8%a7%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل تقييم التأثير البيئي الخاص بالأنشطة الاستثمارية.pdf"
         },
         {
             "name": "  دليل خدمات المواطنين بهيئة المجتمعات العمرانية الجديدة. ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%ae%d8%af%d9%85%d8%a7%d8%aa+%d8%a7%d9%84%d9%85%d9%88%d8%a7%d8%b7%d9%86%d9%8a%d9%86+%d8%a8%d9%87%d9%8a%d8%a6%d8%a9+%d8%a7%d9%84%d9%85%d8%ac%d8%aa%d9%85%d8%b9%d8%a7%d8%aa+%d8%a7%d9%84%d8%b9%d9%85%d8%b1%d8%a7%d9%86%d9%8a%d8%a9+%d8%a7%d9%84%d8%ac%d8%af%d9%8a%d8%af%d8%a9.pdf"
+            "link": "guides/دليل خدمات المواطنين بهيئة المجتمعات العمرانية الجديدة..pdf"
         }
     ]
 }, 
@@ -8034,27 +8034,27 @@ const masterActivityDB = [
 "guides":[
         {
             "name": "قرار رئيس الوزراء رقم 2091 لسنة 2024",
-            "link": "https://drive.google.com/file/d/1tAGET5GiyV0BgnPeyEipUDkjUlK_vbvL/view?usp=sharing"
+            "link": "guides/قرار رئيس الوزراء رقم 2091 لسنة 2024.pdf"
         },
         {
             "name": "قـانون المحال العامة رقم 154 لسنة 2019",
-            "link": "https://drive.google.com/file/d/14e1klP2ETnDapVCyUki-2yDnIVEzTAcw/view?usp=sharing"
+            "link": "guides/قـانون المحال العامة رقم 154 لسنة 2019.pdf"
         },
         {
             "name": "اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019 ",
-            "link": "https://drive.google.com/file/d/1eP7h7AjoQqOTyS4KZGhaFLqqq4mR7UKa/view?usp=sharing"
+            "link": "guides/اللائحة التنفيذية للقانون المحال العامة رقم  154 لسنة 2019.pdf"
         },
              {
             "name": "قانون البيئة رقم 4 لسنة 1994",
-            "link": "https://drive.google.com/file/d/14wWpnK4fRJ9KRfmI297g90eS4JJq3xAo/view?usp=sharing"
+            "link": "guides/قانون البيئة رقم 4 لسنة 1994.pdf"
         },
         {
             "name": " دليل تقييم التأثير البيئي الخاص بالأنشطة الاستثمارية ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%af%d9%84%d9%8a%d9%84+%d8%aa%d9%82%d9%8a%d9%8a%d9%85+%d8%a7%d9%84%d8%aa%d8%a3%d8%ab%d9%8a%d8%b1+%d8%a7%d9%84%d8%a8%d9%8a%d8%a6%d9%89+%d8%a7%d9%84%d8%ae%d8%a7%d8%b5+%d8%a8%d8%a7%d9%84%d8%a7%d9%86%d8%b4%d8%b7%d9%87+%d8%a7%d9%84%d8%a7%d8%b3%d8%aa%d8%ab%d9%85%d8%a7%d8%b1%d9%8a%d8%a9.pdf"
+            "link": "guides/دليل تقييم التأثير البيئي الخاص بالأنشطة الاستثمارية.pdf"
         },
         {
             "name": "  دليل خدمات المواطنين بهيئة المجتمعات العمرانية الجديدة. ",
-            "link": "https://tracklicence.gafi.gov.eg/pdfviewer.ashx?File=%d8%ae%d8%af%d9%85%d8%a7%d8%aa+%d8%a7%d9%84%d9%85%d9%88%d8%a7%d8%b7%d9%86%d9%8a%d9%86+%d8%a8%d9%87%d9%8a%d8%a6%d8%a9+%d8%a7%d9%84%d9%85%d8%ac%d8%aa%d9%85%d8%b9%d8%a7%d8%aa+%d8%a7%d9%84%d8%b9%d9%85%d8%b1%d8%a7%d9%86%d9%8a%d8%a9+%d8%a7%d9%84%d8%ac%d8%af%d9%8a%d8%af%d8%a9.pdf"
+            "link": "guides/دليل خدمات المواطنين بهيئة المجتمعات العمرانية الجديدة..pdf"
         }
     ]
 }, 
