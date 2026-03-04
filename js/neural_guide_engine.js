@@ -42,6 +42,19 @@ const GuideIntentDetector = {
    * - الرقم إن وُجد
    * - الكلمات المفتاحية الموسعة
    */
+  // تصحيح الأخطاء الإملائية الشائعة
+  fixTypos(word) {
+    const typos = {
+      'شرء': 'شراء', 'شرا': 'شراء', 'الشرء': 'الشراء',
+      'اجراء': 'إجراء', 'اجراءات': 'إجراءات',
+      'انشاء': 'إنشاء', 'اعفاء': 'إعفاء',
+      'مستشفيات': 'مستشفيات', 'صيدليه': 'صيدلية',
+      'ادويه': 'أدوية', 'ادوية': 'أدوية',
+      'مستلزمات': 'مستلزمات', 'مستحضرات': 'مستحضرات',
+    };
+    return typos[word] || word;
+  },
+
   analyze(query) {
     const q = window.normalizeArabic ? window.normalizeArabic(query) : query;
 
@@ -50,43 +63,52 @@ const GuideIntentDetector = {
       /(?:مادة|المادة|بند|الفقرة|فقرة)\s*[\(\[]*\s*([٠-٩\d]+)\s*[\)\]]*/i
     );
     
-    // ② البحث عن رقم منفرد (مثل "24" فقط)
+    // ② البحث عن رقم منفرد
     const numOnlyMatch = !articleMatch && query.match(/^[\s]*([٠-٩\d]+)[\s]*$/) 
                        ? query.match(/([٠-٩\d]+)/) : null;
 
-    // تحويل للرقم اللاتيني
     const toLatinNum = n => n ? n.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : null;
 
     const articleNum = articleMatch 
       ? toLatinNum(articleMatch[1]) 
       : (numOnlyMatch ? toLatinNum(numOnlyMatch[1]) : null);
 
-    // ③ استخراج الكلمات المفتاحية + التوسيع الدلالي
+    // ③ استخراج الكلمات + تصحيح الأخطاء + التوسيع الدلالي
     const stopWords = new Set(['في','من','الى','على','عن','هل','ما','هو','هي',
       'ذلك','تلك','لي','لك','كيف','ماذا','متى','اين','لماذا','كم','وفي',
       'وعلى','ومن','وان','أن','إذا','حيث','التي','الذي','بعد','قبل']);
 
-    const rawWords = q.split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
-    
+    const rawWords = q.split(/\s+/)
+      .filter(w => w.length > 2 && !stopWords.has(w))
+      .map(w => this.fixTypos(w)); // ← تصحيح الأخطاء
+
+    // توليد جذور الكلمات (إزالة أل التعريف والسوابق الشائعة)
+    const stemWord = w => w.replace(/^(ال|وال|بال|كال|فال|لل)/, '');
+    const stems = rawWords.map(stemWord).filter(w => w.length > 2);
+
     // التوسيع الدلالي
-    const expandedWords = new Set(rawWords);
+    const expandedWords = new Set([...rawWords, ...stems]);
     rawWords.forEach(word => {
-      const synonyms = GuideSemantic[word] || [];
-      synonyms.forEach(s => expandedWords.add(window.normalizeArabic ? window.normalizeArabic(s) : s));
+      const synonyms = GuideSemantic[word] || GuideSemantic[stemWord(word)] || [];
+      synonyms.forEach(s => {
+        const norm = window.normalizeArabic ? window.normalizeArabic(s) : s;
+        expandedWords.add(norm);
+        expandedWords.add(stemWord(norm));
+      });
     });
 
     // ④ نوع الاستعلام
-    let queryType = 'semantic'; // الافتراضي
+    let queryType = 'semantic';
     if (articleNum) queryType = 'article';
     else if (rawWords.length <= 2) queryType = 'keyword';
 
-    // ⑤ هل السؤال عن دليل بعينه أم عام؟
     const isGlobal = !window.AgentMemory?.activeGuide;
 
     return {
       queryType,
       articleNum,
       rawWords,
+      stems,
       expandedWords: [...expandedWords],
       isGlobal,
       originalQuery: query,
@@ -122,29 +144,38 @@ const GuideScorer = {
       }
     }
 
-    // ② تطابق الكلمات الموسعة
+    // ② تطابق الكلمات الموسعة مع الجذور
     intent.expandedWords.forEach(word => {
       if (word.length < 3) return;
-      
-      // تطابق في الكلمات المفتاحية المُعالجة مسبقاً (سريع)
-      if (chunkKeywords.has(word)) {
-        score += 30;
-      }
-      
-      // تطابق في النص الكامل مع حساب التكرار
+      if (chunkKeywords.has(word)) score += 30;
       const regex = new RegExp(word, 'g');
       const matches = text.match(regex);
       if (matches) {
         score += matches.length * 8;
-        // بونص للظهور في بداية القطعة
         if (text.startsWith(word) || text.includes('\n' + word)) score += 15;
       }
     });
 
-    // ③ الكلمات الأصلية (غير الموسعة) تأخذ وزناً أعلى
+    // ③ الكلمات الأصلية — وزن أعلى
     intent.rawWords.forEach(word => {
-      if (text.includes(word)) score += 20; // بونص إضافي للكلمة الأصلية
+      if (text.includes(word)) score += 25;
     });
+
+    // ③-ب الجذور — تطابق جزئي
+    (intent.stems || []).forEach(stem => {
+      if (stem.length < 3) return;
+      const stemRegex = new RegExp(stem, 'g');
+      const stemMatches = text.match(stemRegex);
+      if (stemMatches) score += stemMatches.length * 12;
+    });
+
+    // ③-ج بونص التجاور: كلمتان من السؤال بجانب بعض في النص
+    if (intent.rawWords.length >= 2) {
+      for (let i = 0; i < intent.rawWords.length - 1; i++) {
+        const phrase = intent.rawWords[i] + '.{0,20}' + intent.rawWords[i+1];
+        if (new RegExp(phrase).test(text)) score += 150;
+      }
+    }
 
     // ④ بونص نوع القطعة
     if (chunk.type === 'article') score += 100;
@@ -193,7 +224,7 @@ const GuideScorer = {
     // ترتيب تنازلياً ثم أخذ أفضل 5
     return results
       .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
+      .slice(0, 8);
   }
 };
 
@@ -206,7 +237,7 @@ const GuideFormatter = {
   /**
    * يُنسّق نص القطعة ليكون مقروءاً وجميلاً
    */
-  formatChunkText(text) {
+  formatChunkText(text, highlightWords = []) {
     if (!text) return '';
 
     // تقسيم إلى أسطر
@@ -250,6 +281,20 @@ const GuideFormatter = {
       }
     });
 
+    // تلوين كلمات البحث إذا وُجدت
+    if (highlightWords && highlightWords.length > 0) {
+      highlightWords.forEach(word => {
+        if (!word || word.length < 3) return;
+        // تلوين بدون كسر HTML tags
+        const safeWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${safeWord})`, 'gi');
+        html = html.replace(regex, (match, p1) => {
+          // تجنب التلوين داخل attributes
+          return `<mark class="guide-highlight">${p1}</mark>`;
+        });
+      });
+    }
+
     return html;
   },
 
@@ -277,7 +322,7 @@ const GuideFormatter = {
       </div>
       
       <div class="guide-answer-body">
-        ${this.formatChunkText(getChunkText(top.chunk))}
+        ${this.formatChunkText(getChunkText(top.chunk), intent.rawWords)}
       </div>`;
 
     // ===== نتائج بديلة (عند الالتباس) =====
@@ -454,15 +499,18 @@ window.selectGuideResult = function(guideId, chunkId, encodedQuery) {
  * فتح الدليل على صفحة محددة
  */
 window.openGuidePage = function(guideId, pageNum) {
-  if (!window.PROCESSED_GUIDES && !window.FULL_GUIDES_DB) return;
-  
-  // البحث عن رابط الدليل في قاعدة البيانات الأصلية
-  const originalGuide = window.FULL_GUIDES_DB?.find(g => g.id === guideId);
-  if (originalGuide?.source_file) {
-    // إذا كان الرابط محلياً
-    const url = `guides/${originalGuide.source_file}#page=${pageNum}`;
-    window.open(url, '_blank');
-  }
+  if (!window.FULL_GUIDES_DB) return;
+
+  const originalGuide = window.FULL_GUIDES_DB.find(g => g.id === guideId);
+  if (!originalGuide) return;
+
+  // تصحيح الامتداد المزدوج .pdf.pdf → .pdf
+  let fileName = originalGuide.source_file || originalGuide.guide_name || '';
+  fileName = fileName.replace(/\.pdf\.pdf$/i, '.pdf');
+
+  // بناء الرابط
+  const url = `guides/${encodeURIComponent(fileName)}#page=${pageNum}`;
+  window.open(url, '_blank');
 };
 
 // =====================================================
@@ -692,6 +740,17 @@ window.openGuidePage = function(guideId, pageNum) {
       margin-top: 4px;
       color: #92400e;
       font-size: 0.8rem;
+    }
+
+    /* ===== تلوين كلمات البحث ===== */
+    mark.guide-highlight {
+      background: linear-gradient(120deg, #fef08a 0%, #fde047 100%);
+      color: #713f12;
+      padding: 1px 3px;
+      border-radius: 3px;
+      font-weight: bold;
+      font-style: normal;
+      box-shadow: 0 1px 3px rgba(234,179,8,0.3);
     }
   `;
   
