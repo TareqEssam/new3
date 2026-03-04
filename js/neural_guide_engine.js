@@ -1,0 +1,715 @@
+/**
+ * 🧠 neural_guide_engine.js
+ * محرك البحث الذكي في الأدلة الرسمية
+ * 
+ * يعمل مع: processed_guides.js + gpt_agent.js + neural_search_v6.js
+ * بدون أي نموذج ذكاء اصطناعي خارجي — 100% Client-Side
+ */
+
+// =====================================================
+// ① المصفوفة الدلالية المخصصة للأدلة القانونية
+// =====================================================
+
+const GuideSemantic = {
+  // نوايا البحث
+  "شروط":       ["متطلبات", "اشتراطات", "يشترط", "يلزم", "يجب", "لازم", "ضروري", "مطلوب"],
+  "ترخيص":      ["تراخيص", "رخصه", "رخصة", "موافقه", "موافقة", "اذن", "إذن", "اجازه"],
+  "اجراءات":    ["خطوات", "مراحل", "طريقه", "كيفيه", "آلية", "طريقة", "مسار"],
+  "غرامه":      ["عقوبه", "جزاء", "مخالفه", "غرامة", "عقوبة", "مخالفة", "جزائي"],
+  "جهه":        ["جهة", "هيئه", "هيئة", "وزاره", "وزارة", "مسئول", "سلطه"],
+  "مدة":        ["فترة", "مده", "وقت", "ايام", "أيام", "شهر", "سنه", "سنة"],
+  "رفض":        ["قبول", "اعتراض", "طعن", "تظلم", "استئناف"],
+  "تجديد":      ["تمديد", "استمرار", "تحديث", "تجديد الترخيص"],
+  "الغاء":      ["إلغاء", "سحب", "وقف", "تعليق", "انهاء"],
+  "محل":        ["المحل", "تجاري", "نشاط", "مشروع", "منشاه", "منشأة"],
+  "غلق":        ["اغلاق", "إغلاق", "اقفال", "تعليق", "وقف"],
+  "مواد":       ["مادة", "بند", "فقرة", "نص", "نصوص"],
+  "عقوبات":     ["عقوبه", "جزاء", "غرامه", "حبس", "سجن", "مخالفة"],
+  "تفتيش":      ["رقابه", "رقابة", "متابعه", "فحص", "كشف", "معاينه"],
+  "استيراد":    ["تصدير", "جمارك", "تجاره", "تجارة", "دولية"],
+  "بيئه":       ["بيئة", "تلوث", "سلامه", "حمايه", "اشتراطات بيئية"],
+};
+
+// =====================================================
+// ② كاشف نية السؤال الذكي
+// =====================================================
+
+const GuideIntentDetector = {
+
+  /**
+   * يحلل السؤال ويستخرج:
+   * - نوع الاستعلام (مادة / بحث دلالي / سؤال مفتوح)
+   * - الرقم إن وُجد
+   * - الكلمات المفتاحية الموسعة
+   */
+  analyze(query) {
+    const q = window.normalizeArabic ? window.normalizeArabic(query) : query;
+
+    // ① البحث عن مادة/بند/فقرة بالرقم
+    const articleMatch = query.match(
+      /(?:مادة|المادة|بند|الفقرة|فقرة)\s*[\(\[]*\s*([٠-٩\d]+)\s*[\)\]]*/i
+    );
+    
+    // ② البحث عن رقم منفرد (مثل "24" فقط)
+    const numOnlyMatch = !articleMatch && query.match(/^[\s]*([٠-٩\d]+)[\s]*$/) 
+                       ? query.match(/([٠-٩\d]+)/) : null;
+
+    // تحويل للرقم اللاتيني
+    const toLatinNum = n => n ? n.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : null;
+
+    const articleNum = articleMatch 
+      ? toLatinNum(articleMatch[1]) 
+      : (numOnlyMatch ? toLatinNum(numOnlyMatch[1]) : null);
+
+    // ③ استخراج الكلمات المفتاحية + التوسيع الدلالي
+    const stopWords = new Set(['في','من','الى','على','عن','هل','ما','هو','هي',
+      'ذلك','تلك','لي','لك','كيف','ماذا','متى','اين','لماذا','كم','وفي',
+      'وعلى','ومن','وان','أن','إذا','حيث','التي','الذي','بعد','قبل']);
+
+    const rawWords = q.split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w));
+    
+    // التوسيع الدلالي
+    const expandedWords = new Set(rawWords);
+    rawWords.forEach(word => {
+      const synonyms = GuideSemantic[word] || [];
+      synonyms.forEach(s => expandedWords.add(window.normalizeArabic ? window.normalizeArabic(s) : s));
+    });
+
+    // ④ نوع الاستعلام
+    let queryType = 'semantic'; // الافتراضي
+    if (articleNum) queryType = 'article';
+    else if (rawWords.length <= 2) queryType = 'keyword';
+
+    // ⑤ هل السؤال عن دليل بعينه أم عام؟
+    const isGlobal = !window.AgentMemory?.activeGuide;
+
+    return {
+      queryType,
+      articleNum,
+      rawWords,
+      expandedWords: [...expandedWords],
+      isGlobal,
+      originalQuery: query,
+      normalizedQuery: q
+    };
+  }
+};
+
+// =====================================================
+// ③ محرك التسجيل والترتيب
+// =====================================================
+
+const GuideScorer = {
+
+  /**
+   * يحسب نقاط تطابق قطعة معرفية مع الاستعلام
+   */
+  scoreChunk(chunk, intent) {
+    let score = 0;
+    const rawText = getChunkText(chunk);
+    const text = window.normalizeArabic ? window.normalizeArabic(rawText) : rawText;
+    const chunkKeywords = new Set(chunk.keywords || []);
+
+    // ① تطابق رقم المادة (أعلى أولوية)
+    if (intent.queryType === 'article' && intent.articleNum) {
+      if (chunk.article_num == intent.articleNum) {
+        score += 2000; // تطابق مباشر
+      } else {
+        // البحث عن الرقم في النص
+        const numAr = intent.articleNum.toString().split('').map(d => '٠١٢٣٤٥٦٧٨٩'[d] ?? d).join('');
+        const articleRegex = new RegExp(`مادة\\s*[\\(\\[]*\\s*(?:${intent.articleNum}|${numAr})\\s*[\\)\\]]*`, 'i');
+        if (articleRegex.test(chunk.text)) score += 1500;
+      }
+    }
+
+    // ② تطابق الكلمات الموسعة
+    intent.expandedWords.forEach(word => {
+      if (word.length < 3) return;
+      
+      // تطابق في الكلمات المفتاحية المُعالجة مسبقاً (سريع)
+      if (chunkKeywords.has(word)) {
+        score += 30;
+      }
+      
+      // تطابق في النص الكامل مع حساب التكرار
+      const regex = new RegExp(word, 'g');
+      const matches = text.match(regex);
+      if (matches) {
+        score += matches.length * 8;
+        // بونص للظهور في بداية القطعة
+        if (text.startsWith(word) || text.includes('\n' + word)) score += 15;
+      }
+    });
+
+    // ③ الكلمات الأصلية (غير الموسعة) تأخذ وزناً أعلى
+    intent.rawWords.forEach(word => {
+      if (text.includes(word)) score += 20; // بونص إضافي للكلمة الأصلية
+    });
+
+    // ④ بونص نوع القطعة
+    if (chunk.type === 'article') score += 100;
+    if (chunk.type === 'list') score += 60;
+    if (chunk.has_items) score += 40;
+
+    // ⑤ بونص الكثافة (نص أقصر مع نقاط أعلى = أدق)
+    if (score > 0 && chunk.char_count > 0) {
+      const density = score / (chunk.char_count / 100);
+      score += Math.min(density * 3, 200);
+    }
+
+    return Math.round(score);
+  },
+
+  /**
+   * يبحث في قاعدة البيانات المُعالجة ويرجع أفضل النتائج
+   */
+  search(intent, guideId = null) {
+    if (!window.PROCESSED_GUIDES) {
+      console.warn('⚠️ PROCESSED_GUIDES غير محملة');
+      return [];
+    }
+
+    // تحديد نطاق البحث
+    const guidesToSearch = guideId
+      ? window.PROCESSED_GUIDES.filter(g => g.id === guideId)
+      : window.PROCESSED_GUIDES;
+
+    const results = [];
+
+    guidesToSearch.forEach(guide => {
+      (guide.chunks || []).forEach(chunk => {
+        const score = this.scoreChunk(chunk, intent);
+        if (score > 50) { // عتبة دنيا للنتائج
+          results.push({
+            score,
+            chunk,
+            guide_name: guide.guide_name,
+            guide_id: guide.id
+          });
+        }
+      });
+    });
+
+    // ترتيب تنازلياً ثم أخذ أفضل 5
+    return results
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+  }
+};
+
+// =====================================================
+// ④ مُنسّق الإجابات الذكي
+// =====================================================
+
+const GuideFormatter = {
+
+  /**
+   * يُنسّق نص القطعة ليكون مقروءاً وجميلاً
+   */
+  formatChunkText(text) {
+    if (!text) return '';
+
+    // تقسيم إلى أسطر
+    let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    let html = '';
+
+    lines.forEach((line, idx) => {
+      // عنوان المادة
+      if (/^مادة\s*[\(\[]*\s*[\d٠-٩]+/.test(line) || /^المادة\s+[\d٠-٩]+/.test(line)) {
+        html += `<div class="guide-article-title">📋 ${line}</div>`;
+      }
+      // بنود أرقام عربية (١- ٢- ...)
+      else if (/^[١٢٣٤٥٦٧٨٩٠]+\s*[-–.]/.test(line)) {
+        const num = line.match(/^([١٢٣٤٥٦٧٨٩٠]+)/)[1];
+        const content = line.replace(/^[١٢٣٤٥٦٧٨٩٠]+\s*[-–.]\s*/, '');
+        html += `<div class="guide-item"><span class="guide-item-num">${num}</span><span class="guide-item-text">${content}</span></div>`;
+      }
+      // بنود أرقام لاتينية (1. 2. ...)
+      else if (/^\d+\s*[-–.]/.test(line)) {
+        const num = line.match(/^(\d+)/)[1];
+        const content = line.replace(/^\d+\s*[-–.]\s*/, '');
+        html += `<div class="guide-item"><span class="guide-item-num">${num}</span><span class="guide-item-text">${content}</span></div>`;
+      }
+      // بنود أبجدية (أ) (ب) ...
+      else if (/^\([أ-ي]\)/.test(line)) {
+        const letter = line.match(/^\(([أ-ي])\)/)[1];
+        const content = line.replace(/^\([أ-ي]\)\s*/, '');
+        html += `<div class="guide-item guide-item-alpha"><span class="guide-item-num">${letter}</span><span class="guide-item-text">${content}</span></div>`;
+      }
+      // عناوين (أولاً، ثانياً...)
+      else if (/^(أولاً|ثانياً|ثالثاً|رابعاً|خامساً|سادساً)/.test(line)) {
+        html += `<div class="guide-section-title">◆ ${line}</div>`;
+      }
+      // خط فاصل
+      else if (/^[-─━]{3,}$/.test(line)) {
+        html += `<hr class="guide-divider">`;
+      }
+      // نص عادي
+      else {
+        html += `<div class="guide-paragraph">${line}</div>`;
+      }
+    });
+
+    return html;
+  },
+
+  /**
+   * يبني بطاقة الإجابة الكاملة
+   */
+  buildAnswerCard(results, intent) {
+    if (!results || results.length === 0) return null;
+
+    const top = results[0];
+    const hasAlternatives = results.length > 1 && results[1].score > results[0].score * 0.5;
+
+    // ===== الإجابة الرئيسية =====
+    let html = `
+    <div class="guide-answer-card">
+      <div class="guide-answer-header">
+        <div class="guide-answer-icon">📄</div>
+        <div class="guide-answer-meta">
+          <div class="guide-answer-source">${top.guide_name.replace('.pdf', '').replace('.pdf.pdf', '')}</div>
+          <div class="guide-answer-page">صفحة ${top.chunk.page_num}</div>
+        </div>
+        <button class="guide-open-btn" onclick="window.openGuidePage('${top.guide_id}', ${top.chunk.page_num})" title="فتح الصفحة في الدليل">
+          <i class="fas fa-external-link-alt"></i>
+        </button>
+      </div>
+      
+      <div class="guide-answer-body">
+        ${this.formatChunkText(getChunkText(top.chunk))}
+      </div>`;
+
+    // ===== نتائج بديلة (عند الالتباس) =====
+    if (hasAlternatives) {
+      html += `
+      <div class="guide-alternatives">
+        <div class="guide-alternatives-label">🔍 وجدت أيضاً في:</div>
+        ${results.slice(1, 3).map(r => `
+          <div class="guide-alt-item" onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}')">
+            <span class="guide-alt-icon">📋</span>
+            <div class="guide-alt-content">
+              <strong>${r.guide_name.replace('.pdf', '').replace('.pdf.pdf', '').substring(0, 40)}...</strong>
+              <small>صفحة ${r.chunk.page_num} — ${r.chunk.title.substring(0, 50)}</small>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    }
+
+    html += `</div>`;
+    return html;
+  },
+
+  /**
+   * يبني سؤال التوضيح عند التساوي
+   */
+  buildClarificationCard(results, query) {
+    let html = `
+    <div class="guide-clarification-card">
+      <div class="guide-clarify-header">
+        <div class="guide-clarify-icon">🤔</div>
+        <div class="guide-clarify-title">وجدت هذا الموضوع في أكثر من دليل</div>
+      </div>
+      <div class="guide-clarify-subtitle">أي الأدلة تقصد؟</div>`;
+
+    results.slice(0, 4).forEach((r, i) => {
+      html += `
+      <div class="choice-btn" onclick="window.selectGuideResult('${r.guide_id}', '${r.chunk.id}', '${encodeURIComponent(query)}')">
+        <span class="choice-icon">${i === 0 ? '🎯' : '📋'}</span>
+        <div class="choice-content">
+          <strong>${r.guide_name.replace('.pdf', '').replace('.pdf.pdf', '').substring(0, 45)}</strong>
+          <small>صفحة ${r.chunk.page_num} — ${r.chunk.title.substring(0, 50)}</small>
+        </div>
+      </div>`;
+    });
+
+    html += `</div>`;
+    return html;
+  }
+};
+
+// =====================================================
+// ⑤ دالة استرجاع النص الفعلي من FULL_GUIDES_DB
+// =====================================================
+
+function getChunkText(chunk) {
+  // إذا كان النص مخزناً مباشرة (للتوافق مع النسخ القديمة)
+  if (chunk.text) return chunk.text;
+
+  // استرجاع النص بالإحداثيات من FULL_GUIDES_DB
+  if (!window.FULL_GUIDES_DB) return '';
+
+  const guide = window.FULL_GUIDES_DB.find(g => g.id === chunk.guide_id);
+  if (!guide) return '';
+
+  const page = (guide.pages || []).find(p => p.page_num === chunk.page_num);
+  if (!page || !page.text) return '';
+
+  // استخراج القطعة بالإحداثيات
+  if (chunk.text_start !== undefined && chunk.text_end !== undefined) {
+    return page.text.slice(chunk.text_start, chunk.text_end).trim();
+  }
+
+  // fallback: الصفحة كاملة
+  return page.text;
+}
+
+// =====================================================
+// ⑥ المحرك الرئيسي — handleGuideSearch
+// =====================================================
+
+window.handleGuideSearch = function(query, activeGuide) {
+  console.log(`🔍 بحث في الدليل: "${activeGuide.name}" — السؤال: "${query}"`);
+
+  // تحليل النية
+  const intent = GuideIntentDetector.analyze(query);
+  console.log('🧠 Intent:', intent);
+
+  // البحث في الدليل المحدد
+  const results = GuideScorer.search(intent, activeGuide.id);
+  console.log(`📊 النتائج: ${results.length} — أعلى نقاط: ${results[0]?.score}`);
+
+  // لا نتائج
+  if (results.length === 0) {
+    return `
+    <div class="guide-no-result">
+      <div class="guide-no-result-icon">🔍</div>
+      <div class="guide-no-result-text">
+        لم أجد معلومات عن <strong>"${query}"</strong> في هذا الدليل.<br>
+        <small>جرب كلمات مختلفة أو رقم مادة محدد</small>
+      </div>
+    </div>`;
+  }
+
+  // تحقق من الالتباس: نتيجتان متقاربتان جداً من أدلة مختلفة
+  const topScore = results[0].score;
+  const secondScore = results[1]?.score || 0;
+  const isAmbiguous = (
+    results.length >= 2 &&
+    results[0].guide_id !== results[1].guide_id &&
+    secondScore > topScore * 0.85 &&
+    topScore < 500
+  );
+
+  if (isAmbiguous) {
+    console.log('🤔 السؤال ملتبس — طلب توضيح');
+    return GuideFormatter.buildClarificationCard(results, query);
+  }
+
+  // إجابة واضحة
+  return GuideFormatter.buildAnswerCard(results, intent);
+};
+
+// =====================================================
+// ⑦ دوال مساعدة
+// =====================================================
+
+/**
+ * عرض قطعة محددة بعد اختيار المستخدم
+ */
+window.showGuideChunk = function(guideId, chunkId) {
+  if (!window.PROCESSED_GUIDES) return;
+  
+  const guide = window.PROCESSED_GUIDES.find(g => g.id === guideId);
+  if (!guide) return;
+
+  const chunk = guide.chunks.find(c => c.id === chunkId);
+  if (!chunk) return;
+
+  const result = [{
+    score: 999,
+    chunk,
+    guide_name: guide.guide_name,
+    guide_id: guide.id
+  }];
+
+  const html = GuideFormatter.buildAnswerCard(result, {});
+  if (html && window.typeWriterResponse) {
+    window.typeWriterResponse(html);
+  }
+};
+
+/**
+ * تحديد نتيجة بعد توضيح المستخدم
+ */
+window.selectGuideResult = function(guideId, chunkId, encodedQuery) {
+  const query = decodeURIComponent(encodedQuery);
+  
+  // تعيين الدليل المحدد في الذاكرة مؤقتاً
+  if (window.AgentMemory?.activeGuide) {
+    const originalId = window.AgentMemory.activeGuide.id;
+    window.AgentMemory.activeGuide.id = guideId;
+    
+    // عرض الإجابة
+    window.showGuideChunk(guideId, chunkId);
+    
+    // إعادة الدليل الأصلي
+    window.AgentMemory.activeGuide.id = originalId;
+  } else {
+    window.showGuideChunk(guideId, chunkId);
+  }
+};
+
+/**
+ * فتح الدليل على صفحة محددة
+ */
+window.openGuidePage = function(guideId, pageNum) {
+  if (!window.PROCESSED_GUIDES && !window.FULL_GUIDES_DB) return;
+  
+  // البحث عن رابط الدليل في قاعدة البيانات الأصلية
+  const originalGuide = window.FULL_GUIDES_DB?.find(g => g.id === guideId);
+  if (originalGuide?.source_file) {
+    // إذا كان الرابط محلياً
+    const url = `guides/${originalGuide.source_file}#page=${pageNum}`;
+    window.open(url, '_blank');
+  }
+};
+
+// =====================================================
+// ⑧ CSS المدمج للتنسيق الجميل
+// =====================================================
+
+(function injectGuideStyles() {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById('guide-engine-styles')) return;
+  
+  const style = document.createElement('style');
+  style.id = 'guide-engine-styles';
+  style.textContent = `
+    /* ===== بطاقة الإجابة الرئيسية ===== */
+    .guide-answer-card {
+      background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
+      border: 1px solid #bae6fd;
+      border-radius: 12px;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      direction: rtl;
+    }
+
+    .guide-answer-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+      color: white;
+    }
+
+    .guide-answer-icon { font-size: 1.4rem; }
+
+    .guide-answer-meta { flex: 1; }
+
+    .guide-answer-source {
+      font-weight: bold;
+      font-size: 0.85rem;
+      line-height: 1.3;
+    }
+
+    .guide-answer-page {
+      font-size: 0.75rem;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .guide-open-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      border-radius: 6px;
+      padding: 5px 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background 0.2s;
+    }
+    .guide-open-btn:hover { background: rgba(255,255,255,0.35); }
+
+    /* ===== محتوى الإجابة ===== */
+    .guide-answer-body {
+      padding: 16px;
+    }
+
+    .guide-article-title {
+      font-weight: bold;
+      font-size: 1rem;
+      color: #0369a1;
+      padding: 8px 12px;
+      background: #e0f2fe;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-right: 4px solid #0369a1;
+    }
+
+    .guide-section-title {
+      font-weight: bold;
+      color: #1e40af;
+      padding: 6px 0;
+      margin: 8px 0 4px;
+      font-size: 0.95rem;
+    }
+
+    .guide-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 7px 10px;
+      margin: 4px 0;
+      background: #f8fafc;
+      border-radius: 8px;
+      border-right: 3px solid #e2e8f0;
+      transition: border-color 0.2s;
+    }
+    .guide-item:hover { border-right-color: #0369a1; background: #f0f9ff; }
+
+    .guide-item-alpha { border-right-color: #7c3aed; }
+    .guide-item-alpha:hover { border-right-color: #6d28d9; background: #f5f3ff; }
+
+    .guide-item-num {
+      min-width: 24px;
+      height: 24px;
+      background: #0369a1;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .guide-item-alpha .guide-item-num { background: #7c3aed; }
+
+    .guide-item-text {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #334155;
+    }
+
+    .guide-paragraph {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: #475569;
+      padding: 4px 0;
+    }
+
+    .guide-divider {
+      border: none;
+      border-top: 1px dashed #cbd5e1;
+      margin: 10px 0;
+    }
+
+    /* ===== النتائج البديلة ===== */
+    .guide-alternatives {
+      border-top: 1px solid #e2e8f0;
+      padding: 12px 16px;
+      background: #f8fafc;
+    }
+
+    .guide-alternatives-label {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .guide-alt-item {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 8px 10px;
+      margin: 4px 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .guide-alt-item:hover {
+      border-color: #0369a1;
+      background: #f0f9ff;
+      transform: translateX(-2px);
+    }
+
+    .guide-alt-icon { font-size: 1rem; flex-shrink: 0; }
+
+    .guide-alt-content { flex: 1; }
+    .guide-alt-content strong { font-size: 0.85rem; color: #1e293b; display: block; }
+    .guide-alt-content small { font-size: 0.75rem; color: #64748b; }
+
+    /* ===== بطاقة التوضيح ===== */
+    .guide-clarification-card {
+      background: white;
+      border: 2px solid #fbbf24;
+      border-radius: 12px;
+      padding: 16px;
+      direction: rtl;
+    }
+
+    .guide-clarify-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .guide-clarify-icon { font-size: 1.5rem; }
+
+    .guide-clarify-title {
+      font-weight: bold;
+      font-size: 1rem;
+      color: #92400e;
+    }
+
+    .guide-clarify-subtitle {
+      font-size: 0.85rem;
+      color: #78716c;
+      margin-bottom: 12px;
+      padding-right: 4px;
+    }
+
+    /* ===== لا توجد نتيجة ===== */
+    .guide-no-result {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 16px;
+      background: #fef9c3;
+      border: 1px solid #fde047;
+      border-radius: 10px;
+      direction: rtl;
+    }
+
+    .guide-no-result-icon { font-size: 1.5rem; }
+
+    .guide-no-result-text {
+      font-size: 0.9rem;
+      color: #713f12;
+      line-height: 1.6;
+    }
+
+    .guide-no-result-text small {
+      display: block;
+      margin-top: 4px;
+      color: #92400e;
+      font-size: 0.8rem;
+    }
+  `;
+  
+  document.head.appendChild(style);
+  console.log('✅ Guide Engine Styles injected');
+})();
+
+// =====================================================
+// ⑨ تحقق من التهيئة
+// =====================================================
+
+(function checkInit() {
+  if (typeof window === 'undefined') return;
+  if (!window.PROCESSED_GUIDES) {
+    console.warn('⚠️ neural_guide_engine: PROCESSED_GUIDES غير محملة!');
+    console.warn('   تأكد من إضافة processed_guides.js قبل هذا الملف في HTML');
+  } else {
+    const totalChunks = window.PROCESSED_GUIDES.reduce((sum, g) => sum + (g.chunks?.length || 0), 0);
+    console.log(`✅ Neural Guide Engine جاهز — ${window.PROCESSED_GUIDES.length} دليل، ${totalChunks} قطعة معرفية`);
+  }
+})();

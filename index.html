@@ -1,0 +1,4491 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إعداد تقارير اللجان - التحول الرقمي</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1491/1491468.png">
+	<!-- ... الكود الحالي لملف HTML ينتهي هنا ... -->
+<script src="js/gpt_guides_db.js"></script>
+<script src="js/processed_guides.js"></script>   
+
+       <script src="js/activity_database.js"></script>
+       <!-- ✅ محرك التجهيزات الذكي — الجديد -->
+            <script src="js/smart-facility-engine.js"></script>
+          <script src="js/neural_search_v6.js"></script>
+        <script src="js/decision104.js"></script>
+
+
+
+    <script src="js/main_logic.js"></script>
+    <script src="js/voice_agent.js"></script>
+
+
+      <!-- الخطوط -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+
+<!-- Font Awesome للأيقونات -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Leaflet CSS لخرائط OpenStreetMap -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Tajawal', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 950px;
+            background: white;
+            padding: 30px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .step-section {
+            display: none;
+            animation: slideIn 0.4s ease-out;
+        }
+        .step-section.active {
+            display: block;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .header-box {
+            background: linear-gradient(45deg, #0d6efd, #0a58ca);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(13, 110, 253, 0.2);
+        }
+        .info-label {
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 6px;
+            display: block;
+            font-size: 0.9rem;
+        }
+        .auto-filled {
+            background-color: #e9ecef;
+            border-color: #ced4da;
+            color: #495057;
+            pointer-events: none;
+        }
+        .result-label {
+            color: #198754;
+            font-weight: bold;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        .nav-buttons {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .rep-box { border: 1px dashed #0d6efd; padding: 15px; border-radius: 8px; background-color: #f8f9fa; }
+        .cert-box { background-color: #e7f1ff; border-right: 4px solid #0d6efd; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        
+        /* تنسيق خاص لخانات الضريبة المقسمة */
+        .tax-inputs input {
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        
+        /* تنسيق العنوان المكرر */
+        .repeated-address {
+            background-color: #f8f9fa;
+            border: 1px dashed #0d6efd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        /* تنسيقات البحث الجديدة */
+        .search-container {
+            margin-bottom: 20px;
+        }
+        .search-input-group {
+            position: relative;
+        }
+        .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 1000;
+        }
+        .search-result-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #e8e8e8;
+    transition: all 0.3s ease;
+    position: relative;
+    background: linear-gradient(to right, #ffffff 0%, #f8f9ff 100%);
+    margin-bottom: 2px;
+    border-radius: 4px;
+    font-weight: 500;
+    color: #2c3e50;
+    white-space: normal;      /* السماح للنص بالنزول لسطر جديد */
+       word-wrap: break-word;    /* كسر الكلمات الطويلة */
+       text-align: right;        /* التأكد من المحاذاة لليمين */
+}
+
+.search-result-item:hover {
+    background: linear-gradient(to right, #e3f2fd 0%, #bbdefb 100%);
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+    border-left: 4px solid #2196F3;
+    color: #1565c0;
+    font-weight: 600;
+}
+
+.search-result-item:active {
+    background: linear-gradient(to right, #bbdefb 0%, #90caf9 100%);
+    transform: translateX(3px);
+}
+
+.search-result-item .highlight {
+    background-color: #ffeb3b;
+    color: #000;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: 700;
+}
+
+.search-results {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 2px solid #2196F3;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background-color: #fff;
+}
+
+.search-results::-webkit-scrollbar {
+    width: 8px;
+}
+
+.search-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+    background: #2196F3;
+    border-radius: 4px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+    background: #1976d2;
+}
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        .sector-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        .sector-a {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .sector-b {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .sector-both {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .activity-details {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .activity-details.sector-a {
+            background-color: #e7f3fe;
+            border-left: 4px solid #0d6efd;
+            white-space: normal;      /* منع النص من البقاء على سطر واحد طويل */
+                   word-wrap: break-word;    /* كسر النص ليتناسب مع عرض الشاشة */
+                   line-height: 1.6;         /* تجعل القراءة أسهل للنصوص القانونية الطويلة */
+        }
+        .activity-details.sector-b {
+            background-color: #e7f3fe;
+            border-right: 4px solid #0d6efd; /* تغيير من left إلى right ليناسب العربية */
+                   border-left: none;              /* إلغاء الخط من اليسار */
+                  direction: rtl;                 /* إجبار الاتجاه من اليمين لليسار */
+        }
+        .activity-details.sector-both {
+            background-color: #d1f7e4;
+            border-left: 4px solid #198754;
+        }
+
+/* ========================================
+   تنسيقات الأزرار الاحترافية المحسّنة
+======================================== */
+
+/* حاوية الأزرار الرئيسية */
+.final-actions-container {
+    margin-top: 40px;
+    padding: 30px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.08);
+}
+
+/* شبكة الأزرار */
+.action-buttons-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* زر الحفظ الرئيسي */
+.btn-save-final {
+    position: relative;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    padding: 18px 35px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.btn-save-final:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(40, 167, 69, 0.4);
+    background: linear-gradient(135deg, #218838 0%, #1ea97c 100%);
+}
+
+.btn-save-final:active {
+    transform: translateY(-1px);
+}
+
+.btn-save-final::before {
+    content: '✓';
+    position: absolute;
+    right: 20px;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.btn-save-final:hover::before {
+    opacity: 1;
+    right: 25px;
+}
+
+/* أزرار التصدير */
+.export-buttons-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.btn-export {
+    position: relative;
+    background: white;
+    color: #495057;
+    border: 2px solid #dee2e6;
+    padding: 15px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-export:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    border-color: #0d6efd;
+    color: #0d6efd;
+    background: #f8f9fa;
+}
+
+/* أيقونات أزرار التصدير */
+.btn-export.word { border-color: #2b579a; }
+.btn-export.word:hover { 
+    border-color: #2b579a; 
+    color: #2b579a; 
+    background: #e7f0ff;
+}
+
+.btn-export.pdf { border-color: #dc3545; }
+.btn-export.pdf:hover { 
+    border-color: #dc3545; 
+    color: #dc3545; 
+    background: #ffe7ea;
+}
+
+.btn-export.json { border-color: #ffc107; }
+.btn-export.json:hover { 
+    border-color: #ffc107; 
+    color: #e0a800; 
+    background: #fff8e1;
+}
+
+/* زر الرجوع */
+.btn-back-final {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.2);
+}
+
+.btn-back-final:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(108, 117, 125, 0.3);
+}
+
+/* تخطيط الأزرار السفلية */
+.bottom-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    border-top: 2px solid #dee2e6;
+}
+
+/* الأيقونات داخل الأزرار */
+.btn-icon {
+    font-size: 1.2rem;
+    display: inline-block;
+}
+
+/* تأثير النبض للزر الرئيسي */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.btn-save-final:focus {
+    animation: pulse 0.5s ease-in-out;
+}
+
+/* تنسيقات الهواتف المحمولة */
+@media (max-width: 768px) {
+    .final-actions-container {
+        padding: 20px 15px;
+    }
+    
+    .action-buttons-grid {
+        gap: 12px;
+    }
+    
+    .btn-save-final {
+        padding: 16px 25px;
+        font-size: 1rem;
+    }
+    
+    .export-buttons-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-export {
+        padding: 14px 20px;
+        font-size: 0.9rem;
+    }
+    
+    .bottom-actions {
+        flex-direction: column-reverse;
+        gap: 15px;
+    }
+    
+    .btn-back-final {
+        width: 100%;
+    }
+}
+
+/* تنسيقات الشاشات الصغيرة جداً */
+@media (max-width: 480px) {
+    .btn-save-final {
+        font-size: 0.95rem;
+        padding: 14px 20px;
+    }
+    
+    .btn-export {
+        font-size: 0.85rem;
+        padding: 12px 15px;
+    }
+}
+
+/* تأثيرات التحميل (اختياري) */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* كود CSS الحالي الموجود */
+    .btn-loading::after {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 50%;
+        left: 50%;
+        margin-left: -8px;
+        margin-top: -8px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* ⬇️⬇️⬇️ أضف كود CSS الجديد هنا ⬇️⬇️⬇️ */
+
+    /* تنسيقات الحقول الديناميكية للتراخيص */
+    .license-field-group {
+        transition: all 0.3s ease;
+        border: 2px solid #dee2e6;
+    }
+
+    .license-field-group:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 2px 8px rgba(13, 110, 253, 0.1);
+    }
+
+    .license-main-checkbox:checked + .form-check-label {
+        color: #198754 !important;
+    }
+
+    .license-details {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* تنسيقات إضافية للتراخيص */
+    .license-field-group.required {
+        border-left: 4px solid #dc3545;
+    }
+
+    .license-field-group.optional {
+        border-left: 4px solid #ffc107;
+    }
+
+    .license-number:valid {
+        border-color: #198754;
+    }
+
+    .license-number:invalid {
+        border-color: #dc3545;
+    }
+
+/* تنسيقات قسم التعديلات المحسّن */
+.modification-card {
+    transition: all 0.3s ease;
+    border: 2px solid #dee2e6;
+}
+
+.modification-card:hover {
+    border-color: #0dcaf0;
+    box-shadow: 0 2px 8px rgba(13, 202, 240, 0.1);
+}
+
+.modification-checkbox:checked + .form-check-label {
+    color: #0dcaf0 !important;
+}
+
+.modification-details {
+    animation: fadeInUp 0.3s ease-in;
+}
+
+.modification-item {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* تنسيقات العنوان المكرر المحسّن */
+.repeated-address .location-item {
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+}
+
+.repeated-address .location-item:last-child {
+    margin-bottom: 0;
+}
+
+.repeated-address .location-coordinates {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* =======================================================
+   تعديلات CSS لتقليل الحجم وتطبيق الألوان الرسمية
+======================================================= */
+
+/* 1. تقليل حجم الخط الرئيسي للزر */
+.fs-7 {
+    font-size: 0.9rem !important; /* حجم خط أصغر من fs-6 */
+}
+
+/* 2. تعديل الحاوية لتقليل المسافة الداخلية الإجمالية */
+.additional-actions-container {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 15px 15px; /* تقليل المسافة الداخلية لتقليل الحجم */
+    border-radius: 10px;
+    border: 1px solid #e3e6f0;
+    box-shadow: 0 1px 10px rgba(0,0,0,0.05); /* ظل أخف */
+}
+
+/* 3. تنسيق الزر الأول: شركات بنشاط مشابه (Deep Indigo) */
+.btn-similar-activity {
+    /* ألوان رسمية: أزرق داكن/كحلي */
+    background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
+    border: 1px solid #1e3a8a !important;
+    color: white !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-similar-activity:hover {
+    background: linear-gradient(135deg, #1e3a8a 0%, #17327d 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+}
+
+/* 4. تنسيق الزر الثاني: سجل اللجان للشركة (Dark Charcoal) */
+.btn-committee-registry {
+    /* ألوان رسمية: رمادي غامق احترافي */
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
+    border: 1px solid #374151 !important;
+    color: white !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-committee-registry:hover {
+    background: linear-gradient(135deg, #374151 0%, #2f3743 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(75, 85, 99, 0.3);
+}
+
+/* 5. تعديل عام على بطاقة الحركة (Action Card) لتقليل نصف القطر */
+.action-card {
+    border-radius: 8px; /* تقليل نصف القطر من 12px إلى 8px */
+    /* ... باقي التنسيقات الأصلية ... */
+}
+
+/* تنسيقات للهواتف المحمولة */
+@media (max-width: 768px) {
+    .additional-actions-container {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+    }
+    
+    .action-card {
+        padding: 20px 15px !important;
+    }
+    
+    .action-card .fs-6 {
+        font-size: 0.9rem !important;
+    }
+    
+    .action-card small {
+        font-size: 0.75rem;
+    }
+}
+
+/* تنسيقات للشاشات الصغيرة جداً */
+@media (max-width: 576px) {
+    .additional-actions-container {
+        padding: 15px 10px;
+    }
+    
+    .action-card {
+        padding: 18px 12px !important;
+        margin-bottom: 10px;
+    }
+    
+    .action-card .fs-4 {
+        font-size: 1.2rem !important;
+    }
+}
+
+/* تأثيرات التركيز للوصول */
+.action-card:focus {
+    outline: 3px solid rgba(13, 110, 253, 0.25);
+    outline-offset: 2px;
+}
+
+
+/* تنسيقات الأقسام الجديدة في الشاشة السادسة */
+.purchase-invoice-item {
+    border-left: 4px solid #0d6efd !important;
+    transition: all 0.3s ease;
+}
+
+.purchase-invoice-item:hover {
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+}
+
+.store-addition-item {
+    border-left: 4px solid #198754 !important;
+    transition: all 0.3s ease;
+}
+
+.store-addition-item:hover {
+    box-shadow: 0 2px 8px rgba(25, 135, 84, 0.15);
+}
+
+.sales-invoice-item {
+    border-left: 4px solid #fd7e14 !important;
+    transition: all 0.3s ease;
+}
+
+.sales-invoice-item:hover {
+    box-shadow: 0 2px 8px rgba(253, 126, 20, 0.15);
+}
+
+/* تنسيقات الأزرار */
+.btn-primary {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    border: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    border: none;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #fd7e14 0%, #e56a00 100%);
+    border: none;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #e56a00 0%, #cc5c00 100%);
+    color: white;
+}
+
+/* تنسيقات حقل الملاحظات الفنية الديناميكية */
+.technical-notes-container {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 2px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.technical-notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.technical-notes-title {
+    font-weight: bold;
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+.technical-notes-badge {
+    background-color: #0d6efd;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.technical-notes-textarea {
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.technical-notes-textarea:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.technical-notes-hint {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.technical-notes-hint i {
+    margin-left: 5px;
+}
+
+/* تنسيقات الحقول الجديدة */
+#whatsappBtn {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    border: none;
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    min-width: 110px;
+}
+
+#whatsappBtn:hover {
+    background: linear-gradient(135deg, #128C7E 0%, #25D366 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+#whatsappBtn:disabled {
+    background: #6c757d;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* تنسيق بطاقات الحقول الجديدة */
+.border-info {
+    border-color: #0dcaf0 !important;
+}
+
+.text-info {
+    color: #0dcaf0 !important;
+}
+
+/* تحسين عرض حقول التاريخ والوقت */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+/* تنسيق الإشعارات */
+.alert-notification {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* تنسيقات التنبيهات الذكية */
+.alert-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideInRight 0.3s ease-out;
+}
+
+.recommendations-list .alert {
+    border-right: 4px solid;
+    animation: fadeInUp 0.3s ease-in;
+}
+
+/* تأثيرات الحركة */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* تنسيق أزرار الفحص */
+.btn-outline-warning:hover {
+    background-color: #ffc107;
+    color: #212529;
+    border-color: #ffc107;
+}
+
+/* تنسيق حقول النتائج */
+input.bg-warning {
+    font-weight: bold;
+}
+
+input.bg-success {
+    font-weight: bold;
+}
+
+/* تنسيق زر PDF */
+.btn-primary.pdf-btn {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    padding: 10px 20px;
+}
+
+.btn-primary.pdf-btn:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+}
+
+/* ========================================
+   تنسيقات الفاصل الاحترافي بين الأقسام
+======================================== */
+
+.section-separator {
+    position: relative;
+    height: 50px; /* ارتفاع الفاصل */
+    margin: 60px 0;
+    overflow: hidden;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #0d6efd 0%, #198754 100%); /* تدرج لوني جذاب */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.separator-content {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    padding: 0 20px;
+    z-index: 10;
+}
+
+.separator-content i {
+    font-size: 2rem;
+    margin-left: 15px;
+    animation: bounce 2s infinite; /* تأثير حركة جذاب */
+}
+
+/* تأثير تموجات الخلفية (اختياري لكن احترافي) */
+.separator-wave {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 45%;
+    animation: wave 10s linear infinite;
+}
+
+.separator-wave:nth-child(2) {
+    border-radius: 40%;
+    animation: wave 15s linear infinite reverse;
+    opacity: 0.7;
+}
+
+/* حركة النبض للأيقونة */
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-5px);
+    }
+    60% {
+        transform: translateY(-3px);
+    }
+}
+
+/* حركة التموجات */
+@keyframes wave {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+//----------
+
+/* ============ أنماط المناطق الصناعية المعدلة ============ */
+.industrial-styles {
+    font-family: 'Tajawal', sans-serif;
+}
+
+.industrial-card .container {
+    width: 100%;
+    padding: 0 15px;
+}
+
+/* قسم الفلاتر والإحصائيات للمناطق الصناعية */
+.industrial-filters-section {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.industrial-filters-section h3 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.industrial-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.industrial-filter-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.industrial-filter-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #333;
+}
+
+.industrial-filter-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    background-color: white;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.industrial-filter-select:focus {
+    outline: none;
+    border-color: #333;
+    box-shadow: 0 0 0 3px rgba(26, 95, 122, 0.2);
+}
+
+.industrial-stats {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.industrial-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+}
+
+.industrial-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.industrial-stat-label {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* جدول المناطق الصناعية */
+.industrial-table-section {
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+}
+
+.industrial-table-header {
+    background-color: #333;
+    color: white;
+    padding: 15px;
+}
+
+.industrial-table-header h3 {
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.industrial-table-container {
+    overflow-x: auto;
+    max-height: 400px;
+}
+
+.industrial-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.industrial-table thead {
+    background-color: #f8f9fa;
+}
+
+.industrial-table th {
+    padding: 12px 10px;
+    text-align: right;
+    font-weight: 700;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+    white-space: nowrap;
+}
+
+.industrial-table td {
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #333;
+}
+
+.industrial-table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.industrial-table tbody tr:hover {
+    background-color: rgba(87, 204, 153, 0.05);
+}
+
+.industrial-area-link {
+    color: #333;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.industrial-area-link:hover {
+    color: #57cc99;
+}
+
+.industrial-area-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.industrial-badge-primary {
+    background-color: rgba(26, 95, 122, 0.1);
+    color: #333;
+}
+
+.industrial-badge-secondary {
+    background-color: rgba(87, 204, 153, 0.1);
+    color: #2a8c6f;
+}
+
+.industrial-badge-tertiary {
+    background-color: rgba(255, 154, 60, 0.1);
+    color: #c67c2a;
+}
+
+/* المودال المعدل للمناطق الصناعية */
+.industrial-modal-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none; /* مهم: مخفي افتراضياً */
+      justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 15px;
+}
+
+.industrial-modal-container {
+    background-color: white;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 800px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: industrialModalFadeIn 0.3s ease;
+}
+
+@keyframes industrialModalFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.industrial-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.industrial-modal-title {
+    font-size: 1.5rem;
+    color: #333;
+    font-weight: 700;
+    margin: 0;
+}
+
+.industrial-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.industrial-modal-close:hover {
+    color: #333;
+    transform: rotate(90deg);
+}
+
+.industrial-modal-body {
+    padding: 20px;
+}
+
+.industrial-area-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.industrial-detail-item {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    border-right: 4px solid #57cc99;
+}
+
+.industrial-detail-label {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.industrial-detail-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.industrial-map-container {
+    margin-top: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+#industrial-area-map {
+    height: 300px;
+    width: 100%;
+}
+
+.industrial-map-footer {
+    background-color: #f8f9fa;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.industrial-decision-details {
+    background-color: #fff9f0;
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 15px;
+    border-right: 4px solid #ff9a3c;
+}
+
+.industrial-decision-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ff9a3c;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.industrial-decision-text {
+    line-height: 1.6;
+    color: #333;
+    white-space: pre-line;
+    font-size: 0.9rem;
+}
+
+/* البحث */
+.industrial-search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.industrial-search-input:focus {
+    outline: none;
+    border-color: #333;
+    box-shadow: 0 0 0 3px rgba(26, 95, 122, 0.2);
+}
+
+/* رسالة عدم وجود نتائج */
+.industrial-no-results {
+    text-align: center;
+    padding: 40px 15px;
+    display: none;
+}
+
+.industrial-no-results i {
+    font-size: 3rem;
+    color: #ddd;
+    margin-bottom: 15px;
+}
+
+.industrial-no-results h4 {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+/* إخفاء attribution الخاص بـ Leaflet */
+.industrial-leaflet-container .leaflet-control-attribution {
+    display: none !important;
+}
+
+/* تجاوبية للمناطق الصناعية */
+@media (max-width: 768px) {
+    .industrial-filter-row {
+        flex-direction: column;
+    }
+    
+    .industrial-filter-group {
+        min-width: 100%;
+    }
+    
+    .industrial-table th,
+    .industrial-table td {
+        padding: 8px 6px;
+        font-size: 0.85rem;
+    }
+    
+    .industrial-modal-container {
+        max-height: 90vh;
+    }
+    
+    .industrial-modal-body {
+        padding: 15px;
+    }
+    
+    .industrial-area-details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    #industrial-area-map {
+        height: 250px;
+    }
+}
+
+//------
+/* الفاصل المستطيل الرمادي */
+.simple-divider {
+    height: 8px; /* ارتفاع صغير */
+    background-color: #4a4a4a; /* رمادي غامق */
+    border-radius: 4px; /* زوايا منحنية قليلاً لشكل أكثر عصرية */
+    margin: 40px 0; /* مسافة من الأعلى والأسفل */
+    width: 100%; /* يأخذ عرض الحاوية بالكامل */
+    opacity: 0.8;
+}
+
+/* تحسين شكل صندوق التفعيل ليتناسب مع الفاصل */
+.form-check.border {
+    border-right: 5px solid #4a4a4a !important; /* إضافة خط جانبي بنفس لون الفاصل للربط البصري */
+}
+
+//-------------
+
+/* =========================
+   Card Layoutالمرافق للأقسام
+========================= */
+
+.category-box {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    padding: 0;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: all 0.25s ease;
+}
+
+.category-box:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+}
+
+/* =========================
+   Header لكل Card
+========================= */
+
+.category-box h6 {
+    margin: 0;
+    padding: 14px 18px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* =========================
+   Body محتوى Card
+========================= */
+
+.category-box > div[id^="group-"] {
+    padding: 16px 18px 18px;
+}
+
+/* =========================
+   ألوان مميزة حسب النوع
+========================= */
+
+.border-danger-subtle h6 { background: #fef2f2; color: #b91c1c; }
+.border-success-subtle h6 { background: #ecfdf5; color: #047857; }
+.border-warning-subtle h6 { background: #fffbeb; color: #92400e; }
+.border-primary-subtle h6 { background: #eff6ff; color: #1d4ed8; }
+.border-secondary-subtle h6 { background: #f1f5f9; color: #334155; }
+.border-dark-subtle h6 { background: #f8fafc; color: #111827; }
+
+/* =========================
+   Chips (تحسين خفيف)
+========================= */
+
+.facility-chip {
+    padding: 9px 16px;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.facility-chip:hover {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+}
+
+.facility-chip.active {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #1e40af;
+    box-shadow: 0 6px 14px rgba(37, 99, 235, 0.25);
+}
+
+
+
+/* بطاقات نوع الإنشاء */
+.const-type-card {
+    border: 2px solid #f1f5f9; border-radius: 12px; padding: 12px;
+    text-align: center; cursor: pointer; transition: 0.2s; background: #fff;
+}
+.const-type-card.active { border-color: #3b82f6; background: #eff6ff; color: #1e40af; transform: scale(1.03); }
+.const-type-card i { font-size: 1.4rem; margin-bottom: 5px; display: block; }
+
+/* ========================================
+   ✨ تنسيقات خريطة مراحل الإنتاج الاحترافية
+======================================== */
+.production-flow-section {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid #eef2f6;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.production-header-bar {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+#activityOverride {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#activityOverride option { color: #333; }
+#activityOverride:hover { background-color: rgba(255, 255, 255, 0.25); }
+
+.stages-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 30px;
+    background: #fcfdfe;
+}
+
+.stage-card-modern {
+    background: white;
+    border: 2px solid #edf2f7;
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.stage-card-modern:hover {
+    transform: translateY(-5px);
+    border-color: #198754;
+    box-shadow: 0 10px 20px rgba(25, 135, 84, 0.1);
+}
+
+.stage-card-modern.active {
+    background: #f0fff4;
+    border-color: #198754;
+    box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.15);
+}
+
+.stage-card-modern .step-number {
+    width: 35px;
+    height: 35px;
+    background: #edf2f7;
+    color: #718096;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.stage-card-modern.active .step-number {
+    background: #198754;
+    color: white;
+    transform: rotate(360deg);
+}
+
+.stage-card-modern .stage-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 10px;
+}
+
+.btn-add-note {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    opacity: 0;
+    transition: 0.3s;
+    background: #e6fffa;
+    color: #319795;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 8px;
+}
+
+.stage-card-modern:hover .btn-add-note { opacity: 1; }
+.stage-card-modern.has-note .btn-add-note { opacity: 1; background: #319795; color: white; }
+
+.note-preview {
+    font-size: 0.75rem;
+    color: #718096;
+    font-style: italic;
+    margin-top: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.narrative-container {
+    padding: 0 30px 30px;
+}
+
+.narrative-box {
+    border: 2px solid #eef2f6;
+    border-radius: 15px;
+    padding: 20px;
+    background: #fff;
+    min-height: 120px;
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: #4a5568;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+
+.production-header-bar {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    padding: 25px;
+    display: flex;
+    flex-direction: column; /* ترتيب العناصر تحت بعضها */
+    gap: 15px; /* مسافة بين العنوان والقائمة */
+    color: white;
+}
+
+.production-header-bar h5 {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    width: 100%; /* يأخذ العرض كاملاً */
+    margin: 0;
+}
+
+/* حاوية القائمة المنسدلة في سطر منفصل */
+.override-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.1); /* خلفية خفيفة للتمييز */
+    padding: 10px 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    align-self: flex-start; /* تبدأ من اليمين في RTL */
+    max-width: 100%;
+}
+
+#activityOverride {
+    background-color: #ffffff; /* جعل القائمة بيضاء لسهولة القراءة */
+    color: #146c43;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    min-width: 200px; /* عرض أدنى مناسب */
+}
+
+.activity-name-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 10px;
+    border-radius: 6px;
+    margin-right: 5px;
+    font-weight: 300;
+}
+//----------------------------
+    </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    :root {
+        --admin-primary: #2c3e50;
+        --admin-secondary: #34495e;
+        --admin-accent: #3498db;
+        --admin-success: #27ae60;
+        --admin-warning: #f39c12;
+        --admin-danger: #e74c3c;
+        --admin-light: #ecf0f1;
+    }
+    
+    .admin-dashboard-wrapper {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--admin-light);
+        z-index: 99999;
+        overflow-y: auto;
+        font-family: 'Tajawal', sans-serif;
+    }
+    
+    .admin-sidebar {
+        width: 250px;
+        background: var(--admin-primary);
+        height: 100vh;
+        position: fixed;
+        color: white;
+        padding: 20px 0;
+    }
+    
+    .admin-main {
+        margin-right: 250px;
+        padding: 30px;
+    }
+    
+    .sidebar-link {
+        display: block;
+        padding: 15px 25px;
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        transition: 0.3s;
+        border-right: 4px solid transparent;
+    }
+    
+    .sidebar-link:hover, .sidebar-link.active {
+        background: var(--admin-secondary);
+        color: white;
+        border-right-color: var(--admin-accent);
+    }
+    
+    .sidebar-link i {
+        margin-left: 10px;
+    }
+    
+    .stat-card-bi {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        border-bottom: 5px solid var(--admin-accent);
+        transition: 0.3s;
+    }
+    
+    .stat-card-bi:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-card-bi h3 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 10px 0;
+        color: var(--admin-primary);
+    }
+    
+    .stat-card-bi p {
+        color: #7f8c8d;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .bi-chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
+    }
+    
+    .smart-tab-btn {
+        padding: 12px 25px;
+        border: none;
+        background: #dcdde1;
+        cursor: pointer;
+        font-weight: bold;
+        border-radius: 8px;
+        margin-left: 10px;
+        transition: 0.3s;
+    }
+    
+    .smart-tab-btn.active {
+        background: var(--admin-accent);
+        color: white;
+    }
+    
+    .smart-tab-content {
+        display: none;
+        padding: 30px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        margin-top: 20px;
+    }
+    
+    .smart-tab-content.active {
+        display: block;
+        animation: fadeIn 0.5s;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .admin-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 10px;
+    }
+    
+    .admin-table tr {
+        background: white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    }
+    
+    .admin-table td, .admin-table th {
+        padding: 15px;
+        vertical-align: middle;
+    }
+    
+    .admin-table tr td:first-child { border-radius: 0 10px 10px 0; }
+    .admin-table tr td:last-child { border-radius: 10px 0 0 10px; }
+    
+    .badge-status {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .badge-licensed { background: #dff9fb; color: #0984e3; }
+    .badge-pending { background: #fff5f5; color: #e84118; }
+    
+    .btn-close-admin {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: var(--admin-danger);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        z-index: 100000;
+    }
+
+
+/* إخفاء select الأصلي وإظهار القائمة البديلة */
+/* القائمة المخصصة - الإصدار النهائي */
+.select-wrapper-custom {
+    position: relative;
+}
+
+.select-wrapper-custom select {
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: all !important;
+}
+
+.custom-dropdown-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    background: transparent;
+    z-index: 1;
+    cursor: pointer;
+}
+
+.custom-dropdown-options {
+    position: absolute;
+    top: calc(100% + 2px);
+    right: 0;
+    left: 0;
+    background: white;
+    border: 2px solid #0d6efd;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 9999;
+    display: none;
+}
+
+.custom-dropdown-options.show {
+    display: block;
+}
+
+.custom-dropdown-option {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #e9ecef;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.7;
+    transition: background 0.15s;
+    text-align: right;
+}
+
+.custom-dropdown-option:hover {
+    background: #e7f3fe;
+    border-right: 4px solid #0d6efd;
+}
+
+.custom-dropdown-option.selected {
+    background: #d4edff;
+    font-weight: bold;
+}
+
+.custom-dropdown-option:last-child {
+    border-bottom: none;
+}
+
+
+
+/* تأثيرات شاشة تسجيل الخروج */
+.logout-card {
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    transform: scale(0.8);
+    opacity: 0;
+}
+
+@keyframes popIn {
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+
+</style>
+
+
+    <style>
+        .bi-dashboard-new { background: #f0f2f5; padding: 20px; border-radius: 15px; }
+        .kpi-grid-new { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .kpi-card-new { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-top: 4px solid #0d6efd; transition: transform 0.3s ease; }
+        .kpi-card-new:hover { transform: translateY(-5px); }
+        .kpi-card-new i { font-size: 2rem; color: #0d6efd; margin-bottom: 10px; }
+        .kpi-card-new h3 { font-size: 1.8rem; font-weight: 800; margin: 5px 0; }
+        .kpi-card-new p { color: #6c757d; font-size: 0.9rem; margin: 0; }
+        .charts-grid-new { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+        .chart-card-new { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .chart-card-new h5 { font-weight: 700; margin-bottom: 20px; color: #333; border-bottom: 2px solid #f0f2f5; padding-bottom: 10px; }
+        .chart-container-new { position: relative; height: 300px; }
+        .filter-bar-new { background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .status-badge-new { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    </style>
+    </head>
+<body>
+<div id="adminDashboardBI" class="admin-dashboard-wrapper">
+    <button class="btn-close-admin" onclick="closeAdminBI()"><i class="fas fa-times"></i> إغلاق لوحة التحكم</button>
+    
+    <div class="admin-sidebar">
+        <div class="text-center mb-5">
+            <h4 class="fw-bold">منظومه المواقف التنفيذية للشركات</h4>
+            <small class="opacity-50">نظام دعم اتخاذ القرار</small>
+        </div>
+        <a href="#" class="sidebar-link active" onclick="showAdminSection('bi-reports', this)"><i class="fas fa-chart-line"></i> التقارير والرسوم البيانية</a>
+        <a href="#" class="sidebar-link" onclick="showAdminSection('bi-add', this)"><i class="fas fa-plus-circle"></i> إضافة نشاط جديد</a>
+        <a href="#" class="sidebar-link" onclick="showAdminSection('bi-edit', this)"><i class="fas fa-edit"></i> تعديل الأنشطة</a>
+        <a href="#" class="sidebar-link" onclick="showAdminSection('bi-settings', this)"><i class="fas fa-cog"></i> إعدادات النظام</a>
+    </div>
+    
+    <div class="admin-main">
+        <!-- قسم التقارير -->
+        
+        <div id="bi-reports" class="admin-section active">
+            <div class="filter-bar-new">
+                <label class="fw-bold"><i class="fas fa-filter"></i> تصفية حسب الفترة:</label>
+                <select class="form-select w-auto" id="periodFilterBI" onchange="updateBIChartsByPeriod()">
+                    <option value="week">هذا الأسبوع</option>
+                    <option value="month" selected>هذا الشهر</option>
+                    <option value="quarter">هذا الربع</option>
+                    <option value="year">هذا العام</option>
+                </select>
+                <div class="ms-auto">
+                    <span class="badge bg-primary p-2">آخر تحديث: الآن</span>
+                </div>
+            </div>
+
+            <div class="kpi-grid-new">
+                <div class="kpi-card-new">
+                    <i class="fas fa-building"></i>
+                    <p>إجمالي الشركات</p>
+                    <h3 id="kpi-total-companies">2,847</h3>
+                    <div class="mt-2">
+                        <span class="status-badge-new bg-success-subtle text-success">جادة: 2,105</span>
+                        <span class="status-badge-new bg-danger-subtle text-danger">متوقفة: 542</span>
+                    </div>
+                </div>
+                <div class="kpi-card-new" style="border-top-color: #27ae60;">
+                    <i class="fas fa-chart-line"></i>
+                    <p>معدل النمو</p>
+                    <h3 id="kpi-growth-rate">18.5%</h3>
+                    <p class="text-success"><i class="fas fa-arrow-up"></i> مستقر</p>
+                </div>
+                <div class="kpi-card-new" style="border-top-color: #f39c12;">
+                    <i class="fas fa-bolt"></i>
+                    <p>استهلاك الطاقة</p>
+                    <h3 id="kpi-energy">4,250</h3>
+                    <p>ميجاوات/ساعة</p>
+                </div>
+                <div class="kpi-card-new" style="border-top-color: #e74c3c;">
+                    <i class="fas fa-trash-alt"></i>
+                    <p>إجمالي المخلفات</p>
+                    <h3 id="kpi-waste">12,450</h3>
+                    <p>طن سنوياً</p>
+                </div>
+            </div>
+
+            <div class="charts-grid-new">
+                <div class="chart-card-new">
+                    <h5><i class="fas fa-chart-area me-2"></i>مؤشر نمو الشركات والأنشطة</h5>
+                    <div class="chart-container-new">
+                        <canvas id="mainGrowthChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card-new">
+                    <h5><i class="fas fa-chart-pie me-2"></i>توزيع حالة الشركات التشغيلية</h5>
+                    <div class="chart-container-new">
+                        <canvas id="statusChartBI"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card-new">
+                    <h5><i class="fas fa-industry me-2"></i>توزيع الأنشطة الصناعية</h5>
+                    <div class="chart-container-new">
+                        <canvas id="activitiesChartBI"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card-new">
+                    <h5><i class="fas fa-plug me-2"></i>تحليل استهلاك الطاقة</h5>
+                    <div class="chart-container-new">
+                        <canvas id="energyChartBI"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card-new">
+                    <h5><i class="fas fa-ship me-2"></i>نسبة استيراد الآلات والخامات</h5>
+                    <div class="chart-container-new">
+                        <canvas id="importsChartBI"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card-new">
+                    <h5><i class="fas fa-recycle me-2"></i>تصنيف وكميات المخلفات</h5>
+                    <div class="chart-container-new">
+                        <canvas id="wasteChartBI"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+            
+        
+        <!-- قسم الإضافة -->
+        <div id="bi-add" class="admin-section" style="display:none;">
+            <h2 class="fw-bold mb-4">إضافة نشاط عبقري جديد</h2>
+            
+            <div class="d-flex mb-4">
+                <button class="smart-tab-btn active" onclick="switchSmartTab('s1', this)">1. النشاط والترخيص</button>
+                <button class="smart-tab-btn" onclick="switchSmartTab('s2', this)">2. التأكد والتحقق</button>
+                <button class="smart-tab-btn" onclick="switchSmartTab('s3', this)">3. البيانات التفصيلية</button>
+                <button class="smart-tab-btn" onclick="switchSmartTab('s4', this)">4. المراحل الإنتاجية</button>
+                <button class="smart-tab-btn" onclick="switchSmartTab('s5', this)">5. خريطة العمليات</button>
+            </div>
+            
+            <form id="smartAddForm">
+                <div id="s1" class="smart-tab-content active">
+                    <h4 class="text-primary mb-4">أولاً: الأنشطة الخاضعة للترخيص</h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">اسم النشاط</label>
+                            <input type="text" id="bi-name" class="form-control form-control-lg" placeholder="مثال: مصنع كابلات">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">اسم الترخيص</label>
+                            <input type="text" id="bi-lic-name" class="form-control form-control-lg">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الجهة الصادرة للتراخيص</label>
+                            <input type="text" id="bi-auth" class="form-control form-control-lg">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">موقع ممارسة النشاط</label>
+                            <input type="text" id="bi-loc" class="form-control form-control-lg">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">السند التشريعي</label>
+                            <input type="text" id="bi-leg" class="form-control form-control-lg">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">اسم الدليل</label>
+                            <input type="text" id="bi-guid" class="form-control form-control-lg">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="s2" class="smart-tab-content">
+                    <h4 class="text-primary mb-4">ثانياً: وفقاً لهذا النشاط يرجى التأكد من:</h4>
+                    <textarea id="bi-check" class="form-control" rows="10" placeholder="اكتب نقاط التحقق هنا..."></textarea>
+                </div>
+                
+                <div id="s3" class="smart-tab-content">
+                    <h4 class="text-primary mb-4">ثالثاً: البيانات التفصيلية للتراخيص والموافقات</h4>
+                    <textarea id="bi-details" class="form-control" rows="10"></textarea>
+                </div>
+                
+                <div id="s4" class="smart-tab-content">
+                    <h4 class="text-primary mb-4">رابعاً: المراحل الإنتاجية أو الخدمية</h4>
+                    <textarea id="bi-stages" class="form-control" rows="10" placeholder="اكتب كل مرحلة في سطر منفصل..."></textarea>
+                </div>
+              
+                
+                <div class="mt-4 text-end">
+                    <button type="button" onclick="saveSmartActivityBI()" class="btn btn-primary btn-lg px-5 shadow">حفظ النشاط العبقري <i class="fas fa-save"></i></button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- قسم التعديل -->
+        <div id="bi-edit" class="admin-section" style="display:none;">
+            <h2 class="fw-bold mb-4">إدارة وتعديل الأنشطة</h2>
+            <div class="card shadow-sm p-4">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>اسم النشاط</th>
+                                <th>الجهة الصادرة</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bi-activities-list">
+                            <!-- سيتم ملؤه برمجياً -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="container">
+    
+<!-- شاشة تسجيل الخروج  -->
+    <div id="step-logout" class="step-section">
+        <div class="row justify-content-center align-items-center" style="min-height: 60vh;">
+            <div class="col-md-6 text-center">
+                <div class="logout-card p-5 bg-white shadow-lg rounded-4" style="border-top: 5px solid #0d6efd;">
+                    <div class="mb-4">
+                        <i class="bi bi-shield-lock-fill text-primary" style="font-size: 5rem; text-shadow: 0 4px 15px rgba(13,110,253,0.3);"></i>
+                    </div>
+                    <h2 class="fw-bold text-dark mb-3">تم تسجيل الخروج بنجاح</h2>
+                    <p class="text-muted mb-4 fs-5">شكراً لاستخدامكم المنظومة الرقمية لحوكمة وإدارة أعمال لجان المعاينة.</p>
+                    
+                    <div class="d-flex justify-content-center mb-4">
+                        <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;">
+                            <span class="visually-hidden">جاري التحميل...</span>
+                        </div>
+                        <span class="ms-2 text-muted fw-bold">&nbsp; جاري تأمين وحفظ البيانات...</span>
+                    </div>
+
+                    <button onclick="goToLogin()" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
+                        <i class="bi bi-box-arrow-in-right me-2"></i> العودة لصفحة تسجيل الدخول
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="step1" class="step-section active">
+        <div class="text-center mb-5 pt-4">
+            <h1 class="text-primary fw-bold">منظومة لجان المعاينة</h1>
+            <p class="text-muted">منظومة رقمية لحوكمة وإدارة أعمال لجان المعاينة، تدقيق البيانات، وتقديم رؤى تحليلية لدعم اتخاذ القرار</p>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card p-4 border-0 shadow-sm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الكود الوظيفي</label>
+                        <input type="text" class="form-control form-control-lg" placeholder="أدخل الكود الوظيفي">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">كلمة المرور</label>
+                        <input type="password" class="form-control form-control-lg" placeholder="*********">
+                    </div>
+                    <button type="button" onclick="handleLogin()" class="btn btn-primary btn-lg w-100">تسجيل الدخول إلى المنظومة</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div id="step2" class="step-section">
+    <div class="header-box">
+        <h4>بيانات القرار والتشكيل</h4>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="info-label">رقم القرار (أدخل: 2025, 2026, 2027)</label>
+                    <div class="input-group">
+                        <input type="number" id="decisionNoInput" class="form-control" placeholder="رقم" oninput="loadCompanyData()">
+                        <select class="form-select" style="max-width: 80px;">
+                            <option>م</option><option>س</option><option>ع</option><option>ك</option><option>ل</option>
+                        </select>
+                    </div>
+                </div>
+                
+            </div>
+            <div id="decisionDateLabel" class="result-label"></div> 
+        </div>
+    </div>
+
+    <div class="card mb-3 bg-light border-0 p-3">
+        <div class="card mb-4 p-3 border-primary" style="border-right: 4px solid #0d6efd;">
+            <div class="col-md-12">
+                <h6 class="text-primary border-bottom pb-2">رئيس اللجنة</h6>
+                <div class="row g-2">
+                    <div class="col-md-5"><label class="info-label">الاسم</label><input type="text" id="headName" class="form-control" value="اسم افتراضي"></div>
+                    <div class="col-md-3"><label class="info-label">كود وظيفي</label><input type="text" id="headCode" class="form-control text-center" value="0000" maxlength="4"></div>
+                    <div class="col-md-4"><label class="info-label">رقم الهاتف</label><input type="text" id="headPhone" class="form-control text-center" value="01xxxxxxxxx"></div>
+                </div>
+            </div>
+            <div class="col-md-12 mt-3">
+                <h6 class="text-primary border-bottom pb-2">عضو اللجنة</h6>
+                <div class="row g-2">
+                    <div class="col-md-5"><label class="info-label">الاسم</label><input type="text" id="memberName" class="form-control" value="اسم افتراضي"></div>
+                    <div class="col-md-3"><label class="info-label">كود وظيفي</label><input type="text" id="memberCode" class="form-control text-center" value="0000" maxlength="4"></div>
+                    <div class="col-md-4"><label class="info-label">رقم الهاتف</label><input type="text" id="memberPhone" class="form-control text-center" value="01xxxxxxxxx"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rep-box mb-3">
+        <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="includeRep" onchange="toggleRepDetails()">
+            <label class="form-check-label fw-bold text-primary" for="includeRep">تضمين "ممثل عن جهة" في التقرير</label>
+        </div>
+        <div id="repDetails" style="display: none;" class="card bg-light border-0 p-3 mb-3">
+            <div class="row g-2">
+                <div class="col-md-4"><label class="info-label">الجهة</label><select class="form-select"><option>--  اختر الممثل --</option><option>التنمية الصناعية</option><option> وزارة الزراعة</option><option>وزارة الصحة </option>وزارة الاتصالات<option>الادارة الغذائية</option><option>الادارة العامة لصناعة الغزل والنسيج والملابس الجاهزة</option><option>الادارة العامة للصناعات والمخازن الكيماوية والجلود</option><option>وزارة النقل</option><option>وزارة الاتصالات</option><option>باقي الجهات</option></select></div>
+                <div class="col-md-4"><label class="info-label">الاسم</label><input type="text" class="form-control" placeholder="اسم الممثل"></div>
+                <div class="col-md-4"><label class="info-label">رقم الهاتف</label><input type="text" class="form-control" placeholder="01xxxxxxxxx"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3 bg-light border-0 p-3">
+        <div class="row g-3">
+            <div class="card mb-4 p-3 border-info" style="border-right: 4px solid #0dcaf0;">
+                <h6 class="text-info border-bottom pb-2"><i class="bi bi-person-badge me-2"></i>ممثل الشركة</h6>
+                <div class="row g-2">
+                    <div class="col-md-7">
+                        <label class="info-label">الاسم</label>
+                        <input type="text" class="form-control" id="companyRepName" placeholder="اسم ممثل الشركة">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="info-label">رقم الهاتف</label>
+                        <input type="text" class="form-control" id="companyRepPhone" placeholder="01xxxxxxxxx">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4 p-3 border-primary" style="border-right: 4px solid #0d6efd;">
+
+                <h6 class="text-primary border-bottom pb-2"><i class="bi bi-headset me-2"></i>ممثل العلاقات العامة</h6>
+                <div class="row g-2 mb-2">
+                    <div class="col-md-6">
+                        <label class="info-label">الاسم</label>
+                        <input type="text" class="form-control" id="prRepName" placeholder="اسم ممثل العلاقات العامة">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="info-label">رقم الهاتف / واتساب</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="prRepPhone" placeholder="01xxxxxxxxx" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/\s+/g, '')">
+                            <button class="btn btn-success btn-sm" type="button" id="whatsappBtn" onclick="sendWhatsAppMessage()">
+                                <i class="bi bi-whatsapp"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="info-label">يوم المعاينة</label>
+                        <input type="date" class="form-control" id="inspectionDate">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="info-label">ساعة المعاينة</label>
+                        <input type="time" class="form-control" id="inspectionTime">
+                    </div>
+                </div>
+                <div class="mt-1 text-center">
+                    <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-info-circle me-1"></i>سيتم استخدام هذه البيانات في رسالة الواتساب</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div id="companyDataArea">
+        <h5 class="text-dark mb-3">بيانات الشركة</h5>
+        <div class="cert-box">
+            <label class="info-label text-primary mb-2">بيان شهادة التأسيس:</label>
+            <p class="mb-0 fw-bold" id="certText">صدرت شهادة الهيئة المرخصة بتأسيس الشركة محل العرض برقم <span class="text-danger">-----</span> وتاريخ <span class="text-danger">--/--/----</span></p>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-12"><label class="info-label">اسم الشركة</label><input type="text" id="companyName" class="form-control auto-filled"></div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-4"><label class="info-label">اللجنة</label><input type="text" id="committeeType" class="form-control auto-filled"></div>
+            <div class="col-md-4"><label class="info-label">الشكل القانوني</label><input type="text" id="legalForm" class="form-control auto-filled"></div>
+            <div class="col-md-4"><label class="info-label">رأس المال</label><input type="text" id="capital" class="form-control"></div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6"><label class="info-label">قانون الشركة</label><input type="text" id="law" class="form-control auto-filled"></div>
+            <div class="col-md-6"><label class="info-label">النشاط</label><textarea id="activity" class="form-control auto-filled" rows="2"></textarea></div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-12"><label class="info-label">المركز الرئيسي وموقع ممارسة النشاط</label><input type="text" id="address" class="form-control auto-filled"></div>
+        </div>
+    </div>
+
+    <div class="additional-actions-container mb-4">
+    <div class="row g-3 justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <button type="button" class="btn btn-similar-activity w-100 h-100 py-2 action-card">
+                <div class="d-flex align-items-center justify-content-center">
+                    <i class="bi bi-bar-chart-fill fs-5 me-3"></i>
+                    <div class="text-start">
+                        <div class="fw-bold fs-7">شركات بنشاط مماثل</div>
+                        <small class="opacity-75">عرض الشركات</small>
+                    </div>
+                </div>
+            </button>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <button type="button" class="btn btn-committee-registry w-100 h-100 py-2 action-card">
+                <div class="d-flex align-items-center justify-content-center">
+                    <i class="bi bi-calendar-check-fill fs-5 me-3"></i>
+                    <div class="text-start">
+                        <div class="fw-bold fs-7">سجل اللجان للشركة</div>
+                        <small class="opacity-75">عرض اللجان السابقه</small>
+                    </div>
+                </div>
+            </button>
+        </div>
+    </div>
+</div>
+
+    <div class="nav-buttons">
+        <button onclick="handleLogout()" class="btn btn-outline-danger fw-bold">
+    <i class="bi bi-box-arrow-right me-1"></i> تسجيل خروج محمي
+</button>
+        <button onclick="nextStep(3)" class="btn btn-primary">حفظ والانتقال للتالي</button>
+    </div>
+</div>
+    <div id="step3" class="step-section">
+        <div class="header-box">
+            <h4> سداد رسم اللجنة والسجل التجاري والملف الضريبي والتعديلات</h4>
+        </div>
+
+        <div class="card mb-4 border-primary">
+            <div class="card-header bg-transparent text-primary fw-bold">أولاً: بيانات سداد رسوم اللجنة</div>
+            <div class="card-body bg-light">
+                <div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <label class="info-label">قامت الشركة بسداد مبلغ</label>
+        <div class="input-group">
+            <input type="number" class="form-control" id="feeNumeric" oninput="updateFeeWords()" placeholder="0000">
+            <span class="input-group-text">جنيهاً</span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <label class="info-label">القيمة بالحروف</label>
+        <input type="text" class="form-control" id="feeWords" placeholder="فقط ..." readonly>
+    </div>
+    <div class="col-md-4">
+        <label class="info-label">تاريخ السداد</label>
+        <input type="date" class="form-control">
+    </div>
+</div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="info-label">رقم الإيصال</label>
+                        <input type="text" class="form-control" placeholder="أدخل رقم الإيصال">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 border-success">
+    <div class="card-header bg-transparent text-success fw-bold">ثانياً: بيانات السجل التجاري</div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="info-label">رقم السجل التجاري (6 أرقام)</label>
+                <input type="text" class="form-control" placeholder="ادخل رقم السجل التجاري" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6);">
+            </div>
+            <div class="col-md-4">
+                <label class="info-label">مكتب سجل تجاري</label>
+                <select class="form-select"><option value="">-- اختر المكتب --</option><option>استثمار القاهرة</option><option>استثمار العاشر من رمضان</option><option>استثمار الاسكندرية</option></select>
+            </div>
+            <div class="col-md-4">
+                <label class="info-label">ساري حتى</label>
+                <input type="date" class="form-control" id="commercialRegisterExpiry" onchange="checkExpiryDate(this, 'commercialRegisterAlert')">
+                <div id="commercialRegisterAlert" class="mt-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <div class="card mb-3 border-warning">
+    <div class="card-header bg-transparent text-dark fw-bold">ثالثاً: بيانات الملف الضريبي</div>
+    <div class="card-body">
+        <h6 class="text-muted border-bottom pb-2">أ- البطاقة الضريبية العامة</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-5">
+                <label class="info-label">رقم البطاقة الضريبية (XXX-XXX-XXX)</label>
+                <div class="input-group tax-inputs" dir="ltr">
+                    <input type="number" pattern="[0-9]*" inputmode="numeric" id="tax1" class="form-control" maxlength="3" placeholder="000" 
+                           onkeyup="moveFocus(this, 'tax2')" 
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3); syncVatNumber()">
+                    <span class="input-group-text fw-bold">-</span>
+                    <input type="number" pattern="[0-9]*" inputmode="numeric" id="tax2" class="form-control" maxlength="3" placeholder="000" 
+                           onkeyup="moveFocus(this, 'tax3')" 
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3); syncVatNumber()">
+                    <span class="input-group-text fw-bold">-</span>
+                    <input type="number" pattern="[0-9]*" inputmode="numeric" id="tax3" class="form-control" maxlength="3" placeholder="000" 
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,3); syncVatNumber()">
+                </div>
+            </div>
+            <div class="col-md-3"><label class="info-label">تاريخ الإصدار</label><input type="date" class="form-control"></div>
+            <div class="col-md-4">
+            <label class="info-label">تاريخ الانتهاء</label>
+            <input type="date" class="form-control" id="taxCardExpiry" onchange="checkExpiryDate(this, 'taxCardAlert')">
+            <div id="taxCardAlert" class="mt-2"></div>
+             </div>
+               </div>
+
+        <h6 class="text-muted border-bottom pb-2">ب- الضريبة على القيمة المضافة</h6>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="vatCheck" onchange="toggleVatSection()">
+            <label class="form-check-label fw-bold" for="vatCheck">الشركة مسجلة في ضريبة القيمة المضافة</label>
+        </div>
+        <div id="vatSection" style="display:none; background-color: #fff3cd; padding: 15px; border-radius: 5px;">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="info-label">رقم تسجيل القيمة المضافة</label>
+                    <input type="text" id="vatNumber" class="form-control bg-white fw-bold text-center" readonly>
+                    <small class="text-success">* تم التجميع تلقائياً</small>
+                </div>
+                <div class="col-md-4"><label class="info-label">تاريخ صدور الشهادة</label><input type="date" class="form-control"></div>
+                <div class="col-md-4"><label class="info-label">تاريخ الانتهاء</label><input type="date" class="form-control"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        <!-- بداية قسم: رابعاً: تعديلات بيانات الشركة -->
+       <!-- قسم تعديلات بيانات الشركة المحسّن -->
+<div class="card mb-3 border-info">
+    <div class="card-header bg-transparent text-info fw-bold">رابعاً: تعديلات بيانات الشركة</div>
+    <div class="card-body">
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="companyModificationsCheck" onchange="toggleSection('companyModificationsDetails', this.checked)">
+            <label class="form-check-label fw-bold" for="companyModificationsCheck">
+                تضمن التقرير بيانات تعديلات الشركة
+            </label>
+        </div>
+
+        <div id="companyModificationsDetails" style="display: none;">
+            <!-- تعديل اسم الشركة -->
+            <div class="modification-card mb-3 p-3 border rounded">
+                <div class="form-check mb-2">
+                    <input class="form-check-input modification-checkbox" type="checkbox" id="modifyNameCheck" onchange="toggleModificationDetails('modifyNameDetails', this.checked)">
+                    <label class="form-check-label fw-bold text-primary" for="modifyNameCheck">تعديل اسم الشركة</label>
+                </div>
+                <div id="modifyNameDetails" class="modification-details" style="display:none;">
+                    <div class="modification-item mb-2 p-2 bg-light rounded">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-4">
+                                <label class="info-label small">رقم المادة</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="ادخل رقم المادة">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="info-label small">بتاريخ</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="addModificationItem('modifyNameContainer', 'modifyName')">+ إضافة تعديل</button>
+                            </div>
+                        </div>
+                        <!-- حقل الملاحظات المضاف -->
+                        <div class="row g-2 mt-2">
+                            <div class="col-12">
+                                <label class="info-label small">ملاحظات</label>
+                                <textarea class="form-control form-control-sm" rows="2" placeholder="أدخل أي ملاحظات حول هذا التعديل..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modifyNameContainer"></div>
+                </div>
+            </div>
+
+            <!-- تعديل عنوان الشركة -->
+            <div class="modification-card mb-3 p-3 border rounded">
+                <div class="form-check mb-2">
+                    <input class="form-check-input modification-checkbox" type="checkbox" id="modifyAddressCheck" onchange="toggleModificationDetails('modifyAddressDetails', this.checked)">
+                    <label class="form-check-label fw-bold text-primary" for="modifyAddressCheck">تعديل عنوان الشركة</label>
+                </div>
+                <div id="modifyAddressDetails" class="modification-details" style="display:none;">
+                    <div class="modification-item mb-2 p-2 bg-light rounded">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-4">
+                                <label class="info-label small">رقم المادة</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="ادخل رقم المادة">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="info-label small">بتاريخ</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="addModificationItem('modifyAddressContainer', 'modifyAddress')">+ إضافة تعديل</button>
+                            </div>
+                        </div>
+                        <!-- حقل الملاحظات المضاف -->
+                        <div class="row g-2 mt-2">
+                            <div class="col-12">
+                                <label class="info-label small">ملاحظات</label>
+                                <textarea class="form-control form-control-sm" rows="2" placeholder="أدخل أي ملاحظات حول هذا التعديل..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modifyAddressContainer"></div>
+                </div>
+            </div>
+
+            <!-- تعديل نشاط الشركة -->
+            <div class="modification-card mb-3 p-3 border rounded">
+                <div class="form-check mb-2">
+                    <input class="form-check-input modification-checkbox" type="checkbox" id="modifyActivityCheck" onchange="toggleModificationDetails('modifyActivityDetails', this.checked)">
+                    <label class="form-check-label fw-bold text-primary" for="modifyActivityCheck">تعديل نشاط الشركة</label>
+                </div>
+                <div id="modifyActivityDetails" class="modification-details" style="display:none;">
+                    <div class="modification-item mb-2 p-2 bg-light rounded">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-4">
+                                <label class="info-label small">رقم المادة</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="ادخل رقم المادة">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="info-label small">بتاريخ</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="addModificationItem('modifyActivityContainer', 'modifyActivity')">+ إضافة تعديل</button>
+                            </div>
+                        </div>
+                        <!-- حقل الملاحظات المضاف -->
+                        <div class="row g-2 mt-2">
+                            <div class="col-12">
+                                <label class="info-label small">ملاحظات</label>
+                                <textarea class="form-control form-control-sm" rows="2" placeholder="أدخل أي ملاحظات حول هذا التعديل..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modifyActivityContainer"></div>
+                </div>
+            </div>
+
+            <!-- تعديل رأس المال -->
+            <div class="modification-card mb-3 p-3 border rounded">
+                <div class="form-check mb-2">
+                    <input class="form-check-input modification-checkbox" type="checkbox" id="modifyCapitalCheck" onchange="toggleModificationDetails('modifyCapitalDetails', this.checked)">
+                    <label class="form-check-label fw-bold text-primary" for="modifyCapitalCheck">تعديل رأس المال</label>
+                </div>
+                <div id="modifyCapitalDetails" class="modification-details" style="display:none;">
+                    <div class="modification-item mb-2 p-2 bg-light rounded">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-4">
+                                <label class="info-label small">رقم المادة</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="ادخل رقم المادة">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="info-label small">بتاريخ</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="addModificationItem('modifyCapitalContainer', 'modifyCapital')">+ إضافة تعديل</button>
+                            </div>
+                        </div>
+                        <!-- حقل الملاحظات المضاف -->
+                        <div class="row g-2 mt-2">
+                            <div class="col-12">
+                                <label class="info-label small">ملاحظات</label>
+                                <textarea class="form-control form-control-sm" rows="2" placeholder="أدخل أي ملاحظات حول هذا التعديل..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modifyCapitalContainer"></div>
+                </div>
+            </div>
+
+            <!-- تعديل الشركاء/المساهمين -->
+            <div class="modification-card mb-3 p-3 border rounded">
+                <div class="form-check mb-2">
+                    <input class="form-check-input modification-checkbox" type="checkbox" id="modifyPartnersCheck" onchange="toggleModificationDetails('modifyPartnersDetails', this.checked)">
+                    <label class="form-check-label fw-bold text-primary" for="modifyPartnersCheck">تعديل الشركاء/المساهمين</label>
+                </div>
+                <div id="modifyPartnersDetails" class="modification-details" style="display:none;">
+                    <div class="modification-item mb-2 p-2 bg-light rounded">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-4">
+                                <label class="info-label small">رقم المادة</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="ادخل رقم المادة">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="info-label small">بتاريخ</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="addModificationItem('modifyPartnersContainer', 'modifyPartners')">+ إضافة تعديل</button>
+                            </div>
+                        </div>
+                        <!-- حقل الملاحظات المضاف -->
+                        <div class="row g-2 mt-2">
+                            <div class="col-12">
+                                <label class="info-label small">ملاحظات</label>
+                                <textarea class="form-control form-control-sm" rows="2" placeholder="أدخل أي ملاحظات حول هذا التعديل..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modifyPartnersContainer"></div>
+                </div>
+            </div>
+
+            <!-- تعديل صلاحيات الاعضاء/المديرين -->
+            <div class="modification-card mb-3 p-3 border rounded">
+                <div class="form-check mb-2">
+                    <input class="form-check-input modification-checkbox" type="checkbox" id="modifyAuthoritiesCheck" onchange="toggleModificationDetails('modifyAuthoritiesDetails', this.checked)">
+                    <label class="form-check-label fw-bold text-primary" for="modifyAuthoritiesCheck">تعديل صلاحيات الاعضاء/المديرين</label>
+                </div>
+                <div id="modifyAuthoritiesDetails" class="modification-details" style="display:none;">
+                    <div class="modification-item mb-2 p-2 bg-light rounded">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-4">
+                                <label class="info-label small">رقم المادة</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="ادخل رقم المادة">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="info-label small">بتاريخ</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="addModificationItem('modifyAuthoritiesContainer', 'modifyAuthorities')">+ إضافة تعديل</button>
+                            </div>
+                        </div>
+                        <!-- حقل الملاحظات المضاف -->
+                        <div class="row g-2 mt-2">
+                            <div class="col-12">
+                                <label class="info-label small">ملاحظات</label>
+                                <textarea class="form-control form-control-sm" rows="2" placeholder="أدخل أي ملاحظات حول هذا التعديل..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modifyAuthoritiesContainer"></div>
+                </div>
+            </div>
+
+            <!-- الدخول إلى/الخروج من المظلة القانونية -->
+            <div class="modification-card mb-3 p-3 border rounded">
+                <div class="form-check mb-2">
+                    <input class="form-check-input modification-checkbox" type="checkbox" id="modifyLegalUmbrellaCheck" onchange="toggleModificationDetails('modifyLegalUmbrellaDetails', this.checked)">
+                    <label class="form-check-label fw-bold text-primary" for="modifyLegalUmbrellaCheck">الدخول إلى / الخروج من (المظلة القانونية)</label>
+                </div>
+                <div id="modifyLegalUmbrellaDetails" class="modification-details" style="display:none;">
+                    <div class="modification-item mb-2 p-2 bg-light rounded">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-3">
+                                <label class="info-label small">رقم المادة</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="ادخل رقم المادة">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">بتاريخ</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">نوع التعديل</label>
+                                <select class="form-select form-select-sm">
+                                    <option>الدخول إلى</option>
+                                    <option>الخروج من</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="addModificationItem('modifyLegalUmbrellaContainer', 'modifyLegalUmbrella')">+ إضافة تعديل</button>
+                            </div>
+                        </div>
+                        <!-- حقل الملاحظات المضاف -->
+                        <div class="row g-2 mt-2">
+                            <div class="col-12">
+                                <label class="info-label small">ملاحظات</label>
+                                <textarea class="form-control form-control-sm" rows="2" placeholder="أدخل أي ملاحظات حول هذا التعديل..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modifyLegalUmbrellaContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+        <!-- نهاية قسم: رابعاً: تعديلات بيانات الشركة -->
+		
+		<div class="nav-buttons">
+    <button type="button" onclick="nextStep(2)" class="btn btn-secondary">السابق (بيانات القرار)</button>
+    <button type="button" onclick="nextStep(4)" class="btn btn-primary">حفظ والانتقال للتالي</button>
+</div>
+    </div>
+        <!-- بداية شاشة التراخيص-->
+
+    <div id="step4" class="step-section">
+        <div class="header-box"><h4>تراخيص النشاط</h4></div>
+
+        <hr>
+        <h5 class="text-primary">تحديد نوع النشاط (المطلوب معاينتة)والتراخيص المطلوبة له</h5>
+        
+        <!-- تحسين: إضافة حقل بحث ذكي للنشاط -->
+        <div class="mb-3">
+            <label class="info-label">نوع النشاط</label>
+            
+            <!-- حقل البحث الجديد -->
+            <div class="search-container mb-2">
+                <div class="search-input-group">
+                    <input type="text" id="activityTypeSearch" class="form-control" placeholder="ابحث بالاسم أو اكتب وصف للنشاط...">
+
+                    <div id="activityTypeSearchResults" class="search-results mt-1"></div>
+                </div>
+                <small class="text-muted">يمكنك البحث بأي جزء من اسم النشاط</small>
+            </div>
+            
+            <!-- القائمة المنسدلة الأصلية -->
+            <select id="activityTypeSelect" class="form-select" onchange="updateLicenseRequirements()">
+    <!-- سيتم تعبئة هذا القسم ديناميكياً بواسطة JavaScript -->
+                  </select>
+        </div>
+        
+    <div class="alert alert-info" id="licenseResultArea" style="display:none;">
+    <strong>الانشطة الخاضعة للترخيص:</strong> <span id="actLicense"></span>
+    <hr>
+    <strong>اسم الترخيص:</strong> <span id="reqLicense"></span>
+    <hr>
+    <strong>الجهة الصادرة للتراخيص:</strong> <span id="authLicense"></span>
+    <hr>
+    <strong>موقع ممارسة النشاط:</strong> <span id="reqLocation"></span>
+    <hr>
+     <strong>السند التشريعي:</strong> <span id="legalBasis"></span>
+     <hr>
+     <strong>اسم الدليل:</strong> 
+    <span id="guideNameDisplay"></span> 
+    <span id="guideLinkArea"></span>
+    <hr>
+
+     <div class="technical-notes-container">
+    <div class="technical-notes-header">
+        <span class="technical-notes-title">وفقا لهذا النشاط يرجي التاكد من:</span>
+        <span class="technical-notes-badge" id="activityTypeBadge">--</span>
+    </div>
+    <textarea id="technicalNotesTextarea" class="technical-notes-textarea form-control" 
+              rows="4" placeholder="سيتم تعبئة الملاحظات الفنية تلقائياً عند اختيار النشاط..."></textarea>
+    <div class="technical-notes-hint">
+        <i class="bi bi-info-circle"></i>
+        هذه ملاحظات فنية موصى بها بناءً على الخبرات السابقة لهذا النشاط
+    </div>
+</div>
+</div>
+
+<!-- قسم الحقول الديناميكية للتراخيص -->
+<div class="card mt-4 border-success" id="dynamicLicensesCard" style="display: none;">
+    <div class="card-header bg-success text-white fw-bold">
+        <i class="fas fa-file-contract me-2"></i>
+        البيانات التفصيلية للتراخيص والموافقات
+    </div>
+    <div class="card-body">
+        <p class="text-muted mb-3">يرجى تعبئة البيانات التفصيلية للتراخيص والموافقات التي اطّلعت عليها اللجنة:</p>
+        
+        <div id="dynamicLicensesContainer">
+            <!-- سيتم تعبئة الحقول الديناميكية هنا -->
+        </div>
+        
+        <!-- قالب الحقول الديناميكية -->
+        <template id="licenseFieldTemplate">
+            <div class="license-field-group mb-4 p-3 border rounded bg-light">
+                <div class="form-check mb-2">
+                    <input class="form-check-input license-main-checkbox" type="checkbox">
+                    <label class="form-check-label fw-bold text-primary"></label>
+                </div>
+                <div class="license-details" style="display: none;">
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <label class="info-label small">رقم الرخصة/الموافقة</label>
+                            <input type="text" class="form-control form-control-sm license-number" placeholder="أدخل الرقم">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="info-label small">تاريخ الإصدار</label>
+                            <input type="date" class="form-control form-control-sm license-issue-date">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="info-label small">تاريخ الانتهاء/السريان</label>
+                            <input type="date" class="form-control form-control-sm license-expiry-date">
+                        </div>
+                    </div>
+                    <div class="row g-2 mt-2">
+                        <div class="col-md-12">
+                            <label class="info-label small">ملاحظات إضافية</label>
+                            <textarea class="form-control form-control-sm license-notes" rows="2" placeholder="أي ملاحظات إضافية حول الرخصة..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
+<!-- حقل اختيار لعرض المناطق الصناعية -->
+<div class="simple-divider"></div>
+
+<div class="form-check mb-3 p-3 border rounded-3 bg-light shadow-sm">
+   <input class="form-check-input ms-2" type="checkbox" id="toggleIndustrialAreas">
+   <label class="form-check-label fw-bold text-primary" for="toggleIndustrialAreas">
+        <i class="fas fa-industry me-1"></i> دليل المناطق الصناعية المعتمدة
+   </label>
+   <small class="text-muted d-block mt-1">قم بتفعيل هذا الخيار إذا كان المشروع يقع ضمن إحدى المناطق الصناعية المعتمدة للاطلاع على التفاصيل.</small>
+</div>
+
+<!-- قسم المناطق الصناعية المعتمدة -->
+<div class="card mt-3 mb-4 border-info" id="industrialAreasCard" style="display: none;">
+   <div class="card-header bg-info text-white fw-bold">
+       <i class="fas fa-industry me-2"></i>
+       المناطق الصناعية المعتمدة
+   </div>
+   <div class="card-body p-0">
+       <div id="industrialAreasContent">
+           <!-- محتوى المناطق الصناعية -->
+       </div>
+   </div>
+</div>
+
+<!-- المودال المعدل للمناطق الصناعية (خارج البطاقة) -->
+<div class="industrial-modal-overlay" id="industrial-modal-overlay">
+   <div class="industrial-modal-container">
+       <div class="industrial-modal-header">
+           <h3 class="industrial-modal-title" id="industrial-modal-area-name"></h3>
+           <button class="industrial-modal-close" id="industrial-modal-close">&times;</button>
+       </div>
+       <div class="industrial-modal-body">
+           <div class="industrial-area-details-grid">
+               <div class="industrial-detail-item">
+                   <div class="industrial-detail-label">التبعية</div>
+                   <div class="industrial-detail-value" id="industrial-modal-dependency"></div>
+               </div>
+               <div class="industrial-detail-item">
+                   <div class="industrial-detail-label">المحافظة</div>
+                   <div class="industrial-detail-value" id="industrial-modal-governorate"></div>
+               </div>
+               <div class="industrial-detail-item">
+                   <div class="industrial-detail-label">المساحة (فدان)</div>
+                   <div class="industrial-detail-value" id="industrial-modal-area-size"></div>
+               </div>
+           </div>
+           
+           <div class="industrial-decision-details">
+               <div class="industrial-decision-title"><i class="fas fa-file-contract"></i> قرار الإنشاء</div>
+               <div class="industrial-decision-text" id="industrial-modal-decision"></div>
+           </div>
+           
+           <div class="industrial-map-container">
+               <div id="industrial-area-map"></div>
+               <div class="industrial-map-footer">
+                   <div class="industrial-gafi-logo">الهيئة العامة للاستثمار والمناطق الحرة</div>
+                   <div>مصدر الخريطة: OpenStreetMap</div>
+               </div>
+           </div>
+       </div>
+   </div>
+</div>
+
+
+        <div class="nav-buttons">
+            <button onclick="nextStep(3)" class="btn btn-secondary">السابق</button>
+            <button onclick="nextStep(5)" class="btn btn-primary">حفظ والانتقال للتالي</button>
+        </div>
+    </div>
+
+
+
+
+
+<div id="step5" class="step-section">
+    <div class="header-box">
+        <h4>الفواتير - والقوائم المالية والضريبية</h4>
+    </div>
+
+    <div class="card mb-4 p-3 border-dark">
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="assetsInvoicesCheck" onchange="toggleAssetsInvoicesSection()">
+            <label class="form-check-label fw-bold text-dark" for="assetsInvoicesCheck">
+                1. فواتير شراء الآلات والمعدات
+            </label>
+        </div>
+
+        <div id="assetsInvoicesSection" style="display: none;">
+            <div class="p-3 bg-light border rounded">
+                <div id="assetsInvoicesContainer">
+                    <div class="asset-invoice-item mb-3 p-3 border rounded bg-white">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="info-label small">اسم الآلة</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="أدخل اسم الآلة">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">العدد / الكمية</label>
+                                <input type="number" class="form-control form-control-sm" placeholder="العدد">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">تاريخ شراء الآلة</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">القيمة (جنية)</label>
+                                <input type="number" class="form-control form-control-sm" placeholder="القيمة الإجمالية">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-dark mt-2" onclick="addAssetInvoice()">
+                    <i class="bi bi-plus-circle"></i> إضافة آلة أخرى
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4 p-3 border-primary">
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="purchaseInvoicesCheck" onchange="togglePurchaseInvoicesSection()">
+            <label class="form-check-label fw-bold text-primary" for="purchaseInvoicesCheck">
+                2. فواتير الشراء (الخامات)
+            </label>
+        </div>
+
+        <div id="purchaseInvoicesSection" style="display: none;">
+            <div class="p-3 bg-light border rounded">
+                <div id="purchaseInvoicesContainer">
+                    <div class="purchase-invoice-item mb-3 p-3 border rounded bg-white">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="info-label small">اسم الخامة/المنتج</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="أدخل الاسم">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">الكمية</label>
+                                <input type="number" class="form-control form-control-sm" placeholder="الكمية المشتراة">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">تاريخ الفاتورة</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">القيمة (جنية)</label>
+                                <input type="number" class="form-control form-control-sm" placeholder="القيمة">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-primary mt-2" onclick="addPurchaseInvoice()">
+                    <i class="bi bi-plus-circle"></i> إضافة فاتورة شراء أخرى
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4 p-3 border-success">
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="storeAdditionsCheck" onchange="toggleStoreAdditionsSection()">
+            <label class="form-check-label fw-bold text-success" for="storeAdditionsCheck">
+                3. إذون إضافة منتج تام إلى المخزن
+            </label>
+        </div>
+
+        <div id="storeAdditionsSection" style="display: none;">
+            <div class="p-3 bg-light border rounded">
+                <div id="storeAdditionsContainer">
+                    <div class="store-addition-item mb-3 p-3 border rounded bg-white">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="info-label small">اسم المنتج</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="أدخل اسم المنتج">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">الكمية</label>
+                                <input type="number" class="form-control form-control-sm" placeholder="الكمية المنتجة">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">تاريخ الإذن</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">القيمة (جنية)</label>
+                                <input type="number" class="form-control form-control-sm" placeholder="القيمة">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-success mt-2" onclick="addStoreAddition()">
+                    <i class="bi bi-plus-circle"></i> إضافة إذن إضافة آخر
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4 p-3 border-warning">
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="salesInvoicesCheck" onchange="toggleSalesInvoicesSection()">
+            <label class="form-check-label fw-bold text-warning" for="salesInvoicesCheck">
+                4. فواتير البيع
+            </label>
+        </div>
+
+        <div id="salesInvoicesSection" style="display: none;">
+            <div class="p-3 bg-light border rounded">
+                <div id="salesInvoicesContainer">
+                    <div class="sales-invoice-item mb-3 p-3 border rounded bg-white">
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <label class="info-label small">اسم المنتج</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="اسم المنتج">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="info-label small">رقم الفاتورة</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="الرقم">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="info-label small">الكمية</label>
+                                <input type="number" class="form-control form-control-sm" placeholder="العدد">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="info-label small">التاريخ</label>
+                                <input type="date" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="info-label small">القيمة (جنية)</label>
+                                <input type="number" class="form-control form-control-sm" placeholder="القيمة">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-warning mt-2" onclick="addSalesInvoice()">
+                    <i class="bi bi-plus-circle"></i> إضافة فاتورة بيع أخرى
+                </button>
+            </div>
+        </div>
+    </div>
+ 
+
+    <!-- قسم التوصيات التفاعلي للفواتير -->
+    <div class="card mb-4 border-info">
+        <div class="card-header bg-info text-white fw-bold">
+            <i class="bi bi-lightbulb"></i> توصيات الفواتير 
+        </div>
+        <div class="card-body">
+            <p class="text-muted">سيتم تحليل التواريخ والكميات والقيم المدخلة تلقائياً.</p>
+            <div id="invoiceRecommendations"></div>
+            <button class="btn btn-sm btn-outline-info mt-2" onclick="analyzeInvoices()">
+                <i class="bi bi-graph-up"></i> تحديث التحليل
+            </button>
+        </div>
+    </div>
+ 
+	<div class="section-separator">
+    <div class="separator-wave"></div>
+    <div class="separator-wave"></div>
+    <div class="separator-content">
+        <i class="bi bi-file-earmark-bar-graph"></i>
+        القوائم الماليه والإقرارات الضريبية
+        <i class="bi bi-cash-stack"></i>
+    </div>
+</div>
+
+    <div class="card mb-3 border-secondary">
+        <div class="card-body bg-light">
+            <div class="d-flex align-items-center flex-wrap mb-2">
+                <div class="form-check ms-2">
+                    <input class="form-check-input" type="checkbox" id="financialStmtCheck" onchange="toggleSection('financialStmtDetails', this.checked)">
+                    <label class="form-check-label fw-bold" for="financialStmtCheck">
+                         القوائم المالية للشركة عن العام المالي
+                    </label>
+                </div>
+                <input type="date" class="form-control form-control-sm w-auto d-inline-block">
+            </div>
+
+            <div id="financialStmtDetails" style="display: none; padding-right: 1.5rem;">
+                <div class="row g-3 mt-1">
+                    <div class="col-md-4">
+                        <label class="small text-muted">مخزون بقيمة</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="valInventory" class="form-control financial-input" placeholder="القيمة" oninput="runFinancialAnalysis()">
+                            <span class="input-group-text">جنيه مصري</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small text-muted">مدينون وأرصدة مدينة بمبلغ</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="valDebtors" class="form-control financial-input" placeholder="القيمة" oninput="runFinancialAnalysis()">
+                            <span class="input-group-text">جنيه مصري</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="small text-muted">دائنون وأرصدة دائنة</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="valCreditors" class="form-control financial-input" placeholder="القيمة" oninput="runFinancialAnalysis()">
+                            <span class="input-group-text">جنيه مصري</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3 border-secondary">
+        <div class="card-body bg-light">
+            <div class="d-flex align-items-center flex-wrap mb-2">
+                <div class="form-check ms-2">
+                    <input class="form-check-input" type="checkbox" id="incomeCheck" onchange="toggleSection('incomeDetails', this.checked)">
+                    <label class="form-check-label fw-bold" for="incomeCheck">
+                        قائمة الدخل عن الفترة المالية من
+                    </label>
+                </div>
+                <input type="date" class="form-control form-control-sm w-auto d-inline-block mx-1">
+                <label class="fw-bold mx-1">حتى</label>
+                <input type="date" class="form-control form-control-sm w-auto d-inline-block mx-1">
+            </div>
+
+            <div id="incomeDetails" style="display: none; padding-right: 1.5rem;">
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label class="small text-muted">مبيعات بمبلغ</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="valSales" class="form-control financial-input" placeholder="القيمة" oninput="runFinancialAnalysis()">
+                            <span class="input-group-text">جنيه مصري</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small text-muted">إهلاك أصول ثابتة</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="valDepreciation" class="form-control financial-input" placeholder="القيمة" oninput="runFinancialAnalysis()">
+                            <span class="input-group-text">جنيه مصري</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3 border-warning">
+        <div class="card-body bg-light">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="vatReturnsCheck" onchange="toggleSection('vatReturnsDetails', this.checked)">
+                <label class="form-check-label fw-bold" for="vatReturnsCheck">
+                    إقرارات الضريبة على القيمة المضافة
+                </label>
+            </div>
+
+            <div id="vatReturnsDetails" style="display: none; padding-right: 1.5rem;">
+                <div class="row g-2 align-items-center mb-3 border-bottom pb-3">
+                    <div class="col-md-12">
+                        <label class="small fw-bold text-primary">اختر العام:</label>
+                        <select class="form-select" id="vatYearSelect" onchange="updateVatMonths()">
+                            <option value="">-- اختر العام --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-2 align-items-center mb-2 border-bottom pb-2">
+                    <div class="col-md-5">
+                        <label class="small fw-bold" id="vatMonthLabel1"> إقرار الضريبة عن شهر:</label>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" id="vatMonth1">
+                            <option selected disabled>اختر الشهر</option>
+                            <option>يناير</option><option>فبراير</option><option>مارس</option>
+                            <option>أبريل</option><option>مايو</option><option>يونيو</option>
+                            <option>يوليو</option><option>أغسطس</option><option>سبتمبر</option>
+                            <option>أكتوبر</option><option>نوفمبر</option><option>ديسمبر</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" id="vatStatus1" onchange="runFinancialAnalysis()">
+                            <option selected disabled value="">الحالة</option>
+                            <option value="ايجابي">إيجابي</option>
+                            <option value="سلبي">سلبي</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-5">
+                        <label class="small fw-bold" id="vatMonthLabel2"> إقرار الضريبة عن شهر:</label>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" id="vatMonth2">
+                            <option selected disabled>اختر الشهر</option>
+                             <option>يناير</option><option>فبراير</option><option>مارس</option><option>أبريل</option><option>مايو</option><option>يونيو</option><option>يوليو</option><option>أغسطس</option><option>سبتمبر</option><option>أكتوبر</option><option>نوفمبر</option><option>ديسمبر</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" id="vatStatus2" onchange="runFinancialAnalysis()">
+                            <option selected disabled value="">الحالة</option>
+                            <option value="ايجابي">إيجابي</option>
+                            <option value="سلبي">سلبي</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12">
+            <label class="info-label text-dark fw-bold">ملاحظات عامة على القوائم</label>
+            <textarea class="form-control" rows="3" placeholder="أدخل أي ملاحظات إضافية هنا كما يمكنك الأستفادة من التحليل المالي من بيانات الشركة..."></textarea>
+        </div>
+    </div>
+
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-calculator me-2"></i> التحليل المالي والتوصيات (نظام خبير)</span>
+            <span class="badge bg-warning text-dark">تحليل آلي</span>
+        </div>
+        <div class="card-body bg-light">
+            <div id="analysisPlaceholder" class="text-center text-muted py-3">
+                <p>يرجى إدخال البيانات المالية (المخزون، المدينون، الدائنون، المبيعات) لظهور التوصيات التحليلية.</p>
+            </div>
+
+            <div id="financialAnalysisResults" style="display: none;">
+                <div class="mb-3">
+                    <h6 class="fw-bold text-primary border-bottom pb-1">1. مؤشر السيولة وتمويل النشاط</h6>
+                    <div id="liquidityAlert"></div>
+                    <p id="liquidityText" class="small mb-0"></p>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="fw-bold text-primary border-bottom pb-1">2. مؤشر كفاءة الدوران والنشاط</h6>
+                    <div id="activityAlert"></div>
+                    <p id="activityText" class="small mb-0"></p>
+                </div>
+
+                <div class="mb-0">
+                    <h6 class="fw-bold text-primary border-bottom pb-1">3. الفحص المتقاطع (Cross-Check)</h6>
+                    <ul id="crossCheckList" class="list-group list-group-flush small bg-transparent">
+                        </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav-buttons">
+        <button onclick="nextStep(4)" class="btn btn-secondary">السابق</button>
+        <button onclick="nextStep(6)" class="btn btn-primary">حفظ والانتقال للتالي</button>
+    </div>
+</div>
+
+    <!-- الصفحة الجديدة المضافة - قرار رئيس مجلس الوزراء رقم 104 لسنة 2022 -->
+    <div id="step6" class="step-section">
+    <div class="header-box">
+        <h4>قرار رئيس مجلس الوزراء رقم 104 لسنة 2022</h4>
+    </div>
+    
+    <!-- التنويه الجديد -->
+    <div class="alert alert-warning border-warning text-dark text-center mb-4" role="alert" style="border-right: 4px solid #ffc107; background-color: #fff3cd;">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <strong>تنويه :</strong> الشركات التي تأسست قبل العمل بأحكام قانون الاستثمار رقم 72 لسنة 2017 غير مخاطبة بهذا القرار
+    </div>
+
+        <!-- قسم البحث الجديد -->
+        <div class="card mb-4 border-info">
+            <div class="card-header bg-info text-white fw-bold">
+                البحث عن النشاط في قرار رئيس الوزراء رقم 104 لسنة 2022
+            </div>
+            <div class="card-body">
+                <div class="search-container">
+                    <label class="info-label mb-2">ابحث عن النشاط:</label>
+                    <div class="search-input-group">
+                        <input type="text" id="activitySearch" class="form-control" placeholder="اكتب اسم النشاط للبحث في القرار..." onkeyup="searchActivity()">
+                        <div id="searchResults" class="search-results mt-1"></div>
+                    </div>
+                    <small class="text-muted">يمكنك البحث بأي جزء من اسم النشاط، وسيتم البحث في القطاعين (أ) و(ب)</small>
+                </div>
+                
+                <div id="activityDetails" class="activity-details">
+                    <!-- سيتم تعبئة هذا القسم تلقائياً عند اختيار نشاط -->
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 border-primary">
+            <div class="card-header bg-primary text-white fw-bold">
+                المناطق الأكثر احتياجاً للتنمية (القطاع أ)
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="sectorA_check" onchange="toggleSectorA()">
+                        <label class="form-check-label fw-bold" for="sectorA_check">
+                            المناطق الأكثر احتياجا للتنمية (القطاع أ)
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="sectorA_details" style="display:none;">
+                    <div class="mb-3">
+                        <label class="info-label">اختر المنطقة:</label>
+                        <select class="form-select" id="sectorA_area">
+                            <option value="">-- اختر المنطقة --</option>
+                            <option value="جنوب محافظة الجيزة">جنوب محافظة الجيزة: (الواحات البحرية – الصف - العياط)</option>
+                            <option value="إقليم قناة السويس">المحافظات التابعة لإقليم قناة السويس: (بورسعيد – اسماعيلية – السويس شرق القناة)</option>
+                            <option value="المحافظات الحدودية">المحافظات الحدودية: أسوان – مرسي مطروح – جنوب سيناء - شمال سيناء - الوادي الجديد – محافظة البحر الأحمر من جنوب سفاجا</option>
+                            <option value="محافظات الصعيد">محافظات الصعيد: الفيوم – بني سويف - المنيا – أسيوط – سوهاج – قنا – الأقصر - أسوان</option>
+                            <option value="نطاق محافظة القاهرة الكبري ">لنشاط السياحة فقط: القاهرة –  الجيزة - القليوبية </option>
+                            <option value="المنطقة الاقتصادية ">المنطقة الاقتصادية للمثلث الذهبي   </option>
+                            <option value="منطقة راس الحكمة ">منطقة رأس الحكمة   </option>
+                            <option value="العاصمة ">العاصمة الإدارية    </option>
+
+
+
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="info-label">القطاع الرئيسي (القطاع أ):</label>
+                        <select class="form-select" id="sectorA_main" onchange="updateSectorASub()">
+                            <option value="">-- اختر القطاع الرئيسي --</option>
+                            <option value="الصناعة">أولاً: قطاع الصناعة</option>
+                            <option value="السياحة">ثانياً: قطاع السياحة</option>
+                            <option value="الاتصالات وتكنولوجيا المعلومات">ثالثاً: قطاع الاتصالات وتكنولوجيا المعلومات</option>
+                            <option value="البترول والثروات الطبيعية">رابعاً: قطاع البترول والثروات الطبيعية</option>
+                            <option value="الزراعة والإنتاج الحيواني الداجني والسمكي">خامساً: قطاع الزراعة والإنتاج الحيواني الداجني والسمكي</option>
+                            <option value="النقل">سادساً: قطاع النقل</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="info-label">القطاع الفرعي (القطاع أ):</label>
+                        <select class="form-select" id="sectorA_sub" onchange="updateSectorAActivities()">
+                            <option value="">-- اختر القطاع الفرعي --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="info-label">الأنشطة الاستثمارية (القطاع أ):</label>
+                        <select class="form-select" id="sectorA_activities">
+                            <option value="">-- اختر النشاط الاستثماري --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 border-success">
+            <div class="card-header bg-success text-white fw-bold">
+                باقي أنحاء الجمهورية (القطاع ب)
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="sectorB_check" onchange="toggleSectorB()">
+                        <label class="form-check-label fw-bold" for="sectorB_check">
+                            نشاط الشركة وارد بقرار رئيس مجلس الوزراء رقم 104 لسنة 2022 (القطاع ب)
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="sectorB_details" style="display:none;">
+                    <div class="mb-3">
+                        <label class="info-label">القطاع الرئيسي (القطاع ب):</label>
+                        <select class="form-select" id="sectorB_main" onchange="updateSectorBSub()">
+                            <option value="">-- اختر القطاع الرئيسي --</option>
+                            <option value="الصناعة">أولاً: قطاع الصناعة</option>
+                            <option value="السياحة">ثانياً: قطاع السياحة</option>
+                            <option value="الاتصالات وتكنولوجيا المعلومات">ثالثاً: قطاع الاتصالات وتكنولوجيا المعلومات</option>
+                            <option value="البترول والثروات الطبيعية">رابعاً: قطاع البترول والثروات الطبيعية</option>
+                            <option value="الزراعة والإنتاج الحيواني الداجني والسمكي">خامساً: قطاع الزراعة والإنتاج الحيواني الداجني والسمكي</option>
+                            <option value="النقل">سادساً: قطاع النقل</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="info-label">القطاع الفرعي (القطاع ب):</label>
+                        <select class="form-select" id="sectorB_sub" onchange="updateSectorBActivities()">
+                            <option value="">-- اختر القطاع الفرعي --</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="info-label">الأنشطة الاستثمارية (القطاع ب):</label>
+                        <select class="form-select" id="sectorB_activities">
+                            <option value="">-- اختر النشاط الاستثماري --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <button onclick="nextStep(5)" class="btn btn-secondary">السابق</button>
+            <button onclick="nextStep(7)" class="btn btn-primary">حفظ والانتقال للتالي</button>
+        </div>
+    </div>
+    <div id="step7" class="step-section">
+    <div class="header-box"><h4>المعاينة الميدانية</h4></div>
+    
+    <!-- حاوية المواقع الرئيسية -->
+    <div id="locationsContainer">
+        <!-- الموقع الرئيسي -->
+        <div class="location-section card mb-4 p-3 border-primary">
+            <h5 class="text-primary mb-3">الموقع الرئيسي للشركة</h5>
+            <div class="row mb-3">
+                <div class="col-md-6"><label class="info-label">تاريخ المعاينة</label><input type="date" class="form-control inspection-date"></div>
+                <div class="col-md-6">
+                    <label class="info-label">المحافظة</label>
+                    <select class="form-select governorate-select" onchange="updateCitiesForLocation(this)">
+                    <option value="">-- اختر محافظة --</option>
+                    <option value="القاهرة">القاهرة</option>
+                    <option value="الجيزة">الجيزة</option>
+                    <option value="الإسكندرية">الإسكندرية</option>
+                    <option value="القليوبية">القليوبية</option>
+                    <option value="الشرقية">الشرقية</option>
+                    <option value="المنوفية">المنوفية</option>
+                    <option value="الدقهلية">الدقهلية</option>
+                    <option value="الغربية">الغربية</option>
+                    <option value="كفر الشيخ">كفر الشيخ</option>
+                    <option value="البحيرة">البحيرة</option>
+                    <option value="دمياط">دمياط</option>
+                    <option value="بورسعيد">بورسعيد</option>
+                    <option value="الإسماعيلية">الإسماعيلية</option>
+                    <option value="السويس">السويس</option>
+                    <option value="الفيوم">الفيوم</option>
+                    <option value="بني سويف">بني سويف</option>
+                    <option value="المنيا">المنيا</option>
+                    <option value="أسيوط">أسيوط</option>
+                    <option value="سوهاج">سوهاج</option>
+                    <option value="قنا">قنا</option>
+                    <option value="الأقصر">الأقصر</option>
+                    <option value="أسوان">أسوان</option>
+                    <option value="الوادي الجديد">الوادي الجديد</option>
+                    <option value="مطروح">مطروح</option>
+                    <option value="البحر الأحمر">البحر الأحمر</option>
+                    <option value="شمال سيناء">شمال سيناء</option>
+                    <option value="جنوب سيناء">جنوب سيناء</option>
+                </select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="info-label">المدينة</label>
+                    <select class="form-select city-select">
+                        <option value="">-- اختر المحافظة أولا --</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="info-label">تفاصيل العنوان (المنطقة/الشارع/الرقم)</label>
+                    <input type="text" class="form-control address-details" placeholder="اسم الشارع، المنطقة، رقم العقار...">
+                </div>
+            </div>
+            
+            <!-- نظام تحديد الموقع المحسن -->
+            <div class="mb-3">
+                <button class="btn btn-primary w-100 location-button" onclick="getAndSaveLocationForLocation(this)">
+                    📍 تحديد الموقع GPS (خط الطول وخط العرض)
+                </button>
+                <div class="location-status mt-2 text-center" style="display:none; color:#198754; font-weight:bold;">✅ تم تحديد الموقع بنجاح.</div>
+                <div class="location-error mt-2 text-center" style="display:none; color:#dc3545; font-weight:bold;">❌ تعذر تحديد الموقع. يرجى التأكد من تفعيل GPS.</div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="info-label">خط الطول (Longitude)</label>
+                    <input type="text" class="form-control longitude" readonly placeholder="سيظهر هنا تلقائيًا">
+                </div>
+                <div class="col-md-6">
+                    <label class="info-label">خط العرض (Latitude)</label>
+                    <input type="text" class="form-control latitude" readonly placeholder="سيظهر هنا تلقائيًا">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="info-label">عنوان موقع المعاينة (رابط من Google Maps)</label>
+                <div class="input-group">
+                    <input type="text" class="form-control map-link" placeholder="سيظهر الرابط هنا تلقائياً" readonly>
+                    <button class="btn btn-outline-primary open-map-btn" type="button" disabled onclick="openMapLinkForLocation(this)">
+                        🌎 فتح الخريطة
+                    </button>
+                </div>
+            </div>
+<!-- العنوان المستخرج -->
+            <div class="card mb-3 bg-light border-0">
+                <div class="card-body p-3">
+                    <h6 class="text-primary fw-bold border-bottom pb-2 mb-2">📍 العنوان المستخرج (Reverse Geocoding)</h6>
+                    
+                    <div class="mb-2">
+                        <span class="badge bg-primary mb-1">(تحويل خط الطول والعرض الي عنوان)</span>
+                        <p class="osm-address mb-0 text-muted small fw-bold" style="min-height: 20px;">
+                            ... في انتظار تحديد موقع المعاينة سيتم تحويل الموقع الجغرافي على الخريطة (خط الطول والعرض) إلى عنوان يمكن قراءته.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- حقل التحقق من وجود شركة أخرى في الموقع -->
+<div class="mb-3">
+    <label class="info-label">فحص وجود شركة أخرى في الموقع</label>
+    <div class="input-group">
+        <button class="btn btn-outline-warning" type="button" onclick="checkExistingCompany(this)">
+            <i class="bi bi-search"></i> فحص الموقع
+        </button>
+        <input type="text" class="form-control" placeholder="سيظهر نتيجة الفحص هنا 👇" readonly id="existingCompanyResult">
+    </div>
+    <small class="text-muted">يقوم هذا الفحص بالبحث عن شركات مسجلة في نفس العنوان.</small>
+</div>
+            <!-- حقل الملاحظات للموقع الرئيسي -->
+
+<div class="mb-3">
+    <label class="info-label">ملاحظات على الموقع</label>
+    <textarea class="form-control location-notes" rows="2" placeholder="أدخل أي ملاحظات خاصة بهذا الموقع..."></textarea>
+</div>
+        </div>
+    </div>
+
+    <!-- زر إضافة موقع جديد -->
+    <div class="text-center mb-4">
+        <button type="button" class="btn btn-outline-success" onclick="addNewLocation()">
+            <i class="bi bi-plus-circle"></i> إضافة موقع آخر للشركة
+        </button>
+    </div>
+
+    <!-- 1. وصف الموقع الذكي -->
+    <div class="card mb-4 border-0 shadow-sm rounded-4">
+        <div class="card-header bg-primary text-white p-3 fw-bold"><i class="fas fa-warehouse me-2"></i> أولاً: وصف الموقع والتجهيزات</div>
+        <div class="card-body bg-light p-4">
+            
+            <label class="info-label fw-bold text-dark mb-3">1. حالة المنشأة أثناء المعاينة</label>
+            <div class="row g-2 mb-4" id="constructionGrid">
+                <!-- يتم توليدها بواسطة JS -->
+            </div>
+
+            <hr>
+
+           <label class="info-label fw-bold text-dark mb-3">2. التجهيزات والمرافق المتاحة</label>
+
+<div id="facilitiesContainer">
+
+    <!-- البنية التحتية -->
+    <div class="category-box">
+        <h6 class="text-primary fw-bold mb-3">
+            <i class="fas fa-bolt me-2"></i> البنية التحتية
+        </h6>
+        <div id="group-infra" class="d-flex flex-wrap gap-2"></div>
+    </div>
+<hr><hr>
+    <!-- الأمن والسلامة -->
+    <div class="category-box border-danger-subtle">
+        <h6 class="text-danger fw-bold mb-3">
+            <i class="fas fa-shield-alt me-2"></i> الأمن والسلامة
+        </h6>
+        <div id="group-safety" class="d-flex flex-wrap gap-2"></div>
+    </div>
+<hr><hr>
+    <!-- التشطيب -->
+    <div class="category-box border-success-subtle">
+        <h6 class="text-success fw-bold mb-3">
+            <i class="fas fa-paint-roller me-2"></i> التشطيب الداخلي
+        </h6>
+        <div id="group-finish" class="d-flex flex-wrap gap-2"></div>
+    </div>
+<hr>
+    <!-- تجهيزات متخصصة عامة -->
+    <div id="specialized-box" class="category-box border-warning-subtle" style="display:none;">
+        <h6 class="text-warning fw-bold mb-3">
+            <i class="fas fa-cogs me-2"></i> تجهيزات متخصصة
+        </h6>
+        <div id="group-special" class="d-flex flex-wrap gap-2"></div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <div class="mt-4 pt-3 border-top">
+                <label class="info-label fw-bold text-primary"><i class="fas fa-pen-nib me-2"></i> النص التجميعي لوصف الموقع</label>
+                <textarea id="siteNarrative" class="form-control bg-white shadow-sm" rows="3" placeholder="سيتم صياغة الوصف آلياً هنا..."></textarea>
+                <small class="text-muted"><i class="fas fa-microphone"></i> يمكنك التعديل يدوياً أو باستخدام الأوامر الصوتية</small>
+            </div>
+        </div>
+    </div>
+
+        <hr>
+        
+<div class="form-check mb-2">
+    <input class="form-check-input" type="checkbox" id="machinesCheck" onchange="toggleSection('machineDetails', this.checked)">
+    <label class="form-check-label fw-bold">آلات ومعدات وخطوط الانتاج</label>
+</div>
+
+<div id="machineDetails" class="p-3 bg-light border rounded mb-3" style="display:none;">
+    <div id="machinesContainer">
+    <!-- الصف الأول للآلات: تم تعديله ليكون للقراءة فقط -->
+    <div class="machine-row border p-3 mb-3 bg-white shadow-sm rounded">
+        <div class="row g-3 position-relative">
+            <div class="col-12 col-md-3">
+                <label class="small text-muted mb-1">اسم الآلة (من الفاتورة)</label>
+                <!-- تمت إضافة readonly و bg-light -->
+                <input type="text" class="form-control bg-light fw-bold" readonly placeholder="اسم الآلة">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="small text-muted mb-1">العدد</label>
+                <!-- تمت إضافة readonly و bg-light -->
+                <input type="number" class="form-control bg-light fw-bold" readonly placeholder="العدد">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="small text-muted mb-1">مصدر الآلة</label>
+                <!-- هذا الحقل مسموح بتعديله لأنه خاص بالمعاينة -->
+                <select class="form-select border-primary">
+                    <option value="" selected disabled>اختر</option>
+                    <option value="استيراد">استيراد</option>
+                    <option value="محلي">محلي</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="small text-muted mb-1">القيمة</label>
+                <!-- تمت إضافة readonly و bg-light -->
+                <input type="text" class="form-control bg-light" readonly placeholder="القيمة">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="small text-muted mb-1">التاريخ</label>
+                <!-- تمت إضافة readonly و bg-light -->
+                <input type="date" class="form-control bg-light" readonly>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="form-check mb-2">
+    <input class="form-check-input" type="checkbox" id="materialsCheck" onchange="toggleSection('materialDetails', this.checked)">
+    <label class="form-check-label fw-bold">الخامات</label>
+</div>
+
+<div id="materialDetails" class="p-3 bg-light border rounded mb-3" style="display:none;">
+    <div id="materialsContainer">
+    <!-- الصف الأول للخامات -->
+    <div class="material-row border p-3 mb-3 bg-white shadow-sm rounded">
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <label class="small text-muted mb-1">اسم الخامة (من الفاتورة)</label>
+                <input type="text" class="form-control bg-light fw-bold" readonly placeholder="اسم الخامة">
+            </div>
+
+            <div class="col-6 col-md-2">
+                <label class="small text-muted mb-1">الكمية</label>
+                <input type="number" class="form-control bg-light fw-bold" readonly placeholder="0">
+            </div>
+            
+            <div class="col-6 col-md-3">
+                <label class="small text-muted mb-1">وحدة القياس (تحدد بالمعاينة)</label>
+                <select class="form-select border-primary">
+                    <option value="">اختر..</option>
+                    <option>كيلو</option><option>طن</option><option>لتر</option><option>لتر3</option><option>قطعة</option><option>متر</option><option>متر2</option><option>متر3</option><option>وحدة</option><option>سم3</option>
+                </select>
+            </div>	
+
+            <div class="col-6 col-md-3">
+                <label class="small text-muted mb-1">القيمة جـم</label>
+                <input type="text" class="form-control bg-light" readonly placeholder="0.00">
+            </div>
+            
+            <div class="col-6 col-md-4">
+                <label class="small text-muted mb-1">مصدر الخامة (يحدد بالمعاينة)</label>
+                <select class="form-select border-primary">
+                    <option value="">اختر..</option>
+                    <option>محلي</option><option>استيراد</option>
+                </select>
+            </div>
+            
+            <div class="col-6 col-md-4">
+                <label class="small text-muted mb-1">الفترة (تحدد بالمعاينة)</label>
+                <select class="form-select border-primary">
+                    <option value="">اختر..</option>
+                    <option>يوم</option><option>شهر</option><option>سنة</option>
+                </select>
+            </div>
+            
+            <div class="col-12 col-md-4">
+                 <label class="small text-muted mb-1">تصنيف الخامة (للمعاينة)</label>
+                 <!-- تمت إضافة border-primary هنا 👇 -->
+                 <input class="form-control border-primary" list="material-options-readonly" placeholder="تصنيف الخامة...">
+                 <datalist id="material-options-readonly">
+        <option value="1. مواد حيوية (نباتي/خشبي/ورق)"></option>
+        <option value="2. مواد حيوية (عضوي حيواني/بشري)"></option>
+        <option value="6. أقمشة/خيوط (طبيعية)"></option>
+        
+        <option value="8. أتربة/أحجار/صخور خام"></option>
+        <option value="9. مواد البناء الأساسية (محاجر/إسمنت/جص)"></option>
+        <option value="3. معادن/فلزات وسبائكها"></option>
+        <option value="10. زجاج وسيراميك"></option>
+
+        <option value="4. بترولي/بوليمر (بلاستيك)"></option>
+        <option value="5. أقمشة/خيوط (صناعي)"></option>
+        <option value="7. زيوت/شحوم (بترولية/صناعية)"></option>
+        <option value="13. مواد مركبة وهيكلية متخصصة"></option>
+        
+        <option value="11. أملاح/كيماويات/أحماض/قواعد"></option>
+        <option value="12. غازات صناعية ومخاليطها"></option>
+
+        <option value="14. أجهزة إلكترونية/كهربائية (منتج مجمع)"></option>
+        <option value="15. بطاريات ومواد تخزين الطاقة"></option>
+        <option value="16. مركبات (وحدات نقل مجمعة)"></option>
+
+        <option value="17. المواد الخطرة (النفايات المتخصصة)"></option>
+        <option value="18. النفايات الطبية"></option>
+                 </datalist>
+            </div>
+        </div>
+    </div> 
+</div>
+</div>    
+<hr>  
+<!-- 2. وصف العملية الإنتاجية العبقري -->
+<div class="production-flow-section mb-5">
+    <!-- الهيدر المطور -->
+    <div class="production-header-bar">
+        <h5 class="fw-bold" id="productionFlowHeader">
+            <i class="fas fa-project-diagram me-2"></i> خريطة مراحل العملية
+        </h5>
+        
+        <div class="override-wrapper">
+            <i class="fas fa-exchange-alt opacity-75"></i>
+            <small class="fw-bold">تغيير نموذج النشاط:</small>
+            <select id="activityOverride" class="form-select shadow-none" onchange="initProductionFlow(this.value)">
+                <option value="">تحميل الأنشطة...</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- شبكة المراحل كما هي -->
+    <div id="productionFlowWrapper" class="stages-grid-container"></div>
+
+    <!-- منطقة النص التجميعي كما هي -->
+    <div class="narrative-container">
+        <label class="info-label fw-bold text-success mb-2">
+            <i class="fas fa-file-signature me-2"></i> الصياغة الفنية للدورة الإنتاجية
+        </label>
+        <textarea id="productionNarrative" class="form-control narrative-box" rows="5" 
+                  placeholder="اضغط على المراحل أعلاه لإنشاء الوصف الفني تلقائياً..."></textarea>
+    </div>
+</div>
+<hr>
+<div class="col-md-6"><label class="info-label">الموقف التنفيذي للشركة (أثناء المعاينة)</label><select class="form-select"><option> اختر الموقف التنفيذي </option><option>متوقفة </option><option> في حالة تشغيل</option><option> تحت الانشاء </option><option>تحت التجهيز </option><option>  حالات اخري</option></select></div>
+        
+<hr>
+
+
+<!-- قسم محضر المناقشة مع ممثل الشركة -->
+<div class="card mb-4 p-3 border-primary">
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="meetingMinutesCheck" onchange="toggleMeetingMinutesSection()">
+        <label class="form-check-label fw-bold text-primary" for="meetingMinutesCheck">
+            محضر مناقشة بين اللجنة وممثل الشركة
+        </label>
+    </div>
+
+    <div id="meetingMinutesSection" style="display: none;">
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label class="info-label">صفة الممثل</label>
+                <select class="form-select" id="representativeRole">
+                    <option value="">-- اختر صفة الممثل --</option>
+                    <option value="محامي الشركة">محامي الشركة</option>
+                    <option value="المحاسب القانوني">المحاسب القانوني</option>
+                    <option value="مفوض الشركة">مفوض الشركة</option>
+                    <option value="الشريك">الشريك</option>
+                    <option value="المساهم">المساهم</option>
+                    <option value="المدير">المدير</option>
+                    <option value="رئيس مجلس الإدارة">رئيس مجلس الإدارة</option>
+                    <option value="عضو مجلس الإدارة">عضو مجلس الإدارة</option>
+                    <option value="فرد أمن">فرد أمن</option>
+                    <option value="آخر">آخر</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="info-label">اسم الممثل</label>
+                <input type="text" class="form-control" id="representativeName" placeholder="أدخل اسم الممثل">
+            </div>
+        </div>
+
+        <div class="mb-3">
+    <label class="info-label">محضر المناقشة</label>
+    <textarea class="form-control" rows="6" placeholder="أدخل محضر المناقشة بين اللجنة وممثل الشركة هنا (يمكنك استخدام مايك الهاتف)..."></textarea>
+</div>
+
+<div class="text-center mt-3">
+    <button type="button" class="btn btn-primary" onclick="generateMeetingMinutesPDF()">
+        <i class="bi bi-file-earmark-pdf"></i> تجهيز محضر المناقشة (PDF)
+    </button>
+    <small class="d-block text-muted mt-2">سيتم إنشاء ملف PDF رسمي لمحضر المناقشة</small>
+</div>
+    </div>
+</div>
+
+<!-- قسم التقاط الصور -->
+<div class="card mb-4 p-3 border-success">
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="photoCaptureCheck" onchange="togglePhotoCaptureSection()">
+        <label class="form-check-label fw-bold text-success" for="photoCaptureCheck">
+            إضافة صور للمعاينة
+        </label>
+    </div>
+
+    <div id="photoCaptureSection" style="display: none;">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <button type="button" class="btn btn-primary w-100" onclick="openCamera()">
+                    📷 فتح الكاميرا
+                </button>
+                <small class="text-muted">سيتم فتح كاميرا الهاتف لالتقاط صورة</small>
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-outline-primary w-100" onclick="document.getElementById('fileInput').click()">
+                    📁 رفع صورة
+                </button>
+                <input type="file" id="fileInput" accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
+                <small class="text-muted">رفع صورة من الجهاز</small>
+            </div>
+        </div>
+
+        <div id="photoPreview" class="mt-3 text-center"></div>
+    </div>
+</div>
+ 
+
+<div class="nav-buttons">
+    <button onclick="nextStep(6)" class="btn btn-secondary">السابق</button>
+    <button onclick="nextStep(8)" class="btn btn-primary">حفظ والانتقال للتالي</button>
+</div>
+ </div>
+</div>
+    <div id="step8" class="step-section">
+    <div class="header-box"><h4>سند حيازة موقع ممارسة النشاط</h4></div>
+
+    <div class="repeated-address">
+        <label class="info-label">الموقع (يتم تعبئته تلقائياً من بيانات المعاينة الميدانية)</label>
+        <div class="form-control bg-light" id="repeatedAddress" style="height: auto; min-height: 60px;">
+            سيظهر العنوان هنا بعد تعبئته في الشاشة السابعة
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="info-label">سند حيازة موقع ممارسة النشاط</label>
+        <select class="form-select" id="ownershipType" onchange="updateFields()">
+            <option value="تمليك">تمليك</option>
+            <option value="إيجار">إيجار</option>
+            <option value="انتفاع">انتفاع</option>
+            <option value="تنازل">تنازل</option>
+        </select>
+    </div>
+
+    <div class="row g-2 mb-3" id="partiesFields">
+        <div class="col-md-6">
+            <input type="text" class="form-control" id="party1" placeholder="البائع (الطرف الأول)">
+        </div>
+        <div class="col-md-6">
+            <input type="text" class="form-control" id="party2" placeholder="المشتري (الطرف الثاني)">
+        </div>
+    </div>
+
+    <div class="row g-2 mb-3" id="dateFieldsContainer">
+        
+        <div class="col-md-4" id="dateFromCol">
+            <label class="info-label small">تاريخ العقد</label>
+            <input type="date" class="form-control" id="dateFromInput">
+        </div>
+        
+        <div class="col-md-4" id="dateToCol">
+            <label class="info-label small">حتى</label>
+            <input type="date" class="form-control" id="dateToInput">
+        </div>
+        
+        <div class="col-md-4" id="durationCol">
+            <label class="info-label small">وذلك لمدة</label>
+            <input type="text" class="form-control" id="durationInput" placeholder="كتابة المدة (سنوات/شهور)">
+        </div>
+    </div>
+
+
+
+        <div class="card mb-3 p-3 bg-light border-0">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="validationCheck" onchange="toggleSection('validationDetails', this.checked)">
+                <label class="form-check-label fw-bold" for="validationCheck">
+                     سند الحيازة مصدّق؟ (شهر عقاري)
+                </label>
+            </div>
+            <div id="validationDetails" class="row g-2" style="display:none;">
+                <div class="col-md-6">
+                    <label class="info-label small">رقم التصديق</label>
+                    <input type="text" class="form-control" placeholder="أدخل رقم التصديق">
+                </div>
+                <div class="col-md-6">
+                    <label class="info-label small">تاريخ التصديق</label>
+                    <input type="date" class="form-control">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3 p-3 bg-light border-0">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="historyProofCheck" onchange="toggleSection('historyProofDetails', this.checked)">
+                <label class="form-check-label fw-bold" for="historyProofCheck">
+                     سند الحيازة به **إثبات تاريخ**؟
+                </label>
+            </div>
+            <div id="historyProofDetails" class="row g-2" style="display:none;">
+                <div class="col-md-6">
+                    <label class="info-label small">رقم إثبات التاريخ</label>
+                    <input type="text" class="form-control" placeholder="أدخل رقم الإثبات">
+                </div>
+                <div class="col-md-6">
+                    <label class="info-label small">تاريخ الإثبات</label>
+                    <input type="date" class="form-control">
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3 p-3 bg-light border-0">
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="signatureValidationCheck" onchange="toggleSection('signatureValidationDetails', this.checked)">
+                <label class="form-check-label fw-bold" for="signatureValidationCheck">
+                     سند الحيازة به **صحة توقيع** من المحكمة؟
+                </label>
+            </div>
+            <div id="signatureValidationDetails" class="row g-2" style="display:none;">
+                <div class="col-md-6">
+                    <label class="info-label small">رقم الحكم</label>
+                    <input type="text" class="form-control" placeholder="أدخل رقم الحكم">
+                </div>
+                <div class="col-md-6">
+                    <label class="info-label small">تاريخ الحكم</label>
+                    <input type="date" class="form-control">
+                </div>
+            </div>
+        </div>
+        
+        
+        <div class="nav-buttons"><button onclick="nextStep(7)" class="btn btn-secondary">السابق</button><button onclick="nextStep(9)" class="btn btn-primary">حفظ والانتقال للتالي</button></div>
+    </div>
+
+    <div id="step9" class="step-section">
+        <div class="header-box">
+            <h4>الأقرار والتشغيل</h4>
+        </div>
+        
+
+
+        <div class="card mb-4 p-3 bg-light">
+            <h6 class="text-primary border-bottom pb-2 mb-3">💢. إقرار بدء الإنتاج</h6>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="prodStartDeclareCheck">
+                <label class="form-check-label fw-bold" for="prodStartDeclareCheck">
+                     إقرار الشركة بأنها بدأت الإنتاج
+                </label>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="info-label">بتاريخ (تقديم الإقرار)</label>
+                    <input type="date" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="info-label">أقرت الشركة ببدء الإنتاج بتاريخ</label>
+                    <input type="date" class="form-control" id="productionStartDate">
+                </div>
+                <div class="col-md-4">
+                    <label class="info-label">وهو يوافق تاريخ:</label>
+                    <select class="form-select" id="productionMatch">
+                        <option>قيد الشركة بالسجل التجاري</option>
+                        <option>أول فاتورة بيع</option>
+                        <option>أول إذن إضافة للمخزن</option>
+                        <option>تاريخ التأشير بموقع ممارسة النشاط</option>
+                        <option>الخ</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+         <div class="card mb-4 p-3 bg-light">
+    <h6 class="text-primary border-bottom pb-2 mb-3">1. الطاقة المستخدمة ⚡</h6>
+    <div id="energyContainer">
+        <div class="row g-2 mb-2 energy-row">
+            <div class="col-md-3">
+                <label class="info-label small">نوع الطاقة</label>
+                <select class="form-select form-select-sm">
+                    <option value="">-- اختر --</option>
+                    <option>كهرباء</option>
+                    <option>كيروسين</option>
+                    <option>بنزين</option>
+                    <option>سولار</option>
+                    <option>غاز طبيعي / غاز مسال</option>
+                    <option>فحم حجري</option>
+                    <option>مازوت / زيت الوقود</option>
+                    <option>طاقة متجددة (عام)</option>
+                    <option>طاقة شمسية</option>
+                    <option>طاقة الرياح</option>
+                    <option>طاقة مائية / كهرومائية</option>
+                    <option>طاقة الكتلة الحيوية</option>
+                    <option>طاقة حرارية أرضية</option>
+                    <option>طاقة نووية</option>
+                    <option>هيدروجين</option>
+                    <option>بخار</option>
+                               </select>
+                           </div>
+   
+
+                    <div class="col-md-3">
+                        <label class="info-label small">متوسط الاستهلاك</label>
+                        <input type="number" class="form-control form-control-sm" placeholder="الرقم">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="info-label small">الوحدة</label>
+                        <select class="form-select form-select-sm">
+                        <option value="">اختر..</option>
+                        <option>كيلو</option><option>طن</option><option>لتر</option><option>لتر3</option><option>قطعة</option><option>وحدة</option><option>سم3</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="info-label small">القيمة (جنيهاً)</label>
+                        <input type="number" class="form-control form-control-sm" placeholder="المبلغ">
+                    </div>
+                    <div class="col-md-1 d-flex align-items-end">
+                        <button type="button" class="btn btn-sm btn-outline-success w-100" onclick="addEnergyRow()">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 p-3 bg-light">
+            <h6 class="text-primary border-bottom pb-2 mb-3">2. العمالة والخبرات 👷🏻‍♂️</h6>
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="info-label">العمالة المصرية - متوسط عدد العاملين</label>
+                    <input type="number" class="form-control" placeholder="العدد">
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <label class="info-label">أهم الخبرات التي تحتاجها الشركة</label>
+                    <textarea class="form-control" rows="2" placeholder="اكتب هنا الخبرات..."></textarea>
+                </div>
+                <div class="col-md-4">
+                    <label class="info-label">نسبة توافرها بالسوق المصري</label>
+                    <select class="form-select">
+                        <option>عالية</option><option>متوسطة</option><option>ضعيفة</option><option>غير متاحة</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4 p-3 bg-light">
+    <h6 class="text-primary border-bottom pb-2 mb-3">3. المخلفات الناتجة عن النشاط 🚨</h6>
+
+    <div id="waste-entries-container">
+        <div class="waste-entry-row row g-3 mb-3 border-bottom pb-3">
+            <div class="col-md-3">
+                <label class="info-label small">نوع المخلفات</label>
+                <select class="form-select">
+                    <option value="">-- اختر --</option>
+                    <option>مواد حيوية (نباتي/خشبي/ورق)</option>
+                    <option>مواد حيوية (عضوي حيواني/بشري)</option>
+                    <option>أقمشة/خيوط (طبيعية)</option>
+                    <option>أتربة/أحجار/صخور خام</option>
+                    <option>مواد البناء الأساسية (محاجر/إسمنت/جص)</option>
+                    <option>معادن/فلزات وسبائكها</option>
+                    <option>زجاج وسيراميك</option>
+                    <option>بترولي/بوليمر (بلاستيك)</option>
+                    <option>أقمشة/خيوط (صناعي)</option>
+                    <option>زيوت/شحوم (بترولية/صناعية)</option>
+                    <option>مواد مركبة وهيكلية متخصصة</option>
+                    <option>أملاح/كيماويات/أحماض/قواعد</option>
+                    <option>غازات صناعية ومخاليطها</option>
+                    <option>أجهزة إلكترونية/كهربائية (منتج مجمع)</option>
+                    <option>بطاريات ومواد تخزين الطاقة</option>
+                    <option>مركبات (وحدات نقل مجمعة)</option>
+                    <option>المواد الخطرة (النفايات المتخصصة)</option>
+                    <option>النفايات الطبية</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="info-label small">وصف المخلفات</label>
+                <input type="text" class="form-control" placeholder="وصف المخلف">
+            </div>
+            <div class="col-md-2">
+                <label class="info-label small">الكمية الناتجة</label>
+                <input type="number" class="form-control" placeholder="الرقم">
+            </div>
+            <div class="col-md-2">
+                <label class="info-label small">وحدة الكمية</label>
+                <select class="form-select">
+                        <option value="">اختر..</option>
+                    <option>كيلو</option><option>طن</option><option>لتر</option><option>لتر3</option><option>قطعة</option><option>متر</option><option>متر2</option><option>متر3</option><option>وحدة</option><option>سم3</option>
+                </select>
+            </div>
+            <div class="col-md-2 ">
+                <div class="w-100">
+                    <label class="info-label small">الفترة</label>
+                    <select class="form-select">
+                        <option>يوم</option>
+                        <option>شهر</option>
+                        <option>سنة</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-start mt-3">
+        <button type="button" class="btn btn-outline-primary btn-sm" id="add-waste-btn">
+            <i class="bi bi-plus-circle"></i> إضافة مخلفات أخرى
+        </button>
+    </div>
+</div>
+
+<template id="waste-entry-template">
+    <div class="waste-entry-row row g-3 mb-3 border-bottom pb-3">
+        <div class="col-md-3">
+            <label class="info-label small">نوع المخلفات</label>
+            <select class="form-select">
+                <option value="">-- اختر --</option>
+                <option>مواد حيوية (نباتي/خشبي/ورق)</option>
+                <option>مواد حيوية (عضوي حيواني/بشري)</option>
+                <option>أقمشة/خيوط (طبيعية)</option>
+                <option>أتربة/أحجار/صخور خام</option>
+                <option>مواد البناء الأساسية (محاجر/إسمنت/جص)</option>
+                <option>معادن/فلزات وسبائكها</option>
+                <option>زجاج وسيراميك</option>
+                <option>بترولي/بوليمر (بلاستيك)</option>
+                <option>أقمشة/خيوط (صناعي)</option>
+                <option>زيوت/شحوم (بترولية/صناعية)</option>
+                <option>مواد مركبة وهيكلية متخصصة</option>
+                <option>أملاح/كيماويات/أحماض/قواعد</option>
+                <option>غازات صناعية ومخاليطها</option>
+                <option>أجهزة إلكترونية/كهربائية (منتج مجمع)</option>
+                <option>بطاريات ومواد تخزين الطاقة</option>
+                <option>مركبات (وحدات نقل مجمعة)</option>
+                <option>المواد الخطرة (النفايات المتخصصة)</option>
+                <option>النفايات الطبية</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="info-label small">وصف المخلفات</label>
+            <input type="text" class="form-control" placeholder="وصف المخلف">
+        </div>
+        <div class="col-md-2">
+            <label class="info-label small">الكمية الناتجة</label>
+            <input type="number" class="form-control" placeholder="الرقم">
+        </div>
+        <div class="col-md-2">
+            <label class="info-label small">وحدة الكمية</label>
+            <select class="form-select">
+                        <option>يوم</option>
+                        <option>شهر</option>
+                        <option>سنة</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <div class="row g-1">
+                <div class="col-8">
+                    <label class="info-label small d-block">الفترة</label>
+                    <select class="form-select form-select-sm">
+                        <option>يوم</option>
+                        <option>شهر</option>
+                        <option>سنة</option>
+                    </select>
+                </div>
+                <div class="col-4 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger btn-sm delete-waste-btn w-100" title="حذف هذا الصف">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+       <div class="nav-buttons">
+            <button onclick="nextStep(8)" class="btn btn-secondary">السابق</button>
+            <button onclick="nextStep(10)" class="btn btn-primary">حفظ والانتقال للتالي</button>
+        </div>
+    </div>
+
+    <div id="step10" class="step-section">
+        <div class="header-box"><h4>رأي اللجنة </h4></div>
+        
+        <p class="alert alert-info border-0">
+            في ضوء المعاينة الميدانية التي قامت بها اللجنة على الطبيعة لموقع ممارسة النشاط للشركة، وما اطلعت عليه من مستندات مقدمة من الشركة تحت كامل مسئوليتها، أخذاً في الاعتبار الأسانيد الآتية:-
+        </p>
+
+        <div class="card p-3 mb-4 bg-light">
+            <h6 class="text-primary border-bottom pb-2">الأسانيد</h6>
+            
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="sanadHiyazaCheck">
+                <label class="form-check-label fw-bold" for="sanadHiyazaCheck">
+                    أن سند حيازة موقع ممارسة نشاط الشركة محل العرض
+                </label>
+                <div class="row g-2 mt-1 me-3 align-items-center">
+                    <div class="col-md-4">
+                        <select class="form-select form-select-sm">
+                            <option>تمليك</option><option>إيجار</option><option>انتفاع</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <input type="text" class="form-control form-control-sm" placeholder="اكتب وصف/ملاحظة السند هنا">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="industrialRecordCheck">
+                <label class="form-check-label fw-bold" for="industrialRecordCheck">
+                    أن شهادة سجل صناعي الشركة محل العرض صادرة بتاريخ
+                </label>
+                <div class="mt-1 me-3 w-50">
+                    <input type="date" class="form-control form-control-sm">
+                </div>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="salesCheck">
+                <label class="form-check-label fw-bold" for="salesCheck">
+                    وجود مبيعات بقائمة الدخل عن الفترة المالية من
+                </label>
+                <div class="row g-2 mt-1 me-3 align-items-center">
+                    <div class="col-md-3"><input type="date" class="form-control form-control-sm"></div>
+                    <label class="col-auto p-0">حتى</label>
+                    <div class="col-md-3"><input type="date" class="form-control form-control-sm"></div>
+                    <label class="col-auto p-0">بالقوائم المالية في</label>
+                    <div class="col-md-3"><input type="date" class="form-control form-control-sm"></div>
+                    <label class="col-auto p-0">بمبلغ</label>
+                    <div class="col-md-3"><input type="number" class="form-control form-control-sm" placeholder="الرقم"></div>
+                    <label class="col-auto p-0">جم.</label>
+                </div>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="productionDeclarationCheck">
+                <label class="form-check-label fw-bold" for="productionDeclarationCheck">
+                    إقرار الشركة بأنها بدأت الإنتاج بتاريخ
+                </label>
+                <div class="row g-2 mt-1 me-3 align-items-center">
+                    <div class="col-md-4"><input type="date" class="form-control form-control-sm"></div>
+                    <label class="col-auto p-0">وهو يوافق تاريخ</label>
+                    <div class="col-md-7">
+                         <select class="form-select form-select-sm">
+                            <option>قيد الشركة بالسجل التجاري</option>
+                            <option>أول فاتوره بيع</option>
+                            <option>أول إذن اضافه للمخزن</option>
+                            <option>تاريخ التأشير بموقع ممارسة النشاط</option>
+                            <option>الخ</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="mt-4">
+            
+            <div class="mb-3">
+                <label class="info-label fs-5 text-dark">تري اللجنة أن الشركة</label>
+                <select class="form-select form-select-lg bg-light border-primary text-primary fw-bold">
+                    <option>اختر الموقف التنفيذي للشركة</option>
+                                <option>جادة في التنفيذ</option>
+                    <option>بدأت النشاط</option>
+                    <option>غير جادة</option>
+                    <option>متوقفة</option>
+                    <option>اللجنة لم تتيقن  من جدية الشركة</option>
+                    <option>تشكيل لجنة فجائية</option>
+
+                </select>
+            </div>
+            
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="activityTypeFinalCheck">
+                <label class="form-check-label fw-bold" for="activityTypeFinalCheck">
+                    في نشاط
+                </label>
+                <div class="mt-1 me-3">
+                    <input type="text" class="form-control form-control-sm" placeholder="اكتب نوع النشاط هنا">
+                </div>
+            </div>
+
+            <div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" id="productionDateFinalCheck">
+    <label class="form-check-label fw-bold" for="productionDateFinalCheck">
+        بدأت الإنتاج بتاريخ
+    </label>
+    <div class="row g-2 mt-1 me-3 align-items-center">
+        <div class="col-md-4">
+            <input type="date" class="form-control form-control-sm" id="productionStartDateFinal" onchange="updateProductionDateWords()">
+        </div>
+        <div class="col-md-8">
+            <input type="text" class="form-control form-control-sm bg-light" id="productionStartDateWords" placeholder="سيظهر التاريخ بالعربية هنا" readonly>
+        </div>
+        <label class="col-auto p-0">وهو ما يوافق</label>
+        <div class="col-md-12 mt-2">
+             <select class="form-select form-select-sm">
+                <option>قيد الشركة بالسجل التجاري</option>
+                <option>أول فاتوره بيع</option>
+                <option>أول إذن اضافه للمخزن</option>
+                <option>تاريخ التأشير بموقع ممارسة النشاط</option>
+                <option>الخ</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+        </div>
+        
+        <!-- إضافة الحقول الجديدة قبل أزرار الحفظ والتصدير -->
+<div class="card mb-4 border-0">
+    <div class="card-body p-0">
+        <!-- الحقل الأول - أخضر -->
+        <div class="form-check p-3 mb-3 border rounded" style="background-color: #d4edda; border-color: #c3e6cb !important;">
+            <input class="form-check-input" type="checkbox" id="greenCheck" onchange="toggleTextArea('greenTextArea', this.checked)">
+            <label class="form-check-label fw-bold" for="greenCheck" style="color: #155724;">
+                (الشركة لم تبدأ بعد) نسبة الانتهاء من التنفيذ 
+            </label>
+            <div id="greenTextArea" class="mt-2" style="display: none;">
+                <textarea class="form-control" rows="3" placeholder="أدخل بيانات نسبة انتهاء الشركة من الاعمال..."></textarea>
+            </div>
+        </div>
+
+        <!-- الحقل الثاني - أحمر -->
+        <div class="form-check p-3 mb-3 border rounded" style="background-color: #f8d7da; border-color: #f5c6cb !important;">
+            <input class="form-check-input" type="checkbox" id="redCheck" onchange="toggleTextArea('redTextArea', this.checked)">
+            <label class="form-check-label fw-bold" for="redCheck" style="color: #721c24;">
+                مع الزام الشركة
+            </label>
+            <div id="redTextArea" class="mt-2" style="display: none;">
+                <textarea class="form-control" rows="3" placeholder="أدخل بيانات إلزام الشركة هنا..."></textarea>
+            </div>
+        </div>
+
+        <!-- الحقل الثالث - برتقالي -->
+        <div class="form-check p-3 mb-3 border rounded" style="background-color: #ffeaa7; border-color: #fdcb6e !important;">
+            <input class="form-check-input" type="checkbox" id="orangeCheck" onchange="toggleTextArea('orangeTextArea', this.checked)">
+            <label class="form-check-label fw-bold" for="orangeCheck" style="color: #e17055;">
+                مع مراعاة
+            </label>
+            <div id="orangeTextArea" class="mt-2" style="display: none;">
+                <textarea class="form-control" rows="3" placeholder="أدخل بيانات مع مراعاة ..."></textarea>
+            </div>
+        </div>
+
+        <!-- الحقل الرابع - أصفر -->
+        <div class="form-check p-3 mb-3 border rounded" style="background-color: #fff3cd; border-color: #ffeaa7 !important;">
+            <input class="form-check-input" type="checkbox" id="yellowCheck" onchange="toggleTextArea('yellowTextArea', this.checked)">
+            <label class="form-check-label fw-bold" for="yellowCheck" style="color: #856404;">
+                ملاحظات
+            </label>
+            <div id="yellowTextArea" class="mt-2" style="display: none;">
+                <textarea class="form-control" rows="3" placeholder="أدخل الملاحظات هنا..."></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- استبدل <div class="nav-buttons"> بالكامل بهذا الكود -->
+
+<div class="final-actions-container">
+    <!-- زر الحفظ الرئيسي -->
+    <div class="action-buttons-grid">
+        <button 
+            onclick="saveFinalReport()" 
+            class="btn-save-final"
+            id="btnSaveFinal">
+            <span class="btn-icon">💾</span>
+            حفظ التقرير النهائي
+        </button>
+    </div>
+    
+    <!-- أزرار التصدير -->
+    <div class="mb-3">
+        <label class="d-block text-center fw-bold mb-2 text-muted" style="font-size: 0.9rem;">
+            📤 تصدير التقرير بصيغة:
+        </label>
+        <div class="export-buttons-container">
+            <button 
+                onclick="exportReport('word')" 
+                class="btn-export word">
+                <span class="btn-icon">📄</span>
+                Word
+            </button>
+            
+            <button 
+                onclick="exportReport('pdf')" 
+                class="btn-export pdf">
+                <span class="btn-icon">📕</span>
+                PDF
+            </button>
+            
+            <button 
+                onclick="exportReport('json')" 
+                class="btn-export json">
+                <span class="btn-icon">📋</span>
+                JSON
+            </button>
+        </div>
+    </div>
+    
+    <!-- زر الرجوع -->
+    <div class="bottom-actions">
+        <button 
+            onclick="nextStep(9)" 
+            class="btn-back-final">
+            <span class="btn-icon">◀</span>
+            الرجوع للسابق
+        </button>
+        
+        <small class="text-muted">
+            <i class="bi bi-info-circle"></i>
+            تأكد من حفظ التقرير قبل الخروج
+        </small>
+    </div>
+</div>    </div>
+
+</div>
+
+
+
+        <script src="js/app.js"></script>
+        <script src="js/industrial_database.js"></script>
+
+             
+
+        <script src="js/gpt_agent.js"></script> <!-- يجب أن يكون الأول -->
+            <script src="js/neural_guide_engine.js"></script>
+            <script src="js/gpt_activities.js"></script>
+            <script src="js/gpt_areas.js"></script>
+            <script src="js/gpt_decision104.js"></script>
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Leaflet JS لخرائط OpenStreetMap -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+</body>
+</html>
