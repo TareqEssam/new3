@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محرك البحث الذكي في الأدلة الرسمية
+ * محرك البحث في الأدلة الرسمية
  * 
  * يعمل مع: processed_guides.js + gpt_agent.js + neural_search_v6.js
  * بدون أي نموذج ذكاء اصطناعي خارجي — 100% Client-Side
@@ -325,19 +325,51 @@ const GuideFormatter = {
         ${this.formatChunkText(getChunkText(top.chunk), intent.rawWords)}
       </div>`;
 
-    // ===== نتائج بديلة (عند الالتباس) =====
+    // ===== نتائج بديلة مع مقتطف =====
     if (hasAlternatives) {
-      html += `
-      <div class="guide-alternatives">
-        <div class="guide-alternatives-label">🔍 وجدت أيضاً في:</div>
-        ${results.slice(1, 3).map(r => `
+      const altItems = results.slice(1, 4).map(r => {
+        // استخراج أول جملة مفيدة من النص (تتجاوز العنوان)
+        const fullText = getChunkText(r.chunk) || '';
+        const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 15);
+        // تخطي العنوان (أول سطر) وأخذ أول جملة حقيقية
+        const snippetLine = lines.length > 1 ? lines[1] : lines[0] || '';
+        // اقتطاع بذكاء عند نهاية جملة
+        let snippet = snippetLine.substring(0, 110);
+        if (snippetLine.length > 110) {
+          const lastStop = Math.max(snippet.lastIndexOf('،'), snippet.lastIndexOf('.'));
+          if (lastStop > 60) snippet = snippet.substring(0, lastStop + 1);
+          else snippet += '...';
+        }
+        // تلوين كلمات البحث في المقتطف
+        let coloredSnippet = snippet;
+        (intent.rawWords || []).forEach(word => {
+          if (!word || word.length < 3) return;
+          const safe = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          coloredSnippet = coloredSnippet.replace(
+            new RegExp(`(${safe})`, 'gi'),
+            '<mark class="guide-highlight">$1</mark>'
+          );
+        });
+        const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'.pdf').replace(/\.pdf$/i,'');
+        const shortName = guideName.length > 38 ? guideName.substring(0,38)+'...' : guideName;
+        return `
           <div class="guide-alt-item" onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}')">
             <span class="guide-alt-icon">📋</span>
             <div class="guide-alt-content">
-              <strong>${r.guide_name.replace('.pdf', '').replace('.pdf.pdf', '').substring(0, 40)}...</strong>
-              <small>صفحة ${r.chunk.page_num} — ${r.chunk.title.substring(0, 50)}</small>
+              <div class="guide-alt-header">
+                <strong>${shortName}</strong>
+                <span class="guide-alt-page">ص ${r.chunk.page_num}</span>
+              </div>
+              <div class="guide-alt-title">${r.chunk.title.substring(0,60)}</div>
+              ${coloredSnippet ? `<div class="guide-alt-snippet">${coloredSnippet}</div>` : ''}
             </div>
-          </div>`).join('')}
+          </div>`;
+      }).join('');
+
+      html += `
+      <div class="guide-alternatives">
+        <div class="guide-alternatives-label">🔍 وجدت أيضاً في:</div>
+        ${altItems}
       </div>`;
     }
 
@@ -680,9 +712,55 @@ window.openGuidePage = function(guideId, pageNum) {
 
     .guide-alt-icon { font-size: 1rem; flex-shrink: 0; }
 
-    .guide-alt-content { flex: 1; }
-    .guide-alt-content strong { font-size: 0.85rem; color: #1e293b; display: block; }
-    .guide-alt-content small { font-size: 0.75rem; color: #64748b; }
+    .guide-alt-content { flex: 1; min-width: 0; }
+
+    .guide-alt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+
+    .guide-alt-content strong {
+      font-size: 0.82rem;
+      color: #1e293b;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .guide-alt-page {
+      font-size: 0.72rem;
+      background: #0369a1;
+      color: white;
+      padding: 1px 7px;
+      border-radius: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .guide-alt-title {
+      font-size: 0.78rem;
+      color: #0369a1;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .guide-alt-snippet {
+      font-size: 0.78rem;
+      color: #64748b;
+      line-height: 1.5;
+      border-right: 2px solid #e2e8f0;
+      padding-right: 8px;
+      margin-top: 4px;
+      /* اقتطاع بعد سطرين */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
 
     /* ===== بطاقة التوضيح ===== */
     .guide-clarification-card {
