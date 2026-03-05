@@ -1660,26 +1660,17 @@ window.openGuidePage = function(filename, pageNum) {
     let cleanName = filename.replace(/\.pdf$/i, '').trim();
     let fileUrl = `guides/${cleanName}.pdf`;
 
-    // تحويل الرابط إلى رابط مطلق (Absolute URL) - ضروري جداً للمحركات الخارجية
-    const absoluteUrl = fileUrl.startsWith('http') 
-        ? fileUrl 
-        : window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + fileUrl;
+    // 💡 السر الاحترافي: استخدام مسار العارض المحلي (يجب أن يكون لديك مجلد pdfjs في مشروعك)
+    // هذا المسار يمنع الموبايل من "اختطاف" الملف ويفتحه داخل المتصفح
+    const viewerPath = 'js/pdfjs/web/viewer.html'; 
+    
+    // بناء الرابط المطلق للملف لضمان عمل العارض
+    const absolutePdfUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + fileUrl;
+    
+    // الرابط النهائي الذي سيتم تمريره للنافذة المنبثقة
+    const finalSmartUrl = `${viewerPath}?file=${encodeURIComponent(absolutePdfUrl)}#page=${pageNum}`;
 
-    // 💡 الحل العلمي: استخدام عارض PDF.js المستضاف
-    // هذا العارض يعمل كـ "بيئة تشغيل" (Runtime) للملف ويقبل بارامتر page# بشكل إلزامي
-    const pdfViewerUrl = "https://mozilla.github.io/pdf.js/web/viewer.html";
-    const finalUrl = `${pdfViewerUrl}?file=${encodeURIComponent(absoluteUrl)}#page=${pageNum}`;
-
-    // فحص نوع الجهاز (لأغراض الإحصاء فقط، لأن الحل سيعمل على الطرفين)
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    if (isMobile) {
-        // بدلاً من إظهار مودال "النسخ"، سنظهر مودال "جاري التحضير للفتح" 
-        // أو نفتح مباشرة لضمان تجربة مستخدم سريعة
-        showPdfModal(pageNum, 'smart_viewer', finalUrl);
-    } else {
-        window.open(finalUrl, '_blank');
-    }
+    showPdfModal(pageNum, 'pro_viewer', finalSmartUrl);
 };
 
 // نافذة الموبايل: تعرض رقم الصفحة بوضوح وتفتح PDF مباشرة
@@ -1722,88 +1713,46 @@ function showPdfModal(pageNum, viewerType, targetUrl) {
     const existing = document.getElementById('pdf-modal-overlay');
     if (existing) existing.remove();
 
-    // 1. بناء الرابط المطلق للملف (Absolute URL) - ضروري جداً لتجاوز مشاكل المسارات
-    let absolutePdfUrl = targetUrl.split('#')[0];
-    if (!absolutePdfUrl.startsWith('http')) {
-        absolutePdfUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + absolutePdfUrl;
-    }
+    const isMobileView = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // 2. المحرك الاحترافي (نستخدم Google Docs Viewer كـ Proxy لضمان عدم تحميل الملف على الجهاز)
-    // هذا العارض هو الوحيد الذي يستجيب لبارامتر الانتقال عند دمجه مع الـ Hash
-    const googleViewer = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(absolutePdfUrl)}`;
-    const finalTarget = `${googleViewer}#page=${pageNum}`;
+    // صياغة تعليمات احترافية تخبر المستخدم أن النظام سيتولى المهمة
+    let instruction = `<div style="background:rgba(255,255,255,0.1); border-radius:12px; padding:15px; margin:12px 0; text-align:right; border-right: 5px solid #fbbf24;">
+        <div style="font-size:14px; line-height:1.8;">
+            🚀 <strong>نظام العرض الذكي مفعّل:</strong><br>
+            سيتم فتح الدليل الفني الآن والانتقال مباشرة إلى المادة المطلوبة في الصفحة <strong style="color:#fbbf24; font-size:18px;">(${pageNum})</strong>.
+        </div>
+    </div>`;
 
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    // 3. صياغة التعليمات بناءً على نوع الجهاز
-    let instruction = isMobile 
-        ? `<div style="background:rgba(255,255,255,0.1); border-radius:10px; padding:15px; margin:12px 0; text-align:right; border-right: 4px solid #fbbf24;">
-            <div style="font-size:14px; line-height:1.8;">
-                🚀 <strong>تم تفعيل الفتح المباشر للموبايل:</strong><br>
-                سيفتح الدليل الآن ويقفز تلقائياً للصفحة <strong style="color:#fbbf24;">(${pageNum})</strong>.<br>
-                <small style="opacity:0.8;">* ملاحظة: قد يستغرق التحميل ثواني بناءً على سرعة الإنترنت.</small>
-            </div>
-          </div>`
-        : `<div style="background:rgba(255,255,255,0.1); border-radius:10px; padding:15px; margin:12px 0; text-align:right;">
-            <div style="font-size:14px; line-height:1.8;">
-                سيتم فتح الصفحة رقم <strong style="color:#fbbf24;">(${pageNum})</strong> مباشرة.<br>
-                النظام جاهز الآن لعرض البيانات الفنية.
-            </div>
-          </div>`;
-
-    // --- بناء الـ UI (نفس التنسيق الجمالي السابق مع تحسينات الثبات) ---
     const overlay = document.createElement('div');
     overlay.id = 'pdf-modal-overlay';
-    overlay.style.cssText = `position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px); opacity:0; transition:opacity 0.3s ease;`;
+    overlay.style.cssText = `position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px); opacity:0; transition:opacity 0.3s ease;`;
 
     const modal = document.createElement('div');
-    modal.style.cssText = `background:linear-gradient(135deg, #064e3b 0%, #065f46 100%); color:white; padding:30px; border-radius:20px; width:400px; max-width:90vw; direction:rtl; font-family:'Tajawal',sans-serif; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); transform:scale(0.95); transition:transform 0.3s ease;`;
+    modal.style.cssText = `background:linear-gradient(135deg, #064e3b 0%, #065f46 100%); color:white; padding:30px; border-radius:24px; width:400px; max-width:92vw; direction:rtl; font-family:'Tajawal',sans-serif; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); transform:scale(0.9); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);`;
 
     modal.innerHTML = `
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
-            <div style="font-size:35px;">📑</div>
+            <div style="font-size:40px;">🧪</div>
             <div>
-                <strong style="font-size:18px; display:block; color:#fbbf24;">معالج المستندات الذكي</strong>
-                <span style="font-size:12px; opacity:0.7;">فتح صفحة محددة بنظام Bypass</span>
+                <strong style="font-size:18px; display:block; color:#fbbf24;">المعالج الفني للدلائل</strong>
+                <span style="font-size:12px; opacity:0.7;">Direct Page Access (Mobile Optimized)</span>
             </div>
         </div>
         ${instruction}
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button id="pdf-open-btn" style="flex:2; background:#fbbf24; color:#064e3b; border:none; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer; font-family:inherit;">✅ فتح الصفحة الآن</button>
-            <button id="pdf-cancel-btn" style="flex:1; background:rgba(255,255,255,0.1); color:white; border:none; padding:15px; border-radius:12px; cursor:pointer; font-family:inherit;">إلغاء</button>
+        <div style="display:flex; gap:12px; margin-top:25px;">
+            <button id="pdf-open-btn" style="flex:2; background:#fbbf24; color:#064e3b; border:none; padding:16px; border-radius:14px; font-weight:bold; cursor:pointer; font-family:inherit; font-size:16px; box-shadow:0 10px 20px rgba(251,191,36,0.3);">✅ فتح المادة الآن</button>
+            <button id="pdf-cancel-btn" style="flex:1; background:rgba(255,255,255,0.1); color:white; border:none; padding:16px; border-radius:14px; cursor:pointer; font-family:inherit;">إغاء</button>
         </div>`;
 
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    setTimeout(() => { overlay.style.opacity = '1'; modal.style.transform = 'scale(1)'; }, 10);
+    requestAnimationFrame(() => { overlay.style.opacity = '1'; modal.style.transform = 'scale(1)'; });
 
     document.getElementById('pdf-open-btn').onclick = () => {
         overlay.remove();
-        
-        if (isMobile) {
-            // 🚀 الحل التقني "الضربة القاضية": 
-            // فتح صفحة HTML فارغة "On the fly" تحتوي على iframe بالرابط الكامل.
-            // هذا يمنع الموبايل من فتح تطبيق الـ PDF الخارجي ويجبره على العرض داخل المتصفح.
-            const viewerHtml = `
-                <html>
-                    <head>
-                        <title>جاري تحميل الصفحة ${pageNum}...</title>
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <style>body,html,iframe {margin:0; padding:0; height:100%; width:100%; overflow:hidden;}</style>
-                    </head>
-                    <body>
-                        <iframe src="${finalTarget}" frameborder="0"></iframe>
-                    </body>
-                </html>`;
-            
-            const blob = new Blob([viewerHtml], { type: 'text/html' });
-            const blobUrl = URL.createObjectURL(blob);
-            window.open(blobUrl, '_blank');
-        } else {
-            // في الكمبيوتر، الرابط المباشر مع الهاشتاج يعمل بكفاءة
-            window.open(finalTarget, '_blank');
-        }
+        // الفتح باستخدام الرابط الذي يشغل المحرك المحلي
+        window.open(targetUrl, '_blank');
     };
 
     document.getElementById('pdf-cancel-btn').onclick = () => overlay.remove();
