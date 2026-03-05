@@ -991,16 +991,36 @@ else {
 
 function forceDownloadGuide(url, name) {
     try {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = name.endsWith('.pdf') ? name : name + '.pdf';
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        const fileName = name.endsWith('.pdf') ? name : name + '.pdf';
+
+        // بناء الرابط الكامل المطلق
+        let absoluteUrl = url;
+        if (!url.startsWith('http')) {
+            absoluteUrl = window.location.origin + '/' + url;
+        }
+
+        // استخدام fetch + blob لضمان التحميل الفعلي على الموبايل والكمبيوتر
+        // (يحل مشكلة CORS مع GitHub Pages التي تتجاهل خاصية download)
+        fetch(absoluteUrl)
+            .then(function(response) {
+                if (!response.ok) throw new Error('fetch failed');
+                return response.blob();
+            })
+            .then(function(blob) {
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 3000);
+            })
+            .catch(function() {
+                // fallback: فتح في تبويب جديد إذا فشل fetch
+                window.open(absoluteUrl, '_blank');
+            });
     } catch(e) {
-        // fallback: فتح في تبويب جديد إذا فشل التحميل
         window.open(url, '_blank');
     }
 }
