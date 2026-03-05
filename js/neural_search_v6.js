@@ -1,5 +1,5 @@
 /****************************************************************************
- * 🧠 NeuralSearch v6.0 - مــحرك البحث 
+ * 🧠 NeuralSearch v6.0 - محرك البحث 
  * ذكاء اصطناعي محلي 100% - تجربة مستخدم خارقة
  * 
  * الميزات الثورية:
@@ -1685,14 +1685,16 @@ window.openGuidePage = function(filename, pageNum) {
     let targetUrl;
 
     if (isMobile) {
-        // الموبايل: استخدام PDF.js من Mozilla لأنه الوحيد الذي يدعم
-        // الانتقال المباشر لصفحة محددة عبر #page=N على الموبايل
-        const fullUrl = window.location.origin + '/' + baseUrl;
-        targetUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(fullUrl)}#page=${pageNum}`;
-    } else {
-        // الكمبيوتر: الفتح المباشر مع #page=X يعمل بشكل مثالي
-        targetUrl = `${baseUrl}#page=${pageNum}`;
-    }
+    // الموبايل: استخدام Google Docs Viewer مع page parameter
+    // Mozilla PDF.js يرفض الملفات من GitHub Pages بسبب CORS
+    // Google Docs Viewer يدعم فتح الملفات من GitHub Pages بنجاح
+    const fullUrl = window.location.origin + '/' + baseUrl;
+    // Google Docs Viewer يدعم المعامل page= للانتقال لصفحة محددة
+    targetUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fullUrl)}&embedded=false#page=${pageNum}`;
+} else {
+    // الكمبيوتر: الفتح المباشر مع #page=X يعمل بشكل مثالي
+    targetUrl = `${baseUrl}#page=${pageNum}`;
+}
 
     // نسخ رقم الصفحة للحافظة للاحتياط
     try {
