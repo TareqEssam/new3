@@ -1656,122 +1656,24 @@ function getExcerpt(text, keywords, isShort = false) {
 }
 
 // ==================== 🔗 فتح صفحة الدليل (النسخة المتوافقة مع GitHub) ====================
+// ==================== 🔗 فتح صفحة الدليل (النسخة الاحترافية باستخدام العارض الذكي) ====================
 window.openGuidePage = function(filename, pageNum) {
+    // تنظيف اسم الملف
     let cleanName = filename.replace(/\.pdf$/i, '').trim();
+    
+    // مسار الملف داخل مجلد الأدلة
     let fileUrl = `guides/${cleanName}.pdf`;
 
-    // 💡 السر الاحترافي: استخدام مسار العارض المحلي (يجب أن يكون لديك مجلد pdfjs في مشروعك)
-    // هذا المسار يمنع الموبايل من "اختطاف" الملف ويفتحه داخل المتصفح
-    const viewerPath = 'js/pdfjs/web/viewer.html'; 
-    
-    // بناء الرابط المطلق للملف لضمان عمل العارض
-    const absolutePdfUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + fileUrl;
-    
-    // الرابط النهائي الذي سيتم تمريره للنافذة المنبثقة
-    const finalSmartUrl = `${viewerPath}?file=${encodeURIComponent(absolutePdfUrl)}#page=${pageNum}`;
+    // توجيه المستخدم (سواء موبايل أو كمبيوتر) إلى العارض الجديد مع تمرير الملف والصفحة
+    let viewerUrl = `viewer.html?file=${encodeURIComponent(fileUrl)}&page=${pageNum}`;
 
-    showPdfModal(pageNum, 'pro_viewer', finalSmartUrl);
+    // فتح العارض في نافذة جديدة مباشرة
+    window.open(viewerUrl, '_blank');
 };
 
-// نافذة الموبايل: تعرض رقم الصفحة بوضوح وتفتح PDF مباشرة
-function showMobilePageModal(pdfUrl, pageNum) {
-    var ex = document.getElementById('mobile-page-modal');
-    if (ex) ex.remove();
 
-    var overlay = document.createElement('div');
-    overlay.id = 'mobile-page-modal';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999999;display:flex;align-items:center;justify-content:center;';
 
-    var box = document.createElement('div');
-    box.style.cssText = 'background:linear-gradient(135deg,#064e3b,#065f46);color:white;padding:28px;border-radius:16px;width:320px;max-width:90vw;font-family:Tajawal,sans-serif;direction:rtl;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);';
-    box.innerHTML = '<div style="font-size:38px;margin-bottom:10px;">📄</div>'
-        + '<div style="font-size:17px;font-weight:bold;margin-bottom:6px;">فتح الدليل</div>'
-        + '<div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:16px;margin:14px 0;">'
-        + '<div style="font-size:13px;opacity:0.8;margin-bottom:4px;">انتقل إلى الصفحة</div>'
-        + '<div style="font-size:52px;font-weight:bold;color:#fbbf24;line-height:1.1;">' + pageNum + '</div>'
-        + '<div style="font-size:12px;opacity:0.65;margin-top:6px;">✓ رقم الصفحة منسوخ في الحافظة</div>'
-        + '</div>'
-        + '<div style="font-size:12px;opacity:0.7;margin-bottom:16px;line-height:1.7;">بعد فتح الملف، اضغط على حقل رقم الصفحة<br>في الأعلى والصق الرقم</div>'
-        + '<div style="display:flex;gap:10px;">'
-        + '<button id="mpm-open" style="flex:1;background:#fbbf24;color:#064e3b;border:none;padding:13px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:15px;font-weight:bold;cursor:pointer;">✅ فتح الملف</button>'
-        + '<button id="mpm-cancel" style="background:rgba(255,255,255,0.15);color:white;border:none;padding:13px 16px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:14px;cursor:pointer;">إلغاء</button>'
-        + '</div>';
 
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-
-    document.getElementById('mpm-open').onclick = function() {
-        overlay.remove();
-        window.open(pdfUrl, '_blank');
-    };
-    document.getElementById('mpm-cancel').onclick = function() { overlay.remove(); };
-    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-}
-
-// ==================== 🛠️ النافذة الاحترافية المحدثة ====================
-function showPdfModal(pageNum, viewerType, targetUrl) {
-    const existing = document.getElementById('pdf-modal-overlay');
-    if (existing) existing.remove();
-
-    const isMobileView = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    // 1. استخراج الرابط الأصلي للملف وتجريده من أي إضافات
-    // targetUrl قد يحتوي على رابط جوجل بالفعل، نحتاج الرابط الخام للملف
-    let rawPdfUrl = targetUrl;
-    if (targetUrl.includes('url=')) {
-        rawPdfUrl = decodeURIComponent(targetUrl.split('url=')[1].split('&')[0]);
-    }
-    rawPdfUrl = rawPdfUrl.split('#')[0]; // الرابط الخام بدون صفحات
-
-    // 2. تحويله إلى رابط مطلق (Absolute) - شرط أساسي لعمل عارض جوجل
-    if (!rawPdfUrl.startsWith('http')) {
-        rawPdfUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + rawPdfUrl;
-    }
-
-    // 3. 🚀 السر التقني (The Golden Fix): 
-    // بناء رابط جوجل بحيث يكون رقم الصفحة "ملتصقاً" برابط الملف المشفر نفسه وليس برابط جوجل
-    const encodedFullUrl = encodeURIComponent(rawPdfUrl + '#page=' + pageNum);
-    const finalMobileUrl = `https://docs.google.com/viewer?url=${encodedFullUrl}&embedded=true`;
-
-    // 4. واجهة المستخدم (UI)
-    const overlay = document.createElement('div');
-    overlay.id = 'pdf-modal-overlay';
-    overlay.style.cssText = `position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px);`;
-
-    const modal = document.createElement('div');
-    modal.style.cssText = `background:linear-gradient(135deg, #064e3b 0%, #065f46 100%); color:white; padding:25px; border-radius:15px; width:350px; max-width:90vw; direction:rtl; text-align:center; font-family:'Tajawal',sans-serif;`;
-
-    modal.innerHTML = `
-        <div style="font-size:40px; margin-bottom:10px;">📄</div>
-        <div style="font-weight:bold; font-size:18px; margin-bottom:10px;">توجيه ذكي للموبايل</div>
-        <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; font-size:14px; line-height:1.6; margin-bottom:20px;">
-            سيفتح الملف الآن ويقفز تلقائياً إلى:<br>
-            <strong style="color:#fbbf24; font-size:20px;">الصفحة ${pageNum}</strong>
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button id="pdf-open-btn" style="flex:2; background:#fbbf24; color:#064e3b; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">✅ فتح الآن</button>
-            <button id="pdf-cancel-btn" style="flex:1; background:rgba(255,255,255,0.2); color:white; border:none; padding:12px; border-radius:8px; cursor:pointer;">إلغاء</button>
-        </div>`;
-
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-
-    document.getElementById('pdf-open-btn').onclick = () => {
-        overlay.remove();
-        if (isMobileView) {
-            // 🚀 التكتيك الأخير: فتح صفحة ويب (Blob) تحتوي على iframe
-            // هذا يمنع الموبايل من فتح تطبيق Drive الخارجي ويجبره على البقاء في المتصفح لرؤية الصفحة المطلوبة
-            const html = `<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body,html,iframe{margin:0;padding:0;height:100%;width:100%;overflow:hidden;}</style></head>
-                          <body><iframe src="${finalMobileUrl}"></iframe></body></html>`;
-            const blob = new Blob([html], {type: 'text/html'});
-            window.location.href = URL.createObjectURL(blob); // الفتح في نفس التاب لضمان عدم المنع
-        } else {
-            window.open(targetUrl, '_blank');
-        }
-    };
-
-    document.getElementById('pdf-cancel-btn').onclick = () => overlay.remove();
-}
 // ==================== ✂️ عرض مقتطف النص (لا يحتاج تعديل جوهري) ====================
 window.showGuideSnippet = function(filename, pageNum, exactPhrase) {
     if (!window.FULL_GUIDES_DB) return;
@@ -1806,7 +1708,6 @@ window.showGuideSnippet = function(filename, pageNum, exactPhrase) {
 // ==================== 📤 تصدير الدوال ====================
 window.handleGuideSearch = handleGuideSearch;
 
-// إتاحة عالمياً
 // إتاحة عالمياً
 window.NeuralSearch = NeuralSearch;
 window.initializeNeuralSearch = initializeNeuralSearch;
