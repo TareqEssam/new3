@@ -418,59 +418,56 @@ function getSmartLinksGPT(url) {
 }
 
 function forceDownloadGuide(url, name) {
-    // 🧹 1. تنظيف اسم الملف (إزالة .pdf إن وجدت، ثم إزالة أي نقاط زائدة في النهاية، ثم إضافة .pdf نظيفة)
     var cleanName = name.replace(/\.pdf$/i, '').replace(/\.+$/, '').trim();
     var fileName = cleanName + '.pdf';
-
-    // 🧹 2. تنظيف الرابط (تحويل أي ..pdf أو ...pdf إلى .pdf واحدة صحيحة)
-    var cleanUrl = url.replace(/\.+pdf$/i, '.pdf');
-
-    var absoluteUrl = cleanUrl;
-    if (!cleanUrl.startsWith('http')) {
-        // التأكد من عدم تكرار الشرطة المائلة (/)
-        var path = cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl;
+    
+    var absoluteUrl = url;
+    if (!url.startsWith('http')) {
+        // منع تكرار الشرطة المائلة
+        var path = url.startsWith('/') ? url : '/' + url;
         absoluteUrl = window.location.origin + path;
     }
 
     var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+    // دالة للتعامل مع الخطأ 404
+    function handle404Error(r) {
+        if (!r.ok) {
+            alert("❌ الملف غير موجود على الخادم. يرجى التأكد من أن اسم الملف في GitHub يطابق الكود تماماً (مراعاة الـ .pdf والمسافات).");
+            throw new Error("404 Not Found");
+        }
+        return r;
+    }
+
     if (isIOS) {
         fetch(absoluteUrl)
-            .then(function(r) { 
-                // التحقق من نجاح الطلب (تجنب تحميل صفحة 404 على أنها ملف PDF)
-                if (!r.ok) throw new Error("Network response was not ok");
-                return r.arrayBuffer(); 
-            })
+            .then(handle404Error)
+            .then(function(r) { return r.arrayBuffer(); })
             .then(function(buffer) {
                 var bytes = new Uint8Array(buffer);
                 var binary = '';
-                var chunk = 8192;
-                for (var i = 0; i < bytes.length; i += chunk) {
-                    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+                for (var i = 0; i < bytes.length; i += 8192) {
+                    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
                 }
                 var dataUri = 'data:application/octet-stream;base64,' + btoa(binary);
                 var a = document.createElement('a');
                 a.href = dataUri;
                 a.download = fileName;
-                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(function() { document.body.removeChild(a); }, 1000);
             })
-            .catch(function() { window.open(absoluteUrl, '_blank'); });
+            .catch(function() { /* تم إيقاف التحميل الوهمي */ });
     } else {
         fetch(absoluteUrl)
-            .then(function(r) { 
-                if (!r.ok) throw new Error("Network response was not ok");
-                return r.blob(); 
-            })
+            .then(handle404Error)
+            .then(function(r) { return r.blob(); })
             .then(function(blob) {
                 var b = new Blob([blob], { type: 'application/octet-stream' });
                 var blobUrl = URL.createObjectURL(b);
                 var a = document.createElement('a');
                 a.href = blobUrl;
                 a.download = fileName;
-                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(function() {
@@ -478,15 +475,7 @@ function forceDownloadGuide(url, name) {
                     URL.revokeObjectURL(blobUrl);
                 }, 2000);
             })
-            .catch(function() {
-                var a = document.createElement('a');
-                a.href = absoluteUrl;
-                a.download = fileName;
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(function() { document.body.removeChild(a); }, 1000);
-            });
+            .catch(function() { /* تم إيقاف التحميل الوهمي */ });
     }
 }
 
