@@ -990,22 +990,44 @@ else {
 
 
 function forceDownloadGuide(url, name) {
-    try {
-        const fileName = name.endsWith('.pdf') ? name : name + '.pdf';
-        let absoluteUrl = url;
-        if (!url.startsWith('http')) {
-            absoluteUrl = window.location.origin + '/' + url;
-        }
+    var fileName = name.endsWith('.pdf') ? name : name + '.pdf';
+    var absoluteUrl = url;
+    if (!url.startsWith('http')) {
+        absoluteUrl = window.location.origin + '/' + url;
+    }
+
+    var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    if (isIOS) {
+        // iOS Safari: يتجاهل a.download تماماً للـ PDF
+        // الحل الوحيد: تحويل الملف لـ base64 data URI بنوع octet-stream
         fetch(absoluteUrl)
-            .then(function(response) {
-                if (!response.ok) throw new Error('fetch failed');
-                return response.blob();
+            .then(function(r) { return r.arrayBuffer(); })
+            .then(function(buffer) {
+                var bytes = new Uint8Array(buffer);
+                var binary = '';
+                var chunk = 8192;
+                for (var i = 0; i < bytes.length; i += chunk) {
+                    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+                }
+                var dataUri = 'data:application/octet-stream;base64,' + btoa(binary);
+                var a = document.createElement('a');
+                a.href = dataUri;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() { document.body.removeChild(a); }, 1000);
             })
+            .catch(function() { window.open(absoluteUrl, '_blank'); });
+    } else {
+        // Android + Desktop: blob بنوع octet-stream
+        fetch(absoluteUrl)
+            .then(function(r) { return r.blob(); })
             .then(function(blob) {
-                // ← الحل: إنشاء blob جديد بنوع octet-stream يجبر المتصفح على التحميل
-                const downloadBlob = new Blob([blob], { type: 'application/octet-stream' });
-                const blobUrl = URL.createObjectURL(downloadBlob);
-                const a = document.createElement('a');
+                var b = new Blob([blob], { type: 'application/octet-stream' });
+                var blobUrl = URL.createObjectURL(b);
+                var a = document.createElement('a');
                 a.href = blobUrl;
                 a.download = fileName;
                 a.style.display = 'none';
@@ -1014,11 +1036,10 @@ function forceDownloadGuide(url, name) {
                 setTimeout(function() {
                     document.body.removeChild(a);
                     URL.revokeObjectURL(blobUrl);
-                }, 1000);
+                }, 2000);
             })
             .catch(function() {
-                // ← الـ fallback: تحميل مباشر بدون fetch (لا يفتح الملف)
-                const a = document.createElement('a');
+                var a = document.createElement('a');
                 a.href = absoluteUrl;
                 a.download = fileName;
                 a.style.display = 'none';
@@ -1026,14 +1047,6 @@ function forceDownloadGuide(url, name) {
                 a.click();
                 setTimeout(function() { document.body.removeChild(a); }, 1000);
             });
-    } catch(e) {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = (name.endsWith('.pdf') ? name : name + '.pdf');
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(function() { document.body.removeChild(a); }, 1000);
     }
 }
 
@@ -5824,5 +5837,3 @@ if (document.readyState === 'loading') {
             if (biCharts.waste) biCharts.waste.destroy();
             biCharts.waste = new Chart(ctx6, { type: 'bar', data: { labels: ['عضوية', 'معادن', 'بلاستيك', 'ورق', 'كيماويات'], datasets: [{ label: 'الكمية (طن)', data: [4200, 3100, 2450, 1800, 900], backgroundColor: '#95a5a6' }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
-
-
