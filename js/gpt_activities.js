@@ -1,7 +1,7 @@
 // gpt_activities.js
 window.GPT_AGENT = window.GPT_AGENT || {};
 
-// ==================== معالج أسئلة الأنشطة - الإصدار الأصلي ====================
+// ==================== مـــعالج أسئلة الأنشطة - الإصدار الأصلي ====================
 async function handleActivityQuery(query, questionType, preComputedContext, preComputedEntities) {
     if (typeof NeuralSearch === 'undefined' || typeof masterActivityDB === 'undefined') {
         return "⚠️ نظام البحث عن الأنشطة غير متوفر حالياً.";
@@ -257,9 +257,9 @@ function formatActivityResponse(activity, questionType) {
                         <a href="${links.viewUrl}" target="_blank" class="link-btn" style="flex:1; justify-content:center; background: #e0f2fe; color: #0369a1 !important; box-shadow:none; border: 1px solid #bae6fd;">
                             <i class="fas fa-eye"></i> عرض
                         </a>
-                        <a href="${links.downloadUrl}" target="_blank" class="link-btn" style="flex:1; justify-content:center; box-shadow:none;">
-                            <i class="fas fa-download"></i> تحميل
-                        </a>
+                        <button onclick="forceDownloadGuide('${links.downloadUrl}', '${guide.name}')" class="link-btn" style="flex:1; justify-content:center; box-shadow:none; cursor:pointer; border: none;">
+    <i class="fas fa-download"></i> تحميل
+</button>
                         
                         ${guideInDB ? `
                         <!-- زر البحث الذكي يظهر فقط إذا توفر الدليل في القاعدة -->
@@ -282,9 +282,9 @@ function formatActivityResponse(activity, questionType) {
                     <a href="${links.viewUrl}" target="_blank" class="link-btn" style="flex:1; justify-content:center; background: #e0f2fe; color: #0369a1 !important; box-shadow:none; border: 1px solid #bae6fd;">
                         <i class="fas fa-eye"></i> عرض
                     </a>
-                    <a href="${links.downloadUrl}" target="_blank" class="link-btn" style="flex:1; justify-content:center; box-shadow:none;">
-                        <i class="fas fa-download"></i> تحميل
-                    </a>
+                    <button onclick="forceDownloadGuide('${links.downloadUrl}', '${guideName}')" class="link-btn" style="flex:1; justify-content:center; box-shadow:none; cursor:pointer; border: none;">
+    <i class="fas fa-download"></i> تحميل
+</button>
                 </div>
             </div>`;
         }
@@ -530,9 +530,9 @@ function formatGuideInfo(details) {
             <a href="${links.viewUrl}" target="_blank" class="link-btn" style="flex:1; justify-content:center; background: #e0f2fe; color: #0369a1 !important;">
                 <i class="fas fa-eye"></i> عرض
             </a>
-            <a href="${links.downloadUrl}" target="_blank" class="link-btn" style="flex:1; justify-content:center;">
-                <i class="fas fa-download"></i> تحميل
-            </a>
+           <button onclick="forceDownloadGuide('${links.downloadUrl}', '${guideName}')" class="link-btn" style="flex:1; justify-content:center; cursor:pointer; border: none;">
+    <i class="fas fa-download"></i> تحميل
+</button>
             ${guideInDB ? `
             <button onclick="window.startGuideChat('${guideInDB.id}', '${guideName}')" class="link-btn" style="flex:1; justify-content:center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; border: none; box-shadow: 0 2px 5px rgba(118, 75, 162, 0.3);">
                 <i class="fas fa-robot"></i> ابحث 
