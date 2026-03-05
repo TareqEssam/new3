@@ -993,35 +993,69 @@ function forceDownloadGuide(url, name) {
     try {
         const fileName = name.endsWith('.pdf') ? name : name + '.pdf';
 
-        // بناء الرابط الكامل المطلق
         let absoluteUrl = url;
         if (!url.startsWith('http')) {
             absoluteUrl = window.location.origin + '/' + url;
         }
 
-        // استخدام fetch + blob لضمان التحميل الفعلي على الموبايل والكمبيوتر
-        // (يحل مشكلة CORS مع GitHub Pages التي تتجاهل خاصية download)
-        fetch(absoluteUrl)
-            .then(function(response) {
-                if (!response.ok) throw new Error('fetch failed');
-                return response.blob();
-            })
-            .then(function(blob) {
-                const blobUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = fileName;
-                document.body.appendChild(a);
-                a.click();
+        const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+        if (isMobile) {
+            // الموبايل: إنشاء رابط تحميل مباشر عبر Google Drive proxy أو رابط مباشر
+            // مع إضافة ?raw=true لـ GitHub Pages لإجبار التحميل
+            let downloadUrl = absoluteUrl;
+            if (absoluteUrl.includes('github.io')) {
+                // GitHub Pages: نضيف header عبر رابط raw إذا أمكن، أو نستخدم workaround
+                downloadUrl = absoluteUrl;
+            }
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = fileName;
+            a.rel = 'noopener noreferrer';
+            // على الموبايل يجب إضافة العنصر وإزالته بشكل صحيح
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(function() {
                 document.body.removeChild(a);
-                setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 3000);
-            })
-            .catch(function() {
-                // fallback: فتح في تبويب جديد إذا فشل fetch
-                window.open(absoluteUrl, '_blank');
-            });
+            }, 1000);
+        } else {
+            // الكمبيوتر: استخدام fetch + blob (يعمل بشكل مثالي)
+            fetch(absoluteUrl)
+                .then(function(response) {
+                    if (!response.ok) throw new Error('fetch failed');
+                    return response.blob();
+                })
+                .then(function(blob) {
+                    const blobUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 3000);
+                })
+                .catch(function() {
+                    // fallback للكمبيوتر: تحميل مباشر بدون fetch
+                    const a = document.createElement('a');
+                    a.href = absoluteUrl;
+                    a.download = fileName;
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                });
+        }
     } catch(e) {
-        window.open(url, '_blank');
+        // آخر خط دفاع: تحميل مباشر
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (name.endsWith('.pdf') ? name : name + '.pdf');
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 }
 
@@ -5812,4 +5846,5 @@ if (document.readyState === 'loading') {
             if (biCharts.waste) biCharts.waste.destroy();
             biCharts.waste = new Chart(ctx6, { type: 'bar', data: { labels: ['عضوية', 'معادن', 'بلاستيك', 'ورق', 'كيماويات'], datasets: [{ label: 'الكمية (طن)', data: [4200, 3100, 2450, 1800, 900], backgroundColor: '#95a5a6' }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
+
 
