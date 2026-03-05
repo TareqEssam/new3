@@ -1,5 +1,5 @@
 /****************************************************************************
- * 🧠 NeuralSearch v6.0 - مـحرك البحث 
+ * 🧠 NeuralSearch v6.0 - مــــــــــــــــــــــحرك البحث 
  * ذكاء اصطناعي محلي 100% - تجربة مستخدم خارقة
  * 
  * الميزات الثورية:
@@ -1686,13 +1686,10 @@ window.openGuidePage = function(filename, pageNum) {
 
     let targetUrl;
     if (isMobile) {
-        // الموبايل: فتح الـ PDF مباشرة مع رقم الصفحة
-        // mozilla PDF.js يرفض cross-origin في iframe، نفتح تبويب جديد بدلاً منه
         try { navigator.clipboard.writeText(pageNum.toString()).catch(function(){}); } catch(e) {}
         showMobilePageModal(fullUrl, pageNum);
         return;
     } else {
-        // الكمبيوتر: يعمل بشكل مثالي
         targetUrl = baseUrl + '#page=' + pageNum;
     }
 
@@ -1703,25 +1700,25 @@ window.openGuidePage = function(filename, pageNum) {
     showPdfModal(pageNum, 'github_direct', targetUrl);
 };
 
-// نافذة الموبايل: تعرض رقم الصفحة وتفتح الـ PDF مباشرة
+// نافذة الموبايل: تعرض رقم الصفحة بوضوح وتفتح PDF مباشرة
 function showMobilePageModal(pdfUrl, pageNum) {
-    var existing = document.getElementById('mobile-page-modal');
-    if (existing) existing.remove();
+    var ex = document.getElementById('mobile-page-modal');
+    if (ex) ex.remove();
 
     var overlay = document.createElement('div');
     overlay.id = 'mobile-page-modal';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999999;display:flex;align-items:center;justify-content:center;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999999;display:flex;align-items:center;justify-content:center;';
 
     var box = document.createElement('div');
     box.style.cssText = 'background:linear-gradient(135deg,#064e3b,#065f46);color:white;padding:28px;border-radius:16px;width:320px;max-width:90vw;font-family:Tajawal,sans-serif;direction:rtl;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);';
-    box.innerHTML = '<div style="font-size:40px;margin-bottom:12px;">📄</div>'
-        + '<div style="font-size:17px;font-weight:bold;margin-bottom:8px;">فتح الدليل</div>'
-        + '<div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin:14px 0;">'
-        + '<div style="font-size:13px;opacity:0.85;margin-bottom:6px;">انتقل إلى الصفحة</div>'
-        + '<div style="font-size:48px;font-weight:bold;color:#fbbf24;line-height:1;">' + pageNum + '</div>'
-        + '<div style="font-size:12px;opacity:0.7;margin-top:6px;">رقم الصفحة منسوخ في الحافظة ✓</div>'
+    box.innerHTML = '<div style="font-size:38px;margin-bottom:10px;">📄</div>'
+        + '<div style="font-size:17px;font-weight:bold;margin-bottom:6px;">فتح الدليل</div>'
+        + '<div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:16px;margin:14px 0;">'
+        + '<div style="font-size:13px;opacity:0.8;margin-bottom:4px;">انتقل إلى الصفحة</div>'
+        + '<div style="font-size:52px;font-weight:bold;color:#fbbf24;line-height:1.1;">' + pageNum + '</div>'
+        + '<div style="font-size:12px;opacity:0.65;margin-top:6px;">✓ رقم الصفحة منسوخ في الحافظة</div>'
         + '</div>'
-        + '<div style="font-size:12px;opacity:0.75;margin-bottom:16px;">بعد فتح الملف، اضغط على حقل الصفحة في الأعلى وأدخل الرقم</div>'
+        + '<div style="font-size:12px;opacity:0.7;margin-bottom:16px;line-height:1.7;">بعد فتح الملف، اضغط على حقل رقم الصفحة<br>في الأعلى والصق الرقم</div>'
         + '<div style="display:flex;gap:10px;">'
         + '<button id="mpm-open" style="flex:1;background:#fbbf24;color:#064e3b;border:none;padding:13px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:15px;font-weight:bold;cursor:pointer;">✅ فتح الملف</button>'
         + '<button id="mpm-cancel" style="background:rgba(255,255,255,0.15);color:white;border:none;padding:13px 16px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:14px;cursor:pointer;">إلغاء</button>'
