@@ -420,36 +420,48 @@ function getSmartLinksGPT(url) {
 function forceDownloadGuide(url, name) {
     try {
         const fileName = name.endsWith('.pdf') ? name : name + '.pdf';
-
-        // بناء الرابط الكامل المطلق
         let absoluteUrl = url;
         if (!url.startsWith('http')) {
             absoluteUrl = window.location.origin + '/' + url;
         }
-
-        // استخدام fetch لتحميل الملف كـ blob لضمان التحميل الفعلي
-        // (يحل مشكلة CORS مع GitHub Pages على الموبايل والكمبيوتر)
         fetch(absoluteUrl)
-            .then(response => {
-                if (!response.ok) throw new Error('Network error');
+            .then(function(response) {
+                if (!response.ok) throw new Error('fetch failed');
                 return response.blob();
             })
-            .then(blob => {
-                const blobUrl = URL.createObjectURL(blob);
+            .then(function(blob) {
+                // ← الحل: إنشاء blob جديد بنوع octet-stream يجبر المتصفح على التحميل
+                const downloadBlob = new Blob([blob], { type: 'application/octet-stream' });
+                const blobUrl = URL.createObjectURL(downloadBlob);
                 const a = document.createElement('a');
                 a.href = blobUrl;
                 a.download = fileName;
+                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(blobUrl), 3000);
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                }, 1000);
             })
-            .catch(() => {
-                // احتياط: فتح في تبويب جديد إذا فشل fetch
-                window.open(absoluteUrl, '_blank');
+            .catch(function() {
+                // ← الـ fallback: تحميل مباشر بدون fetch (لا يفتح الملف)
+                const a = document.createElement('a');
+                a.href = absoluteUrl;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() { document.body.removeChild(a); }, 1000);
             });
     } catch(e) {
-        window.open(url, '_blank');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (name.endsWith('.pdf') ? name : name + '.pdf');
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() { document.body.removeChild(a); }, 1000);
     }
 }
 
