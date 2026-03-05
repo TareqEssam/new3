@@ -1660,25 +1660,25 @@ window.openGuidePage = function(filename, pageNum) {
     let cleanName = filename.replace(/\.pdf$/i, '').trim();
     let fileUrl = `guides/${cleanName}.pdf`;
 
-    // بناء الرابط الكامل للملف
+    // تحويل الرابط إلى رابط مطلق (Absolute URL) - ضروري جداً للمحركات الخارجية
     const absoluteUrl = fileUrl.startsWith('http') 
         ? fileUrl 
-        : window.location.origin + '/' + fileUrl;
+        : window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + fileUrl;
 
+    // 💡 الحل العلمي: استخدام عارض PDF.js المستضاف
+    // هذا العارض يعمل كـ "بيئة تشغيل" (Runtime) للملف ويقبل بارامتر page# بشكل إلزامي
+    const pdfViewerUrl = "https://mozilla.github.io/pdf.js/web/viewer.html";
+    const finalUrl = `${pdfViewerUrl}?file=${encodeURIComponent(absoluteUrl)}#page=${pageNum}`;
+
+    // فحص نوع الجهاز (لأغراض الإحصاء فقط، لأن الحل سيعمل على الطرفين)
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isMobile) {
-        // 🚀 الحل السحري للموبايل: استخدام عارض PDF.js المستضاف عبر CDN
-        // هذا العارض سيعالج الملف داخل المتصفح ويجبره على الانتقال للصفحة المطلوبة
-        const pdfJsViewer = "https://mozilla.github.io/pdf.js/web/viewer.html";
-        const targetUrl = `${pdfJsViewer}?file=${encodeURIComponent(absoluteUrl)}#page=${pageNum}`;
-        
-        // فتح العارض مباشرة
-        window.open(targetUrl, '_blank');
+        // بدلاً من إظهار مودال "النسخ"، سنظهر مودال "جاري التحضير للفتح" 
+        // أو نفتح مباشرة لضمان تجربة مستخدم سريعة
+        showPdfModal(pageNum, 'smart_viewer', finalUrl);
     } else {
-        // الكمبيوتر يظل كما هو لأنه يدعم الروابط المباشرة بشكل جيد
-        const targetUrl = absoluteUrl + '#page=' + pageNum;
-        window.open(targetUrl, '_blank');
+        window.open(finalUrl, '_blank');
     }
 };
 
@@ -1722,65 +1722,82 @@ function showPdfModal(pageNum, viewerType, targetUrl) {
     const existing = document.getElementById('pdf-modal-overlay');
     if (existing) existing.remove();
 
-    // تعليمات محدثة تتناسب مع الفتح المباشر
     const isMobileView = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 
-let instruction = isMobileView
-    ? `<div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:12px; margin:12px 0; text-align:right;">
-        <div style="font-size:13px; line-height:2;">
-            ١. سيفتح الملف عبر عارض Google المتوافق مع الموبايل<br>
-            ٢. بعد الفتح، انتقل يدوياً إلى صفحة رقم <strong style="font-size:16px; color:#fbbf24;">(${pageNum})</strong><br>
-            ٣. رقم الصفحة منسوخ في الحافظة وجاهز للاستخدام.
-        </div>
-    </div>`
-    : `<div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:12px; margin:12px 0; text-align:right;">
-        <div style="font-size:13px; line-height:2;">
-            ١. سيفتح الملف مباشرة من خادم المشروع السريع<br>
-            ٢. سيتم توجيهك تلقائياً إلى صفحة رقم <strong style="font-size:16px; color:#fbbf24;">(${pageNum})</strong><br>
-            ٣. إذا لم ينتقل تلقائياً، رقم الصفحة منسوخ وجاهز للصق.
-        </div>
-    </div>`;
+    // --- 🚀 التطوير الجوهري: تحويل الرابط لرابط ذكي يدعم الموبايل ---
+    // سنستخدم عارض موزيلا الرسمي كـ "محرك رندرة" لضمان فتح الصفحة المحددة
+    const pdfJsViewer = "https://mozilla.github.io/pdf.js/web/viewer.html";
+    
+    // تنظيف الرابط الأصلي من أي هاشتاجات قديمة
+    let cleanPdfUrl = targetUrl.split('#')[0];
+    
+    // تحويل الرابط لـ Absolute URL (ضروري جداً للمحركات الخارجية)
+    if (!cleanPdfUrl.startsWith('http')) {
+        cleanPdfUrl = window.location.origin + (window.location.pathname.startsWith('/') ? '' : '/') + window.location.pathname.replace(/\/[^\/]*$/, '/') + cleanPdfUrl;
+    }
+
+    // بناء الرابط النهائي الذي سيفتح الصفحة المطلوبة فوراً
+    const finalSmartUrl = `${pdfJsViewer}?file=${encodeURIComponent(cleanPdfUrl)}#page=${pageNum}`;
+
+    // --- ✍️ تحديث التعليمات لتناسب التجربة الجديدة الفائقة ---
+    let instruction = isMobileView
+        ? `<div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:15px; margin:12px 0; text-align:right; border: 1px dashed rgba(251, 191, 36, 0.4);">
+            <div style="font-size:14px; line-height:1.8;">
+                ✨ <strong>تم تفعيل وضع القراءة الذكي للموبايل:</strong><br>
+                ١. سيفتح الدليل داخل متصفحك مباشرة (بدون مغادرة الموقع).<br>
+                ٢. سيتم توجيهك تلقائياً لصفحة رقم <strong style="font-size:18px; color:#fbbf24;">(${pageNum})</strong>.<br>
+                ٣. انتظر ثواني قليلة لتحميل المحرك والحصول على أفضل جودة.
+            </div>
+        </div>`
+        : `<div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:15px; margin:12px 0; text-align:right;">
+            <div style="font-size:14px; line-height:1.8;">
+                ١. سيتم فتح الدليل عبر المحرك السريع لضمان الدقة.<br>
+                ٢. سيتم نقلك مباشرة إلى صفحة رقم <strong style="font-size:18px; color:#fbbf24;">(${pageNum})</strong>.<br>
+                ٣. يمكنك البحث والطباعة مباشرة من داخل المتصفح.
+            </div>
+        </div>`;
 
     const overlay = document.createElement('div');
     overlay.id = 'pdf-modal-overlay';
     overlay.style.cssText = `
-        position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+        position: fixed; inset: 0; background: rgba(0,0,0,0.7);
         z-index: 999998; display: flex; align-items: center;
-        justify-content: center; backdrop-filter: blur(4px);
+        justify-content: center; backdrop-filter: blur(8px);
         opacity: 0; transition: opacity 0.3s ease;
     `;
 
     const modal = document.createElement('div');
     modal.style.cssText = `
         background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
-        color: white; padding: 28px; border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.4); font-family: 'Tajawal', sans-serif;
-        direction: rtl; width: 380px; max-width: 90vw;
-        border: 1px solid rgba(255,255,255,0.15); transform: scale(0.9);
-        transition: transform 0.3s ease;
+        color: white; padding: 30px; border-radius: 20px;
+        box-shadow: 0 25px 70px rgba(0,0,0,0.5); font-family: 'Tajawal', sans-serif;
+        direction: rtl; width: 420px; max-width: 90vw;
+        border: 1px solid rgba(255,255,255,0.2); transform: scale(0.9);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     `;
 
     modal.innerHTML = `
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-            <div style="font-size:32px;">🚀</div>
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
+            <div style="font-size:40px; filter: drop-shadow(0 0 10px rgba(251,191,36,0.5));">🎯</div>
             <div>
-                <strong style="font-size:16px; display:block;">فتح الدليل السريع</strong>
-                <span style="font-size:12px; opacity:0.8;">جاهز للعرض الآن</span>
+                <strong style="font-size:18px; display:block; color: #fbbf24;">انتقال ذكي للصفحة</strong>
+                <span style="font-size:12px; opacity:0.8;">معالج الدلائل الفني v6.0</span>
             </div>
         </div>
         ${instruction}
-        <div style="display:flex; gap:10px; margin-top:16px;">
+        <div style="display:flex; gap:12px; margin-top:20px;">
             <button id="pdf-open-btn" style="
-                flex: 1; background: #fbbf24; color: #064e3b;
-                border: none; padding: 12px; border-radius: 8px;
-                font-family: 'Tajawal', sans-serif; font-size: 15px;
-                font-weight: bold; cursor: pointer; transition: background 0.2s;
-            ">✅ فتح الصفحة ${pageNum}</button>
+                flex: 2; background: #fbbf24; color: #064e3b;
+                border: none; padding: 14px; border-radius: 10px;
+                font-family: 'Tajawal', sans-serif; font-size: 16px;
+                font-weight: bold; cursor: pointer; transition: all 0.2s;
+                box-shadow: 0 4px 15px rgba(251,191,36,0.3);
+            ">🚀 فتح الصفحة الآن</button>
             <button id="pdf-cancel-btn" style="
-                background: rgba(255,255,255,0.15); color: white;
-                border: none; padding: 12px 16px; border-radius: 8px;
+                flex: 1; background: rgba(255,255,255,0.1); color: white;
+                border: 1px solid rgba(255,255,255,0.2); padding: 14px; border-radius: 10px;
                 font-family: 'Tajawal', sans-serif; font-size: 14px; cursor: pointer;
-            ">إلغاء</button>
+            ">تراجع</button>
         </div>
     `;
 
@@ -1794,7 +1811,8 @@ let instruction = isMobileView
 
     document.getElementById('pdf-open-btn').onclick = () => {
         closeModal();
-        window.open(targetUrl, '_blank');
+        // فتح الرابط الذكي الذي يضمن الوصول للصفحة على أي جهاز
+        window.open(finalSmartUrl, '_blank');
     };
 
     document.getElementById('pdf-cancel-btn').onclick = closeModal;
@@ -1806,7 +1824,6 @@ let instruction = isMobileView
         setTimeout(() => overlay.remove(), 300);
     }
 }
-
 // ==================== ✂️ عرض مقتطف النص (لا يحتاج تعديل جوهري) ====================
 window.showGuideSnippet = function(filename, pageNum, exactPhrase) {
     if (!window.FULL_GUIDES_DB) return;
