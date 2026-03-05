@@ -1656,19 +1656,18 @@ function getExcerpt(text, keywords, isShort = false) {
     return (start > 0 ? "..." : "") + snippet + (end < text.length ? "..." : "");
 }
 
-// ==================== 🔗 فتح صفحة الدليل (النسخة المتوافقة مع GitHub) ====================
 // ==================== 🔗 فتح صفحة الدليل (النسخة الاحترافية باستخدام العارض الذكي) ====================
 window.openGuidePage = function(filename, pageNum) {
-    // تنظيف اسم الملف
-    let cleanName = filename.replace(/\.pdf$/i, '').trim();
+    // 🧹 تنظيف اسم الملف: إزالة .pdf إن وجدت، ثم إزالة أي نقاط زائدة في النهاية، ثم إزالة المسافات
+    let cleanName = filename.replace(/\.pdf$/i, '').replace(/\.+$/, '').trim();
     
-    // مسار الملف داخل مجلد الأدلة
+    // بناء المسار الصحيح (بنقطة واحدة فقط)
     let fileUrl = `guides/${cleanName}.pdf`;
 
-    // توجيه المستخدم (سواء موبايل أو كمبيوتر) إلى العارض الجديد مع تمرير الملف والصفحة
+    // توجيه المستخدم إلى العارض الجديد مع تمرير الملف والصفحة
     let viewerUrl = `viewer.html?file=${encodeURIComponent(fileUrl)}&page=${pageNum}`;
 
-    // فتح العارض في نافذة جديدة مباشرة
+    // فتح العارض في نافذة جديدة
     window.open(viewerUrl, '_blank');
 };
 
