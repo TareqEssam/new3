@@ -1715,44 +1715,59 @@ function showPdfModal(pageNum, viewerType, targetUrl) {
 
     const isMobileView = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // صياغة تعليمات احترافية تخبر المستخدم أن النظام سيتولى المهمة
-    let instruction = `<div style="background:rgba(255,255,255,0.1); border-radius:12px; padding:15px; margin:12px 0; text-align:right; border-right: 5px solid #fbbf24;">
-        <div style="font-size:14px; line-height:1.8;">
-            🚀 <strong>نظام العرض الذكي مفعّل:</strong><br>
-            سيتم فتح الدليل الفني الآن والانتقال مباشرة إلى المادة المطلوبة في الصفحة <strong style="color:#fbbf24; font-size:18px;">(${pageNum})</strong>.
-        </div>
-    </div>`;
+    // 1. استخراج الرابط الأصلي للملف وتجريده من أي إضافات
+    // targetUrl قد يحتوي على رابط جوجل بالفعل، نحتاج الرابط الخام للملف
+    let rawPdfUrl = targetUrl;
+    if (targetUrl.includes('url=')) {
+        rawPdfUrl = decodeURIComponent(targetUrl.split('url=')[1].split('&')[0]);
+    }
+    rawPdfUrl = rawPdfUrl.split('#')[0]; // الرابط الخام بدون صفحات
 
+    // 2. تحويله إلى رابط مطلق (Absolute) - شرط أساسي لعمل عارض جوجل
+    if (!rawPdfUrl.startsWith('http')) {
+        rawPdfUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + rawPdfUrl;
+    }
+
+    // 3. 🚀 السر التقني (The Golden Fix): 
+    // بناء رابط جوجل بحيث يكون رقم الصفحة "ملتصقاً" برابط الملف المشفر نفسه وليس برابط جوجل
+    const encodedFullUrl = encodeURIComponent(rawPdfUrl + '#page=' + pageNum);
+    const finalMobileUrl = `https://docs.google.com/viewer?url=${encodedFullUrl}&embedded=true`;
+
+    // 4. واجهة المستخدم (UI)
     const overlay = document.createElement('div');
     overlay.id = 'pdf-modal-overlay';
-    overlay.style.cssText = `position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:999999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px); opacity:0; transition:opacity 0.3s ease;`;
+    overlay.style.cssText = `position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px);`;
 
     const modal = document.createElement('div');
-    modal.style.cssText = `background:linear-gradient(135deg, #064e3b 0%, #065f46 100%); color:white; padding:30px; border-radius:24px; width:400px; max-width:92vw; direction:rtl; font-family:'Tajawal',sans-serif; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); transform:scale(0.9); transition:transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);`;
+    modal.style.cssText = `background:linear-gradient(135deg, #064e3b 0%, #065f46 100%); color:white; padding:25px; border-radius:15px; width:350px; max-width:90vw; direction:rtl; text-align:center; font-family:'Tajawal',sans-serif;`;
 
     modal.innerHTML = `
-        <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
-            <div style="font-size:40px;">🧪</div>
-            <div>
-                <strong style="font-size:18px; display:block; color:#fbbf24;">المعالج الفني للدلائل</strong>
-                <span style="font-size:12px; opacity:0.7;">Direct Page Access (Mobile Optimized)</span>
-            </div>
+        <div style="font-size:40px; margin-bottom:10px;">📄</div>
+        <div style="font-weight:bold; font-size:18px; margin-bottom:10px;">توجيه ذكي للموبايل</div>
+        <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; font-size:14px; line-height:1.6; margin-bottom:20px;">
+            سيفتح الملف الآن ويقفز تلقائياً إلى:<br>
+            <strong style="color:#fbbf24; font-size:20px;">الصفحة ${pageNum}</strong>
         </div>
-        ${instruction}
-        <div style="display:flex; gap:12px; margin-top:25px;">
-            <button id="pdf-open-btn" style="flex:2; background:#fbbf24; color:#064e3b; border:none; padding:16px; border-radius:14px; font-weight:bold; cursor:pointer; font-family:inherit; font-size:16px; box-shadow:0 10px 20px rgba(251,191,36,0.3);">✅ فتح المادة الآن</button>
-            <button id="pdf-cancel-btn" style="flex:1; background:rgba(255,255,255,0.1); color:white; border:none; padding:16px; border-radius:14px; cursor:pointer; font-family:inherit;">إغاء</button>
+        <div style="display:flex; gap:10px;">
+            <button id="pdf-open-btn" style="flex:2; background:#fbbf24; color:#064e3b; border:none; padding:12px; border-radius:8px; font-weight:bold; cursor:pointer;">✅ فتح الآن</button>
+            <button id="pdf-cancel-btn" style="flex:1; background:rgba(255,255,255,0.2); color:white; border:none; padding:12px; border-radius:8px; cursor:pointer;">إلغاء</button>
         </div>`;
 
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    requestAnimationFrame(() => { overlay.style.opacity = '1'; modal.style.transform = 'scale(1)'; });
-
     document.getElementById('pdf-open-btn').onclick = () => {
         overlay.remove();
-        // الفتح باستخدام الرابط الذي يشغل المحرك المحلي
-        window.open(targetUrl, '_blank');
+        if (isMobileView) {
+            // 🚀 التكتيك الأخير: فتح صفحة ويب (Blob) تحتوي على iframe
+            // هذا يمنع الموبايل من فتح تطبيق Drive الخارجي ويجبره على البقاء في المتصفح لرؤية الصفحة المطلوبة
+            const html = `<html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body,html,iframe{margin:0;padding:0;height:100%;width:100%;overflow:hidden;}</style></head>
+                          <body><iframe src="${finalMobileUrl}"></iframe></body></html>`;
+            const blob = new Blob([html], {type: 'text/html'});
+            window.location.href = URL.createObjectURL(blob); // الفتح في نفس التاب لضمان عدم المنع
+        } else {
+            window.open(targetUrl, '_blank');
+        }
     };
 
     document.getElementById('pdf-cancel-btn').onclick = () => overlay.remove();
