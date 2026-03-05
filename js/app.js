@@ -992,36 +992,48 @@ else {
 function forceDownloadGuide(url, name) {
     try {
         const fileName = name.endsWith('.pdf') ? name : name + '.pdf';
-
-        // بناء الرابط الكامل المطلق
         let absoluteUrl = url;
         if (!url.startsWith('http')) {
             absoluteUrl = window.location.origin + '/' + url;
         }
-
-        // استخدام fetch + blob لضمان التحميل الفعلي على الموبايل والكمبيوتر
-        // (يحل مشكلة CORS مع GitHub Pages التي تتجاهل خاصية download)
         fetch(absoluteUrl)
             .then(function(response) {
                 if (!response.ok) throw new Error('fetch failed');
                 return response.blob();
             })
             .then(function(blob) {
-                const blobUrl = URL.createObjectURL(blob);
+                // ← الحل: إنشاء blob جديد بنوع octet-stream يجبر المتصفح على التحميل
+                const downloadBlob = new Blob([blob], { type: 'application/octet-stream' });
+                const blobUrl = URL.createObjectURL(downloadBlob);
                 const a = document.createElement('a');
                 a.href = blobUrl;
                 a.download = fileName;
+                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a);
-                setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 3000);
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(blobUrl);
+                }, 1000);
             })
             .catch(function() {
-                // fallback: فتح في تبويب جديد إذا فشل fetch
-                window.open(absoluteUrl, '_blank');
+                // ← الـ fallback: تحميل مباشر بدون fetch (لا يفتح الملف)
+                const a = document.createElement('a');
+                a.href = absoluteUrl;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() { document.body.removeChild(a); }, 1000);
             });
     } catch(e) {
-        window.open(url, '_blank');
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = (name.endsWith('.pdf') ? name : name + '.pdf');
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() { document.body.removeChild(a); }, 1000);
     }
 }
 
@@ -5812,4 +5824,5 @@ if (document.readyState === 'loading') {
             if (biCharts.waste) biCharts.waste.destroy();
             biCharts.waste = new Chart(ctx6, { type: 'bar', data: { labels: ['عضوية', 'معادن', 'بلاستيك', 'ورق', 'كيماويات'], datasets: [{ label: 'الكمية (طن)', data: [4200, 3100, 2450, 1800, 900], backgroundColor: '#95a5a6' }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
+
 
