@@ -1,7 +1,7 @@
 // gpt_activities.js
 window.GPT_AGENT = window.GPT_AGENT || {};
 
-// ==================== معالج أسئلة الأنشطة - الإصدار الأصلي ====================
+// ==================== معــالج أسئلة الأنشطة - الإصدار الأصلي ====================
 async function handleActivityQuery(query, questionType, preComputedContext, preComputedEntities) {
     if (typeof NeuralSearch === 'undefined' || typeof masterActivityDB === 'undefined') {
         return "⚠️ نظام البحث عن الأنشطة غير متوفر حالياً.";
@@ -418,49 +418,36 @@ function getSmartLinksGPT(url) {
 }
 
 function forceDownloadGuide(url, name) {
-    var cleanName = name.replace(/\.pdf$/i, '').replace(/\.+$/, '').trim();
-    var fileName = cleanName + '.pdf';
-    
+    var fileName = name.endsWith('.pdf') ? name : name + '.pdf';
     var absoluteUrl = url;
     if (!url.startsWith('http')) {
-        // منع تكرار الشرطة المائلة
-        var path = url.startsWith('/') ? url : '/' + url;
-        absoluteUrl = window.location.origin + path;
+        absoluteUrl = window.location.origin + '/' + url;
     }
 
     var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // دالة للتعامل مع الخطأ 404
-    function handle404Error(r) {
-        if (!r.ok) {
-            alert("❌ الملف غير موجود على الخادم. يرجى التأكد من أن اسم الملف في GitHub يطابق الكود تماماً (مراعاة الـ .pdf والمسافات).");
-            throw new Error("404 Not Found");
-        }
-        return r;
-    }
-
     if (isIOS) {
         fetch(absoluteUrl)
-            .then(handle404Error)
             .then(function(r) { return r.arrayBuffer(); })
             .then(function(buffer) {
                 var bytes = new Uint8Array(buffer);
                 var binary = '';
-                for (var i = 0; i < bytes.length; i += 8192) {
-                    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+                var chunk = 8192;
+                for (var i = 0; i < bytes.length; i += chunk) {
+                    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
                 }
                 var dataUri = 'data:application/octet-stream;base64,' + btoa(binary);
                 var a = document.createElement('a');
                 a.href = dataUri;
                 a.download = fileName;
+                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(function() { document.body.removeChild(a); }, 1000);
             })
-            .catch(function() { /* تم إيقاف التحميل الوهمي */ });
+            .catch(function() { window.open(absoluteUrl, '_blank'); });
     } else {
         fetch(absoluteUrl)
-            .then(handle404Error)
             .then(function(r) { return r.blob(); })
             .then(function(blob) {
                 var b = new Blob([blob], { type: 'application/octet-stream' });
@@ -468,6 +455,7 @@ function forceDownloadGuide(url, name) {
                 var a = document.createElement('a');
                 a.href = blobUrl;
                 a.download = fileName;
+                a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(function() {
@@ -475,7 +463,15 @@ function forceDownloadGuide(url, name) {
                     URL.revokeObjectURL(blobUrl);
                 }, 2000);
             })
-            .catch(function() { /* تم إيقاف التحميل الوهمي */ });
+            .catch(function() {
+                var a = document.createElement('a');
+                a.href = absoluteUrl;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() { document.body.removeChild(a); }, 1000);
+            });
     }
 }
 
