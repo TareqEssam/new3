@@ -1722,107 +1722,91 @@ function showPdfModal(pageNum, viewerType, targetUrl) {
     const existing = document.getElementById('pdf-modal-overlay');
     if (existing) existing.remove();
 
-    const isMobileView = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-
-    // --- 🚀 التطوير الجوهري: تحويل الرابط لرابط ذكي يدعم الموبايل ---
-    // سنستخدم عارض موزيلا الرسمي كـ "محرك رندرة" لضمان فتح الصفحة المحددة
-    const pdfJsViewer = "https://mozilla.github.io/pdf.js/web/viewer.html";
-    
-    // تنظيف الرابط الأصلي من أي هاشتاجات قديمة
-    let cleanPdfUrl = targetUrl.split('#')[0];
-    
-    // تحويل الرابط لـ Absolute URL (ضروري جداً للمحركات الخارجية)
-    if (!cleanPdfUrl.startsWith('http')) {
-        cleanPdfUrl = window.location.origin + (window.location.pathname.startsWith('/') ? '' : '/') + window.location.pathname.replace(/\/[^\/]*$/, '/') + cleanPdfUrl;
+    // 1. بناء الرابط المطلق للملف (Absolute URL) - ضروري جداً لتجاوز مشاكل المسارات
+    let absolutePdfUrl = targetUrl.split('#')[0];
+    if (!absolutePdfUrl.startsWith('http')) {
+        absolutePdfUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + absolutePdfUrl;
     }
 
-    // بناء الرابط النهائي الذي سيفتح الصفحة المطلوبة فوراً
-    const finalSmartUrl = `${pdfJsViewer}?file=${encodeURIComponent(cleanPdfUrl)}#page=${pageNum}`;
+    // 2. المحرك الاحترافي (نستخدم Google Docs Viewer كـ Proxy لضمان عدم تحميل الملف على الجهاز)
+    // هذا العارض هو الوحيد الذي يستجيب لبارامتر الانتقال عند دمجه مع الـ Hash
+    const googleViewer = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(absolutePdfUrl)}`;
+    const finalTarget = `${googleViewer}#page=${pageNum}`;
 
-    // --- ✍️ تحديث التعليمات لتناسب التجربة الجديدة الفائقة ---
-    let instruction = isMobileView
-        ? `<div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:15px; margin:12px 0; text-align:right; border: 1px dashed rgba(251, 191, 36, 0.4);">
-            <div style="font-size:14px; line-height:1.8;">
-                ✨ <strong>تم تفعيل وضع القراءة الذكي للموبايل:</strong><br>
-                ١. سيفتح الدليل داخل متصفحك مباشرة (بدون مغادرة الموقع).<br>
-                ٢. سيتم توجيهك تلقائياً لصفحة رقم <strong style="font-size:18px; color:#fbbf24;">(${pageNum})</strong>.<br>
-                ٣. انتظر ثواني قليلة لتحميل المحرك والحصول على أفضل جودة.
-            </div>
-        </div>`
-        : `<div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:15px; margin:12px 0; text-align:right;">
-            <div style="font-size:14px; line-height:1.8;">
-                ١. سيتم فتح الدليل عبر المحرك السريع لضمان الدقة.<br>
-                ٢. سيتم نقلك مباشرة إلى صفحة رقم <strong style="font-size:18px; color:#fbbf24;">(${pageNum})</strong>.<br>
-                ٣. يمكنك البحث والطباعة مباشرة من داخل المتصفح.
-            </div>
-        </div>`;
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+    // 3. صياغة التعليمات بناءً على نوع الجهاز
+    let instruction = isMobile 
+        ? `<div style="background:rgba(255,255,255,0.1); border-radius:10px; padding:15px; margin:12px 0; text-align:right; border-right: 4px solid #fbbf24;">
+            <div style="font-size:14px; line-height:1.8;">
+                🚀 <strong>تم تفعيل الفتح المباشر للموبايل:</strong><br>
+                سيفتح الدليل الآن ويقفز تلقائياً للصفحة <strong style="color:#fbbf24;">(${pageNum})</strong>.<br>
+                <small style="opacity:0.8;">* ملاحظة: قد يستغرق التحميل ثواني بناءً على سرعة الإنترنت.</small>
+            </div>
+          </div>`
+        : `<div style="background:rgba(255,255,255,0.1); border-radius:10px; padding:15px; margin:12px 0; text-align:right;">
+            <div style="font-size:14px; line-height:1.8;">
+                سيتم فتح الصفحة رقم <strong style="color:#fbbf24;">(${pageNum})</strong> مباشرة.<br>
+                النظام جاهز الآن لعرض البيانات الفنية.
+            </div>
+          </div>`;
+
+    // --- بناء الـ UI (نفس التنسيق الجمالي السابق مع تحسينات الثبات) ---
     const overlay = document.createElement('div');
     overlay.id = 'pdf-modal-overlay';
-    overlay.style.cssText = `
-        position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-        z-index: 999998; display: flex; align-items: center;
-        justify-content: center; backdrop-filter: blur(8px);
-        opacity: 0; transition: opacity 0.3s ease;
-    `;
+    overlay.style.cssText = `position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:999999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(10px); opacity:0; transition:opacity 0.3s ease;`;
 
     const modal = document.createElement('div');
-    modal.style.cssText = `
-        background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
-        color: white; padding: 30px; border-radius: 20px;
-        box-shadow: 0 25px 70px rgba(0,0,0,0.5); font-family: 'Tajawal', sans-serif;
-        direction: rtl; width: 420px; max-width: 90vw;
-        border: 1px solid rgba(255,255,255,0.2); transform: scale(0.9);
-        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    `;
+    modal.style.cssText = `background:linear-gradient(135deg, #064e3b 0%, #065f46 100%); color:white; padding:30px; border-radius:20px; width:400px; max-width:90vw; direction:rtl; font-family:'Tajawal',sans-serif; box-shadow:0 25px 50px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); transform:scale(0.95); transition:transform 0.3s ease;`;
 
     modal.innerHTML = `
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
-            <div style="font-size:40px; filter: drop-shadow(0 0 10px rgba(251,191,36,0.5));">🎯</div>
+            <div style="font-size:35px;">📑</div>
             <div>
-                <strong style="font-size:18px; display:block; color: #fbbf24;">انتقال ذكي للصفحة</strong>
-                <span style="font-size:12px; opacity:0.8;">معالج الدلائل الفني v6.0</span>
+                <strong style="font-size:18px; display:block; color:#fbbf24;">معالج المستندات الذكي</strong>
+                <span style="font-size:12px; opacity:0.7;">فتح صفحة محددة بنظام Bypass</span>
             </div>
         </div>
         ${instruction}
-        <div style="display:flex; gap:12px; margin-top:20px;">
-            <button id="pdf-open-btn" style="
-                flex: 2; background: #fbbf24; color: #064e3b;
-                border: none; padding: 14px; border-radius: 10px;
-                font-family: 'Tajawal', sans-serif; font-size: 16px;
-                font-weight: bold; cursor: pointer; transition: all 0.2s;
-                box-shadow: 0 4px 15px rgba(251,191,36,0.3);
-            ">🚀 فتح الصفحة الآن</button>
-            <button id="pdf-cancel-btn" style="
-                flex: 1; background: rgba(255,255,255,0.1); color: white;
-                border: 1px solid rgba(255,255,255,0.2); padding: 14px; border-radius: 10px;
-                font-family: 'Tajawal', sans-serif; font-size: 14px; cursor: pointer;
-            ">تراجع</button>
-        </div>
-    `;
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button id="pdf-open-btn" style="flex:2; background:#fbbf24; color:#064e3b; border:none; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer; font-family:inherit;">✅ فتح الصفحة الآن</button>
+            <button id="pdf-cancel-btn" style="flex:1; background:rgba(255,255,255,0.1); color:white; border:none; padding:15px; border-radius:12px; cursor:pointer; font-family:inherit;">إلغاء</button>
+        </div>`;
 
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    requestAnimationFrame(() => {
-        overlay.style.opacity = '1';
-        modal.style.transform = 'scale(1)';
-    });
+    setTimeout(() => { overlay.style.opacity = '1'; modal.style.transform = 'scale(1)'; }, 10);
 
     document.getElementById('pdf-open-btn').onclick = () => {
-        closeModal();
-        // فتح الرابط الذكي الذي يضمن الوصول للصفحة على أي جهاز
-        window.open(finalSmartUrl, '_blank');
+        overlay.remove();
+        
+        if (isMobile) {
+            // 🚀 الحل التقني "الضربة القاضية": 
+            // فتح صفحة HTML فارغة "On the fly" تحتوي على iframe بالرابط الكامل.
+            // هذا يمنع الموبايل من فتح تطبيق الـ PDF الخارجي ويجبره على العرض داخل المتصفح.
+            const viewerHtml = `
+                <html>
+                    <head>
+                        <title>جاري تحميل الصفحة ${pageNum}...</title>
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>body,html,iframe {margin:0; padding:0; height:100%; width:100%; overflow:hidden;}</style>
+                    </head>
+                    <body>
+                        <iframe src="${finalTarget}" frameborder="0"></iframe>
+                    </body>
+                </html>`;
+            
+            const blob = new Blob([viewerHtml], { type: 'text/html' });
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
+        } else {
+            // في الكمبيوتر، الرابط المباشر مع الهاشتاج يعمل بكفاءة
+            window.open(finalTarget, '_blank');
+        }
     };
 
-    document.getElementById('pdf-cancel-btn').onclick = closeModal;
-    overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
-
-    function closeModal() {
-        overlay.style.opacity = '0';
-        modal.style.transform = 'scale(0.9)';
-        setTimeout(() => overlay.remove(), 300);
-    }
+    document.getElementById('pdf-cancel-btn').onclick = () => overlay.remove();
 }
 // ==================== ✂️ عرض مقتطف النص (لا يحتاج تعديل جوهري) ====================
 window.showGuideSnippet = function(filename, pageNum, exactPhrase) {
