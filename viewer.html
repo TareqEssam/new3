@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>عارض الأدلة الذكي</title>
+    <!-- استدعاء مكتبة PDF.js من السيرفر السحابي -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        body { margin: 0; padding: 0; background-color: #525659; display: flex; flex-direction: column; height: 100vh; font-family: 'Tajawal', sans-serif; overflow: hidden; }
+        #toolbar { background-color: #064e3b; color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; }
+        .btn { background: #fbbf24; color: #064e3b; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; margin: 0 2px; }
+        .btn:active { transform: scale(0.95); }
+        .page-info { font-size: 14px; font-weight: bold; direction: ltr; }
+        #canvas-wrapper { flex: 1; overflow: auto; display: flex; justify-content: center; padding: 15px; background-color: #525659; align-items: flex-start; }
+        canvas { max-width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.5); background-color: white; border-radius: 4px; }
+        #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 18px; font-weight: bold; background: rgba(0,0,0,0.7); padding: 15px 25px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div id="toolbar">
+        <div>
+            <button class="btn" id="prevBtn">السابق</button>
+            <button class="btn" id="nextBtn">التالي</button>
+        </div>
+        <div class="page-info">
+            <span id="pageNum">0</span> / <span id="pageCount">0</span>
+        </div>
+        <div>
+            <button class="btn" id="zoomOutBtn">-</button>
+            <button class="btn" id="zoomInBtn">+</button>
+        </div>
+    </div>
+
+    <div id="loading">جاري تحميل الصفحة المستهدفة... ⏳</div>
+
+    <div id="canvas-wrapper">
+        <canvas id="pdfCanvas"></canvas>
+    </div>
+
+    <script>
+        // إعداد مشغل المكتبة
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // التقاط اسم الملف ورقم الصفحة من الرابط
+        const urlParams = new URLSearchParams(window.location.search);
+        const pdfUrl = urlParams.get('file');
+        let currentPage = parseInt(urlParams.get('page')) || 1;
+
+        let pdfDoc = null;
+        let scale = window.innerWidth < 600 ? 1.0 : 1.5; // حجم مناسب للموبايل
+        const canvas = document.getElementById('pdfCanvas');
+        const ctx = canvas.getContext('2d');
+        const loadingDiv = document.getElementById('loading');
+
+        // دالة رسم الصفحة
+        function renderPage(num) {
+            loadingDiv.style.display = 'block';
+            pdfDoc.getPage(num).then(page => {
+                const viewport = page.getViewport({ scale: scale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = { canvasContext: ctx, viewport: viewport };
+                
+                page.render(renderContext).promise.then(() => {
+                    loadingDiv.style.display = 'none';
+                    document.getElementById('pageNum').textContent = num;
+                });
+            });
+        }
+
+        // تحميل ملف הـ PDF
+        if(pdfUrl) {
+            pdfjsLib.getDocument(pdfUrl).promise.then(doc => {
+                pdfDoc = doc;
+                document.getElementById('pageCount').textContent = doc.numPages;
+                
+                // التأكد من أن رقم الصفحة المطلوب موجود فعلاً
+                if(currentPage > doc.numPages) currentPage = doc.numPages;
+                
+                renderPage(currentPage);
+            }).catch(err => {
+                loadingDiv.textContent = "❌ تعذر تحميل الملف تأكد من المسار";
+                console.error(err);
+            });
+        } else {
+            loadingDiv.textContent = "⚠️ لم يتم تمرير ملف لعرضه";
+        }
+
+        // تفاعلات الأزرار
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage <= 1) return;
+            currentPage--; renderPage(currentPage);
+        });
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentPage >= pdfDoc.numPages) return;
+            currentPage++; renderPage(currentPage);
+        });
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            scale += 0.2; renderPage(currentPage);
+        });
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            if (scale <= 0.6) return;
+            scale -= 0.2; renderPage(currentPage);
+        });
+    </script>
+</body>
+</html>
