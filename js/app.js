@@ -999,8 +999,6 @@ function forceDownloadGuide(url, name) {
     var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isIOS) {
-        // iOS Safari: يتجاهل a.download تماماً للـ PDF
-        // الحل الوحيد: تحويل الملف لـ base64 data URI بنوع octet-stream
         fetch(absoluteUrl)
             .then(function(r) { return r.arrayBuffer(); })
             .then(function(buffer) {
@@ -1021,7 +1019,6 @@ function forceDownloadGuide(url, name) {
             })
             .catch(function() { window.open(absoluteUrl, '_blank'); });
     } else {
-        // Android + Desktop: blob بنوع octet-stream
         fetch(absoluteUrl)
             .then(function(r) { return r.blob(); })
             .then(function(blob) {
