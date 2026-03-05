@@ -1,7 +1,7 @@
 // gpt_activities.js
 window.GPT_AGENT = window.GPT_AGENT || {};
 
-// ==================== مـــعالج أسئلة الأنشطة - الإصدار الأصلي ====================
+// ==================== معالج أسئلة الأنشطة - الإصدار الأصلي ====================
 async function handleActivityQuery(query, questionType, preComputedContext, preComputedEntities) {
     if (typeof NeuralSearch === 'undefined' || typeof masterActivityDB === 'undefined') {
         return "⚠️ نظام البحث عن الأنشطة غير متوفر حالياً.";
@@ -418,17 +418,29 @@ function getSmartLinksGPT(url) {
 }
 
 function forceDownloadGuide(url, name) {
-    var fileName = name.endsWith('.pdf') ? name : name + '.pdf';
-    var absoluteUrl = url;
-    if (!url.startsWith('http')) {
-        absoluteUrl = window.location.origin + '/' + url;
+    // 🧹 1. تنظيف اسم الملف (إزالة .pdf إن وجدت، ثم إزالة أي نقاط زائدة في النهاية، ثم إضافة .pdf نظيفة)
+    var cleanName = name.replace(/\.pdf$/i, '').replace(/\.+$/, '').trim();
+    var fileName = cleanName + '.pdf';
+
+    // 🧹 2. تنظيف الرابط (تحويل أي ..pdf أو ...pdf إلى .pdf واحدة صحيحة)
+    var cleanUrl = url.replace(/\.+pdf$/i, '.pdf');
+
+    var absoluteUrl = cleanUrl;
+    if (!cleanUrl.startsWith('http')) {
+        // التأكد من عدم تكرار الشرطة المائلة (/)
+        var path = cleanUrl.startsWith('/') ? cleanUrl : '/' + cleanUrl;
+        absoluteUrl = window.location.origin + path;
     }
 
     var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isIOS) {
         fetch(absoluteUrl)
-            .then(function(r) { return r.arrayBuffer(); })
+            .then(function(r) { 
+                // التحقق من نجاح الطلب (تجنب تحميل صفحة 404 على أنها ملف PDF)
+                if (!r.ok) throw new Error("Network response was not ok");
+                return r.arrayBuffer(); 
+            })
             .then(function(buffer) {
                 var bytes = new Uint8Array(buffer);
                 var binary = '';
@@ -448,7 +460,10 @@ function forceDownloadGuide(url, name) {
             .catch(function() { window.open(absoluteUrl, '_blank'); });
     } else {
         fetch(absoluteUrl)
-            .then(function(r) { return r.blob(); })
+            .then(function(r) { 
+                if (!r.ok) throw new Error("Network response was not ok");
+                return r.blob(); 
+            })
             .then(function(blob) {
                 var b = new Blob([blob], { type: 'application/octet-stream' });
                 var blobUrl = URL.createObjectURL(b);
