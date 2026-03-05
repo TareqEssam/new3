@@ -1,5 +1,5 @@
 /****************************************************************************
- * 🧠 NeuralSearch v6.0 - مــــــــــــــــــــــحرك البحث 
+ * 🧠 NeuralSearch v6.0 - مـحرك البحث 
  * ذكاء اصطناعي محلي 100% - تجربة مستخدم خارقة
  * 
  * الميزات الثورية:
@@ -1686,13 +1686,14 @@ window.openGuidePage = function(filename, pageNum) {
 
     let targetUrl;
     if (isMobile) {
-        // ← الحل: عرض PDF مدمج داخل نافذة منبثقة باستخدام PDF.js CDN
-        // بدلاً من الاعتماد على viewer خارجي يرفض cross-origin
-        showEmbeddedPdfViewer(fullUrl, pageNum);
-        return; // ← خروج مبكر لأن showEmbeddedPdfViewer تتولى العملية
+        // الموبايل: فتح الـ PDF مباشرة مع رقم الصفحة
+        // mozilla PDF.js يرفض cross-origin في iframe، نفتح تبويب جديد بدلاً منه
+        try { navigator.clipboard.writeText(pageNum.toString()).catch(function(){}); } catch(e) {}
+        showMobilePageModal(fullUrl, pageNum);
+        return;
     } else {
         // الكمبيوتر: يعمل بشكل مثالي
-        targetUrl = `${baseUrl}#page=${pageNum}`;
+        targetUrl = baseUrl + '#page=' + pageNum;
     }
 
     try {
@@ -1702,67 +1703,39 @@ window.openGuidePage = function(filename, pageNum) {
     showPdfModal(pageNum, 'github_direct', targetUrl);
 };
 
-// ← دالة جديدة: عارض PDF مدمج للموبايل يستخدم PDF.js عبر CDN
-function showEmbeddedPdfViewer(pdfUrl, pageNum) {
-    // إزالة أي viewer سابق
-    const existing = document.getElementById('embedded-pdf-overlay');
+// نافذة الموبايل: تعرض رقم الصفحة وتفتح الـ PDF مباشرة
+function showMobilePageModal(pdfUrl, pageNum) {
+    var existing = document.getElementById('mobile-page-modal');
     if (existing) existing.remove();
 
-    // نسخ رقم الصفحة للحافظة
-    try { navigator.clipboard.writeText(pageNum.toString()).catch(e => {}); } catch(e) {}
+    var overlay = document.createElement('div');
+    overlay.id = 'mobile-page-modal';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999999;display:flex;align-items:center;justify-content:center;';
 
-    const overlay = document.createElement('div');
-    overlay.id = 'embedded-pdf-overlay';
-    overlay.style.cssText = `
-        position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-        z-index: 999999; display: flex; flex-direction: column;
-        align-items: center; justify-content: flex-start;
-    `;
+    var box = document.createElement('div');
+    box.style.cssText = 'background:linear-gradient(135deg,#064e3b,#065f46);color:white;padding:28px;border-radius:16px;width:320px;max-width:90vw;font-family:Tajawal,sans-serif;direction:rtl;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);';
+    box.innerHTML = '<div style="font-size:40px;margin-bottom:12px;">📄</div>'
+        + '<div style="font-size:17px;font-weight:bold;margin-bottom:8px;">فتح الدليل</div>'
+        + '<div style="background:rgba(255,255,255,0.1);border-radius:10px;padding:14px;margin:14px 0;">'
+        + '<div style="font-size:13px;opacity:0.85;margin-bottom:6px;">انتقل إلى الصفحة</div>'
+        + '<div style="font-size:48px;font-weight:bold;color:#fbbf24;line-height:1;">' + pageNum + '</div>'
+        + '<div style="font-size:12px;opacity:0.7;margin-top:6px;">رقم الصفحة منسوخ في الحافظة ✓</div>'
+        + '</div>'
+        + '<div style="font-size:12px;opacity:0.75;margin-bottom:16px;">بعد فتح الملف، اضغط على حقل الصفحة في الأعلى وأدخل الرقم</div>'
+        + '<div style="display:flex;gap:10px;">'
+        + '<button id="mpm-open" style="flex:1;background:#fbbf24;color:#064e3b;border:none;padding:13px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:15px;font-weight:bold;cursor:pointer;">✅ فتح الملف</button>'
+        + '<button id="mpm-cancel" style="background:rgba(255,255,255,0.15);color:white;border:none;padding:13px 16px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:14px;cursor:pointer;">إلغاء</button>'
+        + '</div>';
 
-    overlay.innerHTML = `
-        <div style="width:100%; background:#064e3b; color:white; padding:10px 16px;
-                    display:flex; justify-content:space-between; align-items:center;
-                    font-family:'Tajawal',sans-serif; direction:rtl;">
-            <span style="font-weight:bold; font-size:15px;">
-                📄 صفحة رقم <span style="color:#fbbf24; font-size:18px;">${pageNum}</span>
-            </span>
-            <div style="display:flex; gap:8px;">
-                <span style="font-size:12px; background:rgba(255,255,255,0.15);
-                             padding:4px 10px; border-radius:20px;">
-                    رقم الصفحة منسوخ ✓
-                </span>
-                <button onclick="document.getElementById('embedded-pdf-overlay').remove()"
-                        style="background:rgba(255,255,255,0.2); color:white; border:none;
-                               padding:6px 14px; border-radius:8px; cursor:pointer;
-                               font-family:'Tajawal',sans-serif; font-size:14px;">
-                    ✕ إغلاق
-                </button>
-            </div>
-        </div>
-        <div style="width:100%; flex:1; overflow:hidden;">
-            <iframe
-                id="embedded-pdf-frame"
-                src="https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(pdfUrl)}#page=${pageNum}"
-                style="width:100%; height:calc(100vh - 50px); border:none;"
-                allowfullscreen>
-            </iframe>
-        </div>
-        <div style="width:100%; background:#064e3b; padding:8px 16px; text-align:center;
-                    font-family:'Tajawal',sans-serif; color:rgba(255,255,255,0.7); font-size:12px;">
-            إذا لم يُفتح الملف، اضغط:
-            <a href="${pdfUrl}" target="_blank" 
-               style="color:#fbbf24; text-decoration:none; font-weight:bold; margin:0 6px;">
-                فتح الملف مباشرة
-            </a>
-        </div>
-    `;
-
+    overlay.appendChild(box);
     document.body.appendChild(overlay);
 
-    // إغلاق بالنقر على الخلفية
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) overlay.remove();
-    });
+    document.getElementById('mpm-open').onclick = function() {
+        overlay.remove();
+        window.open(pdfUrl, '_blank');
+    };
+    document.getElementById('mpm-cancel').onclick = function() { overlay.remove(); };
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
 }
 
 // ==================== 🛠️ النافذة الاحترافية المحدثة ====================
