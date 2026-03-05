@@ -1,6 +1,6 @@
 //--------------------
 
-// 1. بيانات نظام وصف الموقع
+// 1. بــيانات نظام وصف الموقع
 const constructionTypes = [
     // مباني
     { label: "مبنى مكتمل التشطيب", icon: "fa-building" },
@@ -5812,3 +5812,4 @@ if (document.readyState === 'loading') {
             if (biCharts.waste) biCharts.waste.destroy();
             biCharts.waste = new Chart(ctx6, { type: 'bar', data: { labels: ['عضوية', 'معادن', 'بلاستيك', 'ورق', 'كيماويات'], datasets: [{ label: 'الكمية (طن)', data: [4200, 3100, 2450, 1800, 900], backgroundColor: '#95a5a6' }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
+
