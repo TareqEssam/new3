@@ -1658,16 +1658,34 @@ function getExcerpt(text, keywords, isShort = false) {
 
 // ==================== 🔗 فتح صفحة الدليل (النسخة الاحترافية باستخدام العارض الذكي) ====================
 window.openGuidePage = function(filename, pageNum) {
-    // 🧹 تنظيف اسم الملف: إزالة .pdf إن وجدت، ثم إزالة أي نقاط زائدة في النهاية، ثم إزالة المسافات
-    let cleanName = filename.replace(/\.pdf$/i, '').replace(/\.+$/, '').trim();
-    
-    // بناء المسار الصحيح (بنقطة واحدة فقط)
+    let cleanName = filename.replace(/\.pdf$/i, '').trim();
     let fileUrl = `guides/${cleanName}.pdf`;
 
-    // توجيه المستخدم إلى العارض الجديد مع تمرير الملف والصفحة
-    let viewerUrl = `viewer.html?file=${encodeURIComponent(fileUrl)}&page=${pageNum}`;
+    // 1. استعادة كود البحث عن الرابط الحقيقي من قاعدة البيانات
+    let foundLink = null;
+    if (window.masterActivityDB) {
+        for (const act of window.masterActivityDB) {
+            if (act.details && act.details.guides) {
+                const match = act.details.guides.find(g =>
+                    g.name.includes(cleanName) || cleanName.includes(g.name) ||
+                    (g.link && g.link.includes(cleanName))
+                );
+                if (match && match.link) {
+                    foundLink = match.link;
+                    break;
+                }
+            }
+        }
+    }
 
-    // فتح العارض في نافذة جديدة
+    // 2. تحديد الرابط النهائي
+    const baseUrl = foundLink ? foundLink : fileUrl;
+    const fullUrl = baseUrl.startsWith('http')
+        ? baseUrl
+        : window.location.origin + '/' + baseUrl;
+
+    // 3. توجيه الموبايل والكمبيوتر للعارض الذكي
+    let viewerUrl = `viewer.html?file=${encodeURIComponent(fullUrl)}&page=${pageNum}`;
     window.open(viewerUrl, '_blank');
 };
 
