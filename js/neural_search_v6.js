@@ -1660,44 +1660,26 @@ window.openGuidePage = function(filename, pageNum) {
     let cleanName = filename.replace(/\.pdf$/i, '').trim();
     let fileUrl = `guides/${cleanName}.pdf`;
 
-    let foundLink = null;
-    if (window.masterActivityDB) {
-        for (const act of window.masterActivityDB) {
-            if (act.details && act.details.guides) {
-                const match = act.details.guides.find(g =>
-                    g.name.includes(cleanName) || cleanName.includes(g.name) ||
-                    (g.link && g.link.includes(cleanName))
-                );
-                if (match && match.link) {
-                    foundLink = match.link;
-                    break;
-                }
-            }
-        }
-    }
+    // بناء الرابط الكامل للملف
+    const absoluteUrl = fileUrl.startsWith('http') 
+        ? fileUrl 
+        : window.location.origin + '/' + fileUrl;
 
-    const baseUrl = foundLink ? foundLink : fileUrl;
-    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // بناء الرابط الكامل المطلق دائماً
-    const fullUrl = baseUrl.startsWith('http')
-        ? baseUrl
-        : window.location.origin + '/' + baseUrl;
-
-    let targetUrl;
     if (isMobile) {
-        try { navigator.clipboard.writeText(pageNum.toString()).catch(function(){}); } catch(e) {}
-        showMobilePageModal(fullUrl, pageNum);
-        return;
+        // 🚀 الحل السحري للموبايل: استخدام عارض PDF.js المستضاف عبر CDN
+        // هذا العارض سيعالج الملف داخل المتصفح ويجبره على الانتقال للصفحة المطلوبة
+        const pdfJsViewer = "https://mozilla.github.io/pdf.js/web/viewer.html";
+        const targetUrl = `${pdfJsViewer}?file=${encodeURIComponent(absoluteUrl)}#page=${pageNum}`;
+        
+        // فتح العارض مباشرة
+        window.open(targetUrl, '_blank');
     } else {
-        targetUrl = baseUrl + '#page=' + pageNum;
+        // الكمبيوتر يظل كما هو لأنه يدعم الروابط المباشرة بشكل جيد
+        const targetUrl = absoluteUrl + '#page=' + pageNum;
+        window.open(targetUrl, '_blank');
     }
-
-    try {
-        navigator.clipboard.writeText(pageNum.toString()).catch(e => {});
-    } catch (err) {}
-
-    showPdfModal(pageNum, 'github_direct', targetUrl);
 };
 
 // نافذة الموبايل: تعرض رقم الصفحة بوضوح وتفتح PDF مباشرة
