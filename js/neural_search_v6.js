@@ -1,5 +1,5 @@
 /****************************************************************************
- * 🧠 NeuralSearch v6.0 - مــحرك البحث 
+ * 🧠 NeuralSearch v6.0 - مــــــــــــــــــــــحرك البحث 
  * ذكاء اصطناعي محلي 100% - تجربة مستخدم خارقة
  * 
  * الميزات الثورية:
@@ -1660,7 +1660,6 @@ window.openGuidePage = function(filename, pageNum) {
     let cleanName = filename.replace(/\.pdf$/i, '').trim();
     let fileUrl = `guides/${cleanName}.pdf`;
 
-    // البحث عن الرابط المسجل في قاعدة البيانات
     let foundLink = null;
     if (window.masterActivityDB) {
         for (const act of window.masterActivityDB) {
@@ -1678,29 +1677,93 @@ window.openGuidePage = function(filename, pageNum) {
     }
 
     const baseUrl = foundLink ? foundLink : fileUrl;
-
-    // كشف نوع الجهاز
     const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 
-    let targetUrl;
+    // بناء الرابط الكامل المطلق دائماً
+    const fullUrl = baseUrl.startsWith('http')
+        ? baseUrl
+        : window.location.origin + '/' + baseUrl;
 
+    let targetUrl;
     if (isMobile) {
-        // الموبايل: استخدام PDF.js من Mozilla لأنه الوحيد الذي يدعم
-        // الانتقال المباشر لصفحة محددة عبر #page=N على الموبايل
-        const fullUrl = window.location.origin + '/' + baseUrl;
-        targetUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(fullUrl)}#page=${pageNum}`;
+        // ← الحل: عرض PDF مدمج داخل نافذة منبثقة باستخدام PDF.js CDN
+        // بدلاً من الاعتماد على viewer خارجي يرفض cross-origin
+        showEmbeddedPdfViewer(fullUrl, pageNum);
+        return; // ← خروج مبكر لأن showEmbeddedPdfViewer تتولى العملية
     } else {
-        // الكمبيوتر: الفتح المباشر مع #page=X يعمل بشكل مثالي
+        // الكمبيوتر: يعمل بشكل مثالي
         targetUrl = `${baseUrl}#page=${pageNum}`;
     }
 
-    // نسخ رقم الصفحة للحافظة للاحتياط
     try {
         navigator.clipboard.writeText(pageNum.toString()).catch(e => {});
     } catch (err) {}
 
-    showPdfModal(pageNum, isMobile ? 'google_viewer_mobile' : 'github_direct', targetUrl);
+    showPdfModal(pageNum, 'github_direct', targetUrl);
 };
+
+// ← دالة جديدة: عارض PDF مدمج للموبايل يستخدم PDF.js عبر CDN
+function showEmbeddedPdfViewer(pdfUrl, pageNum) {
+    // إزالة أي viewer سابق
+    const existing = document.getElementById('embedded-pdf-overlay');
+    if (existing) existing.remove();
+
+    // نسخ رقم الصفحة للحافظة
+    try { navigator.clipboard.writeText(pageNum.toString()).catch(e => {}); } catch(e) {}
+
+    const overlay = document.createElement('div');
+    overlay.id = 'embedded-pdf-overlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+        z-index: 999999; display: flex; flex-direction: column;
+        align-items: center; justify-content: flex-start;
+    `;
+
+    overlay.innerHTML = `
+        <div style="width:100%; background:#064e3b; color:white; padding:10px 16px;
+                    display:flex; justify-content:space-between; align-items:center;
+                    font-family:'Tajawal',sans-serif; direction:rtl;">
+            <span style="font-weight:bold; font-size:15px;">
+                📄 صفحة رقم <span style="color:#fbbf24; font-size:18px;">${pageNum}</span>
+            </span>
+            <div style="display:flex; gap:8px;">
+                <span style="font-size:12px; background:rgba(255,255,255,0.15);
+                             padding:4px 10px; border-radius:20px;">
+                    رقم الصفحة منسوخ ✓
+                </span>
+                <button onclick="document.getElementById('embedded-pdf-overlay').remove()"
+                        style="background:rgba(255,255,255,0.2); color:white; border:none;
+                               padding:6px 14px; border-radius:8px; cursor:pointer;
+                               font-family:'Tajawal',sans-serif; font-size:14px;">
+                    ✕ إغلاق
+                </button>
+            </div>
+        </div>
+        <div style="width:100%; flex:1; overflow:hidden;">
+            <iframe
+                id="embedded-pdf-frame"
+                src="https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(pdfUrl)}#page=${pageNum}"
+                style="width:100%; height:calc(100vh - 50px); border:none;"
+                allowfullscreen>
+            </iframe>
+        </div>
+        <div style="width:100%; background:#064e3b; padding:8px 16px; text-align:center;
+                    font-family:'Tajawal',sans-serif; color:rgba(255,255,255,0.7); font-size:12px;">
+            إذا لم يُفتح الملف، اضغط:
+            <a href="${pdfUrl}" target="_blank" 
+               style="color:#fbbf24; text-decoration:none; font-weight:bold; margin:0 6px;">
+                فتح الملف مباشرة
+            </a>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // إغلاق بالنقر على الخلفية
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) overlay.remove();
+    });
+}
 
 // ==================== 🛠️ النافذة الاحترافية المحدثة ====================
 function showPdfModal(pageNum, viewerType, targetUrl) {
