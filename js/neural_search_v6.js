@@ -1725,7 +1725,7 @@ window.openGuidePage = function(filename, pageNum) {
 };
 
 // ==================== 📱 عارض PDF المدمج (Engineered Viewer) ====================
-async function openMobilePdfViewer(url, pageNum, title) {
+window.openMobilePdfViewer = async function(url, pageNum, title) {
     // عرض الواجهة فوراً
     showViewerUI(title, pageNum);
     updateStatus('جاري تهيئة المكتبة...', true);
