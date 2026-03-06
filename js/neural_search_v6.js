@@ -1844,7 +1844,7 @@ overlay.style.zIndex = '999999';
 overlay.style.display = 'flex';
 overlay.style.flexDirection = 'column';
 overlay.style.fontFamily = 'sans-serif';
-    `;
+  
 
     overlay.innerHTML = `
         <div style="height: 50px; background: #065f46; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; color: white;">
