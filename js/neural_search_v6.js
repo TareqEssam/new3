@@ -1796,7 +1796,7 @@ function renderPage(num) {
         // حساب القياسات للموبايل بدقة
         const containerWidth = container.clientWidth - 20;
         const viewportUnscaled = page.getViewport({scale: 1});
-        const scale = (containerWidth / viewportUnscaled.width) * 2;
+        const scale = (containerWidth / viewportUnscaled.width) * window.pdfZoom;
         const viewport = page.getViewport({scale: scale});
 
         canvas.height = viewport.height;
@@ -1826,6 +1826,8 @@ function showViewerUI(title, pageNum) {
     const existing = document.getElementById('mobile-viewer-overlay');
     if (existing) existing.remove();
     
+    window.pdfZoom = 1.5; // الحجم الافتراضي
+
     const overlay = document.createElement('div');
     overlay.id = 'mobile-viewer-overlay';
     document.body.appendChild(overlay);
@@ -1847,24 +1849,33 @@ function showViewerUI(title, pageNum) {
 
     overlay.innerHTML = `
         <div style="height:50px;background:#065f46;display:flex;align-items:center;justify-content:space-between;padding:0 15px;color:white;">
-            <div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;direction:rtl;">${title}</div>
+            <div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;direction:rtl;">${title}</div>
             <button onclick="document.getElementById('mobile-viewer-overlay').remove()" style="background:none;border:none;color:white;font-size:28px;">&times;</button>
         </div>
-        <div id="pdf-wrapper" style="flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:20px 0;background:#222;">
+        <div id="pdf-wrapper" style="flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:10px 0;background:#222;">
             <div id="status-msg" style="color:#fbbf24;margin-top:50px;text-align:center;"></div>
-            <canvas id="the-canvas" style="display:none;background:white;box-shadow:0 0 10px rgba(0,0,0,0.5);"></canvas>
+            <canvas id="the-canvas" style="display:none;background:white;box-shadow:0 0 10px rgba(0,0,0,0.5);max-width:100%;"></canvas>
             <div id="fallback-container" style="display:none;margin-top:20px;text-align:center;">
                 <p style="color:white;margin-bottom:10px;font-size:12px;">تعذر العرض المباشر. اضغط لفتح الملف:</p>
                 <a id="fallback-link" href="#" target="_blank" style="background:#fbbf24;color:#065f46;padding:10px 20px;text-decoration:none;border-radius:5px;font-weight:bold;">فتح الملف الأصلي</a>
             </div>
         </div>
-        <div style="height:60px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;gap:20px;">
-            <button onclick="window.changePdfPage(-1)" style="background:#333;color:white;padding:8px 20px;border-radius:6px;">السابق</button>
-            <span id="page-count" style="color:white;font-weight:bold;">-- / --</span>
-            <button onclick="window.changePdfPage(1)" style="background:#fbbf24;color:#065f46;padding:8px 20px;border-radius:6px;font-weight:bold;">التالي</button>
+        <div style="height:60px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;gap:10px;padding:0 10px;">
+            <button onclick="window.changePdfPage(-1)" style="background:#333;color:white;padding:8px 14px;border-radius:6px;border:none;font-size:16px;">▶</button>
+            <span id="page-count" style="color:white;font-weight:bold;font-size:13px;min-width:60px;text-align:center;">-- / --</span>
+            <button onclick="window.changePdfPage(1)" style="background:#fbbf24;color:#065f46;padding:8px 14px;border-radius:6px;border:none;font-size:16px;font-weight:bold;">◀</button>
+            <div style="width:1px;height:30px;background:#444;margin:0 5px;"></div>
+            <button onclick="window.zoomPdf(-0.25)" style="background:#333;color:white;padding:8px 12px;border-radius:6px;border:none;font-size:18px;font-weight:bold;">−</button>
+            <span id="zoom-level" style="color:#fbbf24;font-size:12px;min-width:35px;text-align:center;">150%</span>
+            <button onclick="window.zoomPdf(0.25)" style="background:#333;color:white;padding:8px 12px;border-radius:6px;border:none;font-size:18px;font-weight:bold;">+</button>
         </div>
     `;
 }
+window.zoomPdf = function(delta) {
+    window.pdfZoom = Math.min(Math.max((window.pdfZoom || 1.5) + delta, 0.5), 3);
+    document.getElementById('zoom-level').innerText = Math.round(window.pdfZoom * 100) + '%';
+    renderPage(window.currentPage);
+};
 
 
 function updateStatus(msg, showSpinner) {
