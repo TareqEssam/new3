@@ -1710,7 +1710,7 @@ window.openGuidePage = function(filename, pageNum) {
     console.log(`🚀 جاري الفتح | الملف: ${cleanName} | الصفحة: ${pageNum} | الرابط: ${finalUrl}`);
 
     const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
-
+     alert('isMobile = ' + isMobile + ' | userAgent = ' + navigator.userAgent);
     if (isMobile) {
         // ✅ تشغيل العارض المدمج
         openMobilePdfViewer(finalUrl, pageNum, cleanName);
