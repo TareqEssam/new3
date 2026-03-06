@@ -418,17 +418,33 @@ function getSmartLinksGPT(url) {
 }
 
 function forceDownloadGuide(url, name) {
-    var fileName = name.endsWith('.pdf') ? name : name + '.pdf';
+    // 1. معالجة اسم الملف: حذف النقاط الزائدة في النهاية ثم إضافة الامتداد
+    // هذا يحل مشكلة (..pdf)
+    var cleanName = name.replace(/[.\s]+$/, ''); // حذف النقاط والمسافات من نهاية الاسم
+    var fileName = cleanName + '.pdf';
+
+    // 2. بناء الرابط الصحيح المتوافق مع GitHub Pages
+    // نستخدم الرابط الحالي كقاعدة لضمان وجود اسم المشروع (Repository Name)
     var absoluteUrl = url;
     if (!url.startsWith('http')) {
-        absoluteUrl = window.location.origin + '/' + url;
+        try {
+            absoluteUrl = new URL(url, window.location.href).href;
+        } catch (e) {
+            console.error("خطأ في بناء الرابط:", e);
+            absoluteUrl = url; // محاولة استخدام الرابط النسبي كبديل
+        }
     }
+
+    console.log(`📥 جاري تحميل: ${fileName} من الرابط: ${absoluteUrl}`);
 
     var isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isIOS) {
         fetch(absoluteUrl)
-            .then(function(r) { return r.arrayBuffer(); })
+            .then(function(r) { 
+                if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+                return r.arrayBuffer(); 
+            })
             .then(function(buffer) {
                 var bytes = new Uint8Array(buffer);
                 var binary = '';
@@ -445,10 +461,16 @@ function forceDownloadGuide(url, name) {
                 a.click();
                 setTimeout(function() { document.body.removeChild(a); }, 1000);
             })
-            .catch(function() { window.open(absoluteUrl, '_blank'); });
+            .catch(function(err) { 
+                console.error("فشل التحميل:", err);
+                window.open(absoluteUrl, '_blank'); 
+            });
     } else {
         fetch(absoluteUrl)
-            .then(function(r) { return r.blob(); })
+            .then(function(r) { 
+                if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+                return r.blob(); 
+            })
             .then(function(blob) {
                 var b = new Blob([blob], { type: 'application/octet-stream' });
                 var blobUrl = URL.createObjectURL(b);
@@ -463,10 +485,13 @@ function forceDownloadGuide(url, name) {
                     URL.revokeObjectURL(blobUrl);
                 }, 2000);
             })
-            .catch(function() {
+            .catch(function(err) {
+                console.error("فشل التحميل المباشر، جاري الفتح في نافذة جديدة:", err);
+                // محاولة أخيرة باستخدام الطريقة التقليدية
                 var a = document.createElement('a');
                 a.href = absoluteUrl;
                 a.download = fileName;
+                a.target = '_blank';
                 a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
