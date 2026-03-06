@@ -540,9 +540,19 @@ window.openGuidePage = function(guideId, pageNum) {
   let fileName = originalGuide.source_file || originalGuide.guide_name || '';
   fileName = fileName.replace(/\.pdf\.pdf$/i, '.pdf');
 
-  // بناء الرابط
-  const url = `guides/${encodeURIComponent(fileName)}#page=${pageNum}`;
-  window.open(url, '_blank');
+  // بناء الرابط الكامل
+  const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+  const finalUrl = `${baseUrl}guides/${encodeURIComponent(fileName)}`;
+
+  const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent)
+    || window.innerWidth <= 768
+    || ('ontouchstart' in window);
+
+  if (isMobile) {
+    openMobilePdfViewer(finalUrl, pageNum, fileName.replace('.pdf', ''));
+  } else {
+    window.open(`${finalUrl}#page=${pageNum}`, '_blank');
+  }
 };
 
 // =====================================================
