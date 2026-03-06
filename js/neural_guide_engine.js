@@ -548,11 +548,11 @@ window.openGuidePage = function(guideId, pageNum) {
 
   if (isMobile) {
     // استخدام الدالة الموجودة في neural_search_v6.js مباشرة
-    if (typeof openMobilePdfViewer === 'function') {
-      openMobilePdfViewer(finalUrl, pageNum, fileName.replace('.pdf', ''));
+    if (typeof window.openMobilePdfViewer === 'function') {
+    window.openMobilePdfViewer(finalUrl, pageNum, fileName.replace('.pdf', ''));
     } else {
-      // fallback إذا لم تكن الدالة محملة
-      window.open(`${finalUrl}#page=${pageNum}`, '_blank');
+    window.open(`${finalUrl}#page=${pageNum}`, '_blank');
+     }
     }
   } else {
     window.open(`${finalUrl}#page=${pageNum}`, '_blank');
