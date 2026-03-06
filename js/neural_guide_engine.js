@@ -528,7 +528,7 @@ window.selectGuideResult = function(guideId, chunkId, encodedQuery) {
 };
 
 /**
- * فتح الدليل على صفحة محددة
+ * فتــح الدليل على صفحة محددة
  */
 window.openGuidePage = function(guideId, pageNum) {
   if (!window.FULL_GUIDES_DB) return;
@@ -536,11 +536,9 @@ window.openGuidePage = function(guideId, pageNum) {
   const originalGuide = window.FULL_GUIDES_DB.find(g => g.id === guideId);
   if (!originalGuide) return;
 
-  // تصحيح الامتداد المزدوج .pdf.pdf → .pdf
   let fileName = originalGuide.source_file || originalGuide.guide_name || '';
   fileName = fileName.replace(/\.pdf\.pdf$/i, '.pdf');
 
-  // بناء الرابط الكامل
   const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
   const finalUrl = `${baseUrl}guides/${encodeURIComponent(fileName)}`;
 
@@ -549,7 +547,13 @@ window.openGuidePage = function(guideId, pageNum) {
     || ('ontouchstart' in window);
 
   if (isMobile) {
-    openMobilePdfViewer(finalUrl, pageNum, fileName.replace('.pdf', ''));
+    // استخدام الدالة الموجودة في neural_search_v6.js مباشرة
+    if (typeof openMobilePdfViewer === 'function') {
+      openMobilePdfViewer(finalUrl, pageNum, fileName.replace('.pdf', ''));
+    } else {
+      // fallback إذا لم تكن الدالة محملة
+      window.open(`${finalUrl}#page=${pageNum}`, '_blank');
+    }
   } else {
     window.open(`${finalUrl}#page=${pageNum}`, '_blank');
   }
