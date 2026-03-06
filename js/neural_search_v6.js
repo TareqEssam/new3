@@ -1655,17 +1655,17 @@ function getExcerpt(text, keywords, isShort = false) {
     return (start > 0 ? "..." : "") + snippet + (end < text.length ? "..." : "");
 }
 
-// ==================== 🔗 فتح صفحة الدليل (نسخة محسنة للموبايل) ====================
+// ==================== 🔗 فتح صفحة الدليل (PDF.js V2 - مع تصحيح الروابط العربية) ====================
 
-// روابط مكتبة PDF.js (سيتم تحميلها عند الحاجة فقط)
-const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-const PDFJS_WORKER_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+// 1. استخدام روابط CDN مستقرة (نسخة 2.16 الأكثر توافقاً مع الموبايل)
+const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+const PDFJS_WORKER_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-// دالة رئيسية لفتح صفحة معينة من دليل
 window.openGuidePage = function(filename, pageNum) {
-    let cleanName = filename.replace(/\.pdf$/i, '').trim();
+    // 1. تنظيف اسم الملف (حذف الامتداد وحذف أي نقاط في النهاية)
+    let cleanName = filename.replace(/\.pdf$/i, '').replace(/[.\s]+$/, '').trim();
     
-    // البحث عن الرابط في قاعدة البيانات (إذا وجد)
+    // 2. البحث عن الرابط في قاعدة البيانات
     let foundLink = null;
     if (window.masterActivityDB) {
         for (const act of window.masterActivityDB) {
@@ -1682,257 +1682,117 @@ window.openGuidePage = function(filename, pageNum) {
         }
     }
 
-    // تجهيز الرابط الأساسي
-    let fileUrl = `guides/${cleanName}.pdf`;
-    const baseUrl = foundLink ? foundLink : fileUrl;
+    // 3. بناء الرابط بذكاء (السر في معالجة اللغة العربية)
+    let finalUrl = '';
     
-    // تحويل الرابط إلى مسار مطلق (ضروري لـ PDF.js ولمنع مشاكل المسارات النسبية)
-    const fullUrl = baseUrl.startsWith('http') 
-        ? baseUrl 
-        : new URL(baseUrl, window.location.href).href;
+    if (foundLink && foundLink.startsWith('http')) {
+        finalUrl = foundLink;
+    } else {
+        // إذا كان رابطاً محلياً، يجب بناء الرابط الكامل
+        // ملاحظة: نقوم بتشفير الاسم العربي لضمان وصول الجافاسكربت للملف
+        const encodedName = encodeURIComponent(cleanName + '.pdf');
+        
+        // الحصول على المسار الأساسي للمشروع
+        const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+        finalUrl = `${baseUrl}guides/${encodedName}`;
+        
+        // تصحيح: إذا كان الرابط يأتي من foundLink وهو نص عربي غير مشفر
+        if (foundLink) {
+             // إذا كان الرابط مخزن في القاعدة كـ "guides/اسم الملف.pdf"
+             // نحتاج لفصل المسار عن اسم الملف وتشفير الاسم فقط
+             const parts = foundLink.split('/');
+             const fileName = parts.pop();
+             const path = parts.join('/');
+             finalUrl = `${baseUrl}${path}/${encodeURIComponent(fileName)}`;
+        }
+    }
 
-    // التحقق من الجهاز (مع دقة أفضل)
-    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent) 
-                    || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+    console.log(`🚀 جاري الفتح | الملف: ${cleanName} | الصفحة: ${pageNum} | الرابط: ${finalUrl}`);
+
+    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
 
     if (isMobile) {
-        // استراتيجية متدرجة للموبايل
-        openMobileGuidePage(fullUrl, pageNum, cleanName);
+        // ✅ تشغيل العارض المدمج
+        openMobilePdfViewer(finalUrl, pageNum, cleanName);
     } else {
-        // للكمبيوتر: الفتح المباشر يعمل بكفاءة (مع إضافة #page)
-        const finalUrl = `${fullUrl}#page=${pageNum}`;
-        window.open(finalUrl, '_blank');
+        // للكمبيوتر
+        window.open(`${finalUrl}#page=${pageNum}`, '_blank');
     }
 };
 
-// استراتيجية فتح الدليل على الموبايل (محاولات متعددة)
-async function openMobileGuidePage(url, pageNum, title) {
-    // 1. المحاولة بـ iframe (الأفضل)
-    try {
-        const iframeSuccess = await tryOpenWithIframe(url, pageNum, title);
-        if (iframeSuccess) return;
-    } catch (e) {
-        console.warn('iframe failed, trying PDF.js...', e);
-    }
-
-    // 2. المحاولة بـ PDF.js
-    try {
-        await openMobilePdfViewer(url, pageNum, title);
-    } catch (e) {
-        console.error('PDF.js failed, opening directly as fallback...', e);
-        // 3. الفتح المباشر كحل أخير (مع إضافة #page)
-        const fallbackUrl = `${url}#page=${pageNum}`;
-        window.open(fallbackUrl, '_blank');
-    }
-}
-
-// محاولة فتح PDF في iframe داخل overlay
-function tryOpenWithIframe(url, pageNum, title) {
-    return new Promise((resolve, reject) => {
-        // إنشاء overlay لعرض الـ iframe
-        const overlay = document.createElement('div');
-        overlay.id = 'mobile-pdf-iframe-overlay';
-        overlay.style.cssText = `
-            position: fixed; inset: 0; background: #1a1a1a; z-index: 999999;
-            display: flex; flex-direction: column; overflow: hidden;
-        `;
-
-        // شريط علوي مع زر إغلاق
-        overlay.innerHTML = `
-            <div style="height: 50px; background: #064e3b; display: flex; align-items: center; padding: 0 15px; color: white; justify-content: space-between;">
-                <div style="font-family: Tajawal; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">
-                    📄 ${title} (صفحة ${pageNum})
-                </div>
-                <button id="close-iframe-viewer" style="background:none; border:none; color:white; font-size: 24px; padding: 0 10px;">&times;</button>
-            </div>
-            <div style="flex: 1; background: #525659; position: relative;">
-                <iframe id="pdf-iframe" style="width: 100%; height: 100%; border: none;" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"></iframe>
-            </div>
-        `;
-
-        document.body.appendChild(overlay);
-
-        const iframe = document.getElementById('pdf-iframe');
-        const closeBtn = document.getElementById('close-iframe-viewer');
-
-        // إغلاق overlay
-        closeBtn.onclick = () => {
-            overlay.remove();
-            resolve(false); // نعتبر أن المستخدم ألغى، لا نكمل للطرق الأخرى
-        };
-
-        // مراقبة تحميل الـ iframe
-        let timeout = setTimeout(() => {
-            // إذا استغرق التحميل أكثر من 10 ثوانٍ، نفشل
-            cleanup();
-            reject(new Error('Iframe load timeout'));
-        }, 10000);
-
-        function cleanup() {
-            clearTimeout(timeout);
-            iframe.removeEventListener('load', handleLoad);
-            iframe.removeEventListener('error', handleError);
-        }
-
-        function handleLoad() {
-            cleanup();
-            // لا يمكن التأكد 100% أن الصفحة المطلوبة قد عرضت، لكن الـ iframe ظهر، نعتبر نجاحاً
-            resolve(true);
-        }
-
-        function handleError() {
-            cleanup();
-            reject(new Error('Iframe failed to load'));
-        }
-
-        iframe.addEventListener('load', handleLoad);
-        iframe.addEventListener('error', handleError);
-
-        // محاولة تحميل الـ PDF مع تحديد الصفحة عبر #page=
-        // بعض المتصفحات تدعم هذا، والبعض الآخر يتجاهله لكن يظهر PDF على الأقل
-        iframe.src = `${url}#page=${pageNum}`;
-    });
-}
-
-// ==================== 📱 عارض PDF المدمج للموبايل (PDF.js Integration) ====================
+// ==================== 📱 عارض PDF المدمج (Engineered Viewer) ====================
 async function openMobilePdfViewer(url, pageNum, title) {
-    // 1. عرض مؤشر التحميل
-    showLoadingOverlay(title, pageNum);
+    // عرض الواجهة فوراً
+    showViewerUI(title, pageNum);
+    updateStatus('جاري تهيئة المكتبة...', true);
 
-    // 2. حقن مكتبة PDF.js إذا لم تكن موجودة
+    // 1. تحميل المكتبة
     if (typeof pdfjsLib === 'undefined') {
         try {
             await loadScript(PDFJS_CDN);
-            pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_CDN;
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_CDN;
         } catch (e) {
-            // فشل تحميل المكتبة
-            closeMobileViewer();
-            throw new Error('Failed to load PDF.js library');
+            showError('فشل تحميل ملفات النظام. تأكد من الإنترنت.', url);
+            return;
         }
     }
 
+    // 2. بدء التحميل
+    updateStatus(`جاري تحميل الملف...`, true);
+    
     try {
-        // 3. تحميل ملف الـ PDF
+        // استخدام PDF.js مباشرة
         const loadingTask = pdfjsLib.getDocument(url);
-        const pdf = await loadingTask.promise;
+        
+        // إضافة مستمع للتقدم في التحميل (Progress)
+        loadingTask.onProgress = function(progress) {
+            const percent = (progress.loaded / progress.total * 100).toFixed(0);
+            if (!isNaN(percent)) {
+                updateStatus(`جاري التحميل: ${percent}%`, true);
+            }
+        };
 
-        // 4. تجهيز النافذة
-        setupViewerUI(pdf, pageNum, title);
-
-        // 5. عرض الصفحة
-        await renderPage(pdf, pageNum);
+        loadingTask.promise.then(function(pdf) {
+            window.currentPdf = pdf;
+            window.currentPage = parseInt(pageNum);
+            renderPage(window.currentPage);
+        }).catch(function(error) {
+            console.error('PDF Load Error:', error);
+            // هنا يظهر الخطأ الحقيقي بدلاً من إخفائه
+            if (error.name === 'MissingPDFException') {
+                showError('الملف غير موجود (404). تأكد من اسم الملف في مجلد guides.', url);
+            } else {
+                showError(`حدث خطأ أثناء قراءة الملف.<br>السبب: ${error.message}`, url);
+            }
+        });
 
     } catch (error) {
-        console.error('Error loading PDF:', error);
-        closeMobileViewer();
-        throw error; // سيتم التقاطه في openMobileGuidePage
+        showError(`خطأ غير متوقع: ${error.message}`, url);
     }
 }
 
-// دالة مساعدة لتحميل السكربت
-function loadScript(src) {
-    return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-    });
-}
-
-// إنشاء واجهة المستخدم للعارض
-function showLoadingOverlay(title, pageNum) {
-    const existing = document.getElementById('mobile-pdf-viewer');
-    if (existing) existing.remove();
-
-    const overlay = document.createElement('div');
-    overlay.id = 'mobile-pdf-viewer';
-    overlay.style.cssText = `
-        position: fixed; inset: 0; background: #1a1a1a; z-index: 999999;
-        display: flex; flex-direction: column; overflow: hidden;
-    `;
-
-    overlay.innerHTML = `
-        <!-- Header -->
-        <div style="height: 50px; background: #064e3b; display: flex; align-items: center; padding: 0 15px; color: white; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
-            <div style="font-family: Tajawal; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">
-                📄 ${title}
-            </div>
-            <button id="close-viewer-btn" style="background:none; border:none; color:white; font-size: 24px; padding: 0 10px;">&times;</button>
-        </div>
-
-        <!-- Toolbar -->
-        <div style="height: 40px; background: #2d3748; display: flex; align-items: center; justify-content: center; gap: 15px; color: white;">
-            <button id="prev-page" style="background:#4a5568; border:none; color:white; padding: 5px 15px; border-radius:4px;">السابق</button>
-            <span id="page-indicator" style="font-family: Arial; font-size: 14px;">صفحة ${pageNum}</span>
-            <button id="next-page" style="background:#fbbf24; border:none; color:#064e3b; padding: 5px 15px; border-radius:4px; font-weight:bold;">التالي</button>
-        </div>
-
-        <!-- Canvas Container -->
-        <div id="pdf-container" style="flex: 1; overflow: auto; background: #525659; display: flex; justify-content: center; align-items: flex-start; padding: 10px; position: relative;">
-            <div id="mobile-pdf-status" style="color: white; margin-top: 50px; text-align: center;">
-                <div class="spinner" style="border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #fbbf24; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 10px;"></div>
-                جاري جلب الصفحة ${pageNum}...
-            </div>
-            <canvas id="the-canvas" style="box-shadow: 0 4px 15px rgba(0,0,0,0.5); display: none;"></canvas>
-        </div>
-        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
-    `;
-
-    document.body.appendChild(overlay);
+// دالة رسم الصفحة
+function renderPage(num) {
+    if (!window.currentPdf) return;
     
-    // إغلاق العارض
-    document.getElementById('close-viewer-btn').onclick = closeMobileViewer;
-}
-
-function closeMobileViewer() {
-    const v = document.getElementById('mobile-pdf-viewer');
-    if (v) v.remove();
-}
-
-let currentPdfDoc = null;
-let currentPageNum = 1;
-let isRendering = false;
-
-function setupViewerUI(pdf, initialPage, title) {
-    currentPdfDoc = pdf;
-    currentPageNum = parseInt(initialPage);
-
-    // تفعيل الأزرار
-    document.getElementById('prev-page').onclick = () => changePage(-1);
-    document.getElementById('next-page').onclick = () => changePage(1);
-    document.getElementById('page-indicator').innerText = `صفحة ${currentPageNum} / ${pdf.numPages}`;
-}
-
-function changePage(offset) {
-    if (!currentPdfDoc || isRendering) return;
-    const newPage = currentPageNum + offset;
-    if (newPage >= 1 && newPage <= currentPdfDoc.numPages) {
-        currentPageNum = newPage;
-        renderPage(currentPdfDoc, currentPageNum);
-    }
-}
-
-async function renderPage(pdf, pageNumber) {
-    isRendering = true;
-    const statusDiv = document.getElementById('mobile-pdf-status');
+    updateStatus(`جاري رسم صفحة ${num}...`, true);
     const canvas = document.getElementById('the-canvas');
     const ctx = canvas.getContext('2d');
-    const container = document.getElementById('pdf-container');
+    const container = document.getElementById('pdf-wrapper');
 
-    // إظهار التحميل
-    if (statusDiv) statusDiv.style.display = 'block';
-    canvas.style.display = 'none';
-    document.getElementById('page-indicator').innerText = `صفحة ${pageNumber} / ${pdf.numPages}`;
+    // تصحيح رقم الصفحة
+    if (num < 1) num = 1;
+    if (num > window.currentPdf.numPages) num = window.currentPdf.numPages;
+    window.currentPage = num;
 
-    try {
-        const page = await pdf.getPage(pageNumber);
-        
-        // حساب الحجم المناسب للموبايل (عرض الشاشة مع هامش)
-        const containerWidth = container.clientWidth - 20; 
-        const unscaledViewport = page.getViewport({ scale: 1 });
-        const scale = containerWidth / unscaledViewport.width;
-        const viewport = page.getViewport({ scale: scale });
+    document.getElementById('page-count').innerText = `${num} / ${window.currentPdf.numPages}`;
+
+    window.currentPdf.getPage(num).then(function(page) {
+        // حساب القياسات للموبايل بدقة
+        const containerWidth = container.clientWidth - 20;
+        const viewportUnscaled = page.getViewport({scale: 1});
+        const scale = containerWidth / viewportUnscaled.width;
+        const viewport = page.getViewport({scale: scale});
 
         canvas.height = viewport.height;
         canvas.width = viewport.width;
@@ -1941,19 +1801,80 @@ async function renderPage(pdf, pageNumber) {
             canvasContext: ctx,
             viewport: viewport
         };
+        
+        const renderTask = page.render(renderContext);
 
-        await page.render(renderContext).promise;
+        renderTask.promise.then(function() {
+            updateStatus('', false); 
+            canvas.style.display = 'block';
+        });
+    });
+}
 
-        // إظهار النتيجة
-        if (statusDiv) statusDiv.style.display = 'none';
-        canvas.style.display = 'block';
-        isRendering = false;
+window.changePdfPage = function(offset) {
+    if (!window.currentPdf) return;
+    renderPage(window.currentPage + offset);
+};
 
-    } catch (e) {
-        console.error('Render error:', e);
-        isRendering = false;
-        throw e;
+// واجهة المستخدم
+function showViewerUI(title, pageNum) {
+    const existing = document.getElementById('mobile-viewer-overlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'mobile-viewer-overlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; background: #121212; z-index: 10000;
+        display: flex; flex-direction: column; font-family: sans-serif;
+    `;
+
+    overlay.innerHTML = `
+        <div style="height: 50px; background: #065f46; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; color: white;">
+            <div style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; direction: rtl;">${title}</div>
+            <button onclick="document.getElementById('mobile-viewer-overlay').remove()" style="background:none; border:none; color:white; font-size: 28px;">&times;</button>
+        </div>
+        <div id="pdf-wrapper" style="flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; padding: 20px 0; background: #222;">
+            <div id="status-msg" style="color: #fbbf24; margin-top: 50px; text-align: center;"></div>
+            <canvas id="the-canvas" style="display: none; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></canvas>
+            
+            <div id="fallback-container" style="display:none; margin-top: 20px; text-align: center;">
+                <p style="color: white; margin-bottom: 10px; font-size: 12px;">تعذر العرض المباشر. اضغط لفتح الملف:</p>
+                <a id="fallback-link" href="#" target="_blank" style="background: #fbbf24; color: #065f46; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">فتح الملف الأصلي</a>
+            </div>
+        </div>
+        <div style="height: 60px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 20px;">
+            <button onclick="window.changePdfPage(-1)" style="background: #333; color: white; padding: 8px 20px; border-radius: 6px;">السابق</button>
+            <span id="page-count" style="color: white; font-weight: bold;">-- / --</span>
+            <button onclick="window.changePdfPage(1)" style="background: #fbbf24; color: #065f46; padding: 8px 20px; border-radius: 6px; font-weight: bold;">التالي</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+}
+
+function updateStatus(msg, showSpinner) {
+    const el = document.getElementById('status-msg');
+    if (el) {
+        el.innerHTML = showSpinner ? `⏳ ${msg}` : msg;
+        el.style.display = msg ? 'block' : 'none';
     }
+    const canvas = document.getElementById('the-canvas');
+    if (canvas && msg) canvas.style.display = 'none';
+}
+
+function showError(msg, url) {
+    updateStatus(`<span style="color: #ef4444;">❌ ${msg}</span>`, false);
+    document.getElementById('fallback-container').style.display = 'block';
+    document.getElementById('fallback-link').href = url;
+}
+
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
 }
 // ==================== ✂️ عرض مقتطف النص (لا يحتاج تعديل جوهري) ====================
 window.showGuideSnippet = function(filename, pageNum, exactPhrase) {
