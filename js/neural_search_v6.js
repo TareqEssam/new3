@@ -1831,6 +1831,7 @@ function showViewerUI(title, pageNum) {
 
     const overlay = document.createElement('div');
     overlay.id = 'mobile-viewer-overlay';
+    alert('z-index overlay: ' + overlay.style.zIndex + ' | body children: ' + document.body.children.length);
     overlay.style.cssText = `
         position: fixed; inset: 0; background: #121212; z-index: 10000;
         display: flex; flex-direction: column; font-family: sans-serif;
@@ -1857,6 +1858,7 @@ function showViewerUI(title, pageNum) {
         </div>
     `;
     document.body.appendChild(overlay);
+    alert('تم إضافة overlay للـ body ✅');
 }
 
 function updateStatus(msg, showSpinner) {
