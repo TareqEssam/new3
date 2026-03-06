@@ -550,10 +550,7 @@ window.openGuidePage = function(guideId, pageNum) {
     // استخدام الدالة الموجودة في neural_search_v6.js مباشرة
     if (typeof window.openMobilePdfViewer === 'function') {
     window.openMobilePdfViewer(finalUrl, pageNum, fileName.replace('.pdf', ''));
-    } else {
-    window.open(`${finalUrl}#page=${pageNum}`, '_blank');
-     }
-    }
+   // fallback إذا لم تكن الدالة محملة
   } else {
     window.open(`${finalUrl}#page=${pageNum}`, '_blank');
   }
