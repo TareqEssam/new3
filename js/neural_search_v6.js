@@ -1710,7 +1710,10 @@ window.openGuidePage = function(filename, pageNum) {
 
     console.log(`🚀 جاري الفتح | الملف: ${cleanName} | الصفحة: ${pageNum} | الرابط: ${finalUrl}`);
 
-    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent);
+    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent) 
+    || window.innerWidth <= 768 
+    || ('ontouchstart' in window);
+    
      alert('isMobile = ' + isMobile + ' | userAgent = ' + navigator.userAgent);
     if (isMobile) {
         // ✅ تشغيل العارض المدمج
