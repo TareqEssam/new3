@@ -1831,10 +1831,19 @@ function showViewerUI(title, pageNum) {
 
     const overlay = document.createElement('div');
     overlay.id = 'mobile-viewer-overlay';
+    document.body.appendChild(overlay); // أضفه أولاً
     alert('z-index overlay: ' + overlay.style.zIndex + ' | body children: ' + document.body.children.length);
-    overlay.style.cssText = `
-        position: fixed; inset: 0; background: #121212; z-index: 10000;
-        display: flex; flex-direction: column; font-family: sans-serif;
+    // ثم طبّق الـ style
+overlay.style.position = 'fixed';
+overlay.style.top = '0';
+overlay.style.left = '0';
+overlay.style.right = '0';
+overlay.style.bottom = '0';
+overlay.style.background = '#121212';
+overlay.style.zIndex = '999999';
+overlay.style.display = 'flex';
+overlay.style.flexDirection = 'column';
+overlay.style.fontFamily = 'sans-serif';
     `;
 
     overlay.innerHTML = `
@@ -1857,7 +1866,6 @@ function showViewerUI(title, pageNum) {
             <button onclick="window.changePdfPage(1)" style="background: #fbbf24; color: #065f46; padding: 8px 20px; border-radius: 6px; font-weight: bold;">التالي</button>
         </div>
     `;
-    document.body.appendChild(overlay);
     alert('تم إضافة overlay للـ body ✅');
 }
 
