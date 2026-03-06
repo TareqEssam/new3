@@ -1726,9 +1726,11 @@ window.openGuidePage = function(filename, pageNum) {
 
 // ==================== 📱 عارض PDF المدمج (Engineered Viewer) ====================
 window.openMobilePdfViewer = async function(url, pageNum, title) {
+    alert('viewer بدأ | url: ' + url);
     // عرض الواجهة فوراً
     showViewerUI(title, pageNum);
     updateStatus('جاري تهيئة المكتبة...', true);
+    alert('بعد showViewerUI');
 
     // 1. تحميل المكتبة
     if (typeof pdfjsLib === 'undefined') {
