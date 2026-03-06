@@ -547,15 +547,11 @@ window.openGuidePage = function(guideId, pageNum) {
     || ('ontouchstart' in window);
 
   if (isMobile) {
-    alert('موبايل - سيفتح PDF viewer');
     if (typeof window.openMobilePdfViewer === 'function') {
-        alert('الدالة موجودة ✅');
         window.openMobilePdfViewer(finalUrl, pageNum, fileName.replace('.pdf', ''));
     } else {
-        alert('الدالة غير موجودة ❌');
     }
 } else {
-    alert('كمبيوتر - سيفتح تاب جديد');
     window.open(`${finalUrl}#page=${pageNum}`, '_blank');
 }
 };
