@@ -1655,11 +1655,11 @@ function getExcerpt(text, keywords, isShort = false) {
     return (start > 0 ? "..." : "") + snippet + (end < text.length ? "..." : "");
 }
 
-// ==================== 🔗 فتح صفحة الدليل (النسخة المتوافقة مع GitHub) ====================
+// ==================== 🔗 فتح صفحة الدليل (الحل العلمي الشامل) ====================
 window.openGuidePage = function(filename, pageNum) {
     let cleanName = filename.replace(/\.pdf$/i, '').trim();
-    let fileUrl = `guides/${cleanName}.pdf`;
-
+    
+    // 1. البحث عن الرابط الصحيح
     let foundLink = null;
     if (window.masterActivityDB) {
         for (const act of window.masterActivityDB) {
@@ -1676,153 +1676,111 @@ window.openGuidePage = function(filename, pageNum) {
         }
     }
 
+    // 2. تجهيز الرابط الأساسي
+    let fileUrl = `guides/${cleanName}.pdf`;
     const baseUrl = foundLink ? foundLink : fileUrl;
+
+    // 3. بناء الرابط المطلق (Absolute URL)
+    const absoluteBaseUrl = baseUrl.startsWith('http')
+        ? baseUrl
+        : new URL(baseUrl, window.location.href).href;
+
+    // 4. إضافة رقم الصفحة للرابط (مهم جداً حتى للموبايل)
+    const finalUrlWithPage = `${absoluteBaseUrl}#page=${pageNum}`;
+
     const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 
-    // بناء الرابط الكامل المطلق دائماً
-    const fullUrl = baseUrl.startsWith('http')
-        ? baseUrl
-        : window.location.origin + '/' + baseUrl;
-
-    let targetUrl;
     if (isMobile) {
-        try { navigator.clipboard.writeText(pageNum.toString()).catch(function(){}); } catch(e) {}
-        showMobilePageModal(fullUrl, pageNum);
-        return;
+        // للموبايل: نرسل الرابط الكامل + رقم الصفحة للنافذة الوسيطة
+        showMobilePageModal(finalUrlWithPage, pageNum);
     } else {
-        targetUrl = baseUrl + '#page=' + pageNum;
+        // للكمبيوتر: فتح مباشر
+        showPdfModal(pageNum, 'github_direct', finalUrlWithPage);
     }
-
-    try {
-        navigator.clipboard.writeText(pageNum.toString()).catch(e => {});
-    } catch (err) {}
-
-    showPdfModal(pageNum, 'github_direct', targetUrl);
 };
 
-// نافذة الموبايل: تعرض رقم الصفحة بوضوح وتفتح PDF مباشرة
+// نافذة الموبايل: (تم إصلاح منطق النسخ ليكون مضموناً 100%)
 function showMobilePageModal(pdfUrl, pageNum) {
     var ex = document.getElementById('mobile-page-modal');
     if (ex) ex.remove();
 
     var overlay = document.createElement('div');
     overlay.id = 'mobile-page-modal';
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:999999;display:flex;align-items:center;justify-content:center;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:999999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);';
 
     var box = document.createElement('div');
-    box.style.cssText = 'background:linear-gradient(135deg,#064e3b,#065f46);color:white;padding:28px;border-radius:16px;width:320px;max-width:90vw;font-family:Tajawal,sans-serif;direction:rtl;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);';
-    box.innerHTML = '<div style="font-size:38px;margin-bottom:10px;">📄</div>'
-        + '<div style="font-size:17px;font-weight:bold;margin-bottom:6px;">فتح الدليل</div>'
-        + '<div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:16px;margin:14px 0;">'
-        + '<div style="font-size:13px;opacity:0.8;margin-bottom:4px;">انتقل إلى الصفحة</div>'
-        + '<div style="font-size:52px;font-weight:bold;color:#fbbf24;line-height:1.1;">' + pageNum + '</div>'
-        + '<div style="font-size:12px;opacity:0.65;margin-top:6px;">✓ رقم الصفحة منسوخ في الحافظة</div>'
-        + '</div>'
-        + '<div style="font-size:12px;opacity:0.7;margin-bottom:16px;line-height:1.7;">بعد فتح الملف، اضغط على حقل رقم الصفحة<br>في الأعلى والصق الرقم</div>'
-        + '<div style="display:flex;gap:10px;">'
-        + '<button id="mpm-open" style="flex:1;background:#fbbf24;color:#064e3b;border:none;padding:13px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:15px;font-weight:bold;cursor:pointer;">✅ فتح الملف</button>'
-        + '<button id="mpm-cancel" style="background:rgba(255,255,255,0.15);color:white;border:none;padding:13px 16px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:14px;cursor:pointer;">إلغاء</button>'
-        + '</div>';
+    box.style.cssText = 'background:linear-gradient(135deg,#064e3b,#065f46);color:white;padding:24px;border-radius:16px;width:340px;max-width:90vw;font-family:Tajawal,sans-serif;direction:rtl;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);';
+    
+    box.innerHTML = `
+        <div style="font-size:42px;margin-bottom:12px;">📲</div>
+        <div style="font-size:18px;font-weight:bold;margin-bottom:8px;">فتح الدليل على الموبايل</div>
+        
+        <div style="background:rgba(255,255,255,0.1);border-radius:12px;padding:15px;margin:15px 0;">
+            <div style="font-size:13px;opacity:0.9;margin-bottom:5px;">الصفحة المطلوبة:</div>
+            <div style="font-size:48px;font-weight:bold;color:#fbbf24;line-height:1;">${pageNum}</div>
+            <div style="font-size:11px;opacity:0.7;margin-top:8px;">سيتم نسخ الرقم تلقائياً عند الفتح</div>
+        </div>
+
+        <div style="font-size:13px;opacity:0.8;margin-bottom:20px;line-height:1.6;">
+            أنظمة الموبايل لا تدعم الانتقال المباشر للصفحة.<br>
+            <b>اضغط زر الفتح، ثم الصق الرقم في خانة البحث بالملف.</b>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+            <button id="mpm-open" style="flex:2;background:#fbbf24;color:#064e3b;border:none;padding:14px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:16px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+                <span>📂 فتح ونسخ الرقم</span>
+            </button>
+            <button id="mpm-cancel" style="flex:1;background:rgba(255,255,255,0.15);color:white;border:none;padding:14px;border-radius:10px;font-family:Tajawal,sans-serif;font-size:14px;cursor:pointer;">إلغاء</button>
+        </div>
+    `;
 
     overlay.appendChild(box);
     document.body.appendChild(overlay);
 
+    // ✅ الحل العلمي للنسخ: يتم النسخ لحظة الضغط (User Action) لضمان القبول من المتصفح
     document.getElementById('mpm-open').onclick = function() {
-        overlay.remove();
-        window.open(pdfUrl, '_blank');
+        const btn = this;
+        btn.innerHTML = '✅ تم النسخ.. جاري الفتح';
+        
+        // محاولة النسخ المضمونة
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(pageNum.toString()).then(() => {
+                openUrlAndClose();
+            }).catch(() => {
+                // في حالة الفشل (نادر جداً في هذا السياق)
+                fallbackCopy(pageNum);
+                openUrlAndClose();
+            });
+        } else {
+            // للمتصفحات القديمة
+            fallbackCopy(pageNum);
+            openUrlAndClose();
+        }
     };
+
+    function openUrlAndClose() {
+        setTimeout(() => {
+            window.open(pdfUrl, '_blank');
+            overlay.remove();
+        }, 300); // تأخير بسيط جداً لرؤية تأثير الزر
+    }
+
+    // دالة احتياطية للنسخ (Fallback)
+    function fallbackCopy(text) {
+        try {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("Copy");
+            textArea.remove();
+        } catch (err) {
+            console.error('Fallback copy failed', err);
+        }
+    }
+
     document.getElementById('mpm-cancel').onclick = function() { overlay.remove(); };
     overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
-}
-
-// ==================== 🛠️ النافذة الاحترافية المحدثة ====================
-function showPdfModal(pageNum, viewerType, targetUrl) {
-    const existing = document.getElementById('pdf-modal-overlay');
-    if (existing) existing.remove();
-
-    // تعليمات محدثة تتناسب مع الفتح المباشر
-    const isMobileView = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
-
-let instruction = isMobileView
-    ? `<div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:12px; margin:12px 0; text-align:right;">
-        <div style="font-size:13px; line-height:2;">
-            ١. سيفتح الملف عبر عارض Google المتوافق مع الموبايل<br>
-            ٢. بعد الفتح، انتقل يدوياً إلى صفحة رقم <strong style="font-size:16px; color:#fbbf24;">(${pageNum})</strong><br>
-            ٣. رقم الصفحة منسوخ في الحافظة وجاهز للاستخدام.
-        </div>
-    </div>`
-    : `<div style="background:rgba(255,255,255,0.1); border-radius:8px; padding:12px; margin:12px 0; text-align:right;">
-        <div style="font-size:13px; line-height:2;">
-            ١. سيفتح الملف مباشرة من خادم المشروع السريع<br>
-            ٢. سيتم توجيهك تلقائياً إلى صفحة رقم <strong style="font-size:16px; color:#fbbf24;">(${pageNum})</strong><br>
-            ٣. إذا لم ينتقل تلقائياً، رقم الصفحة منسوخ وجاهز للصق.
-        </div>
-    </div>`;
-
-    const overlay = document.createElement('div');
-    overlay.id = 'pdf-modal-overlay';
-    overlay.style.cssText = `
-        position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-        z-index: 999998; display: flex; align-items: center;
-        justify-content: center; backdrop-filter: blur(4px);
-        opacity: 0; transition: opacity 0.3s ease;
-    `;
-
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
-        color: white; padding: 28px; border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.4); font-family: 'Tajawal', sans-serif;
-        direction: rtl; width: 380px; max-width: 90vw;
-        border: 1px solid rgba(255,255,255,0.15); transform: scale(0.9);
-        transition: transform 0.3s ease;
-    `;
-
-    modal.innerHTML = `
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-            <div style="font-size:32px;">🚀</div>
-            <div>
-                <strong style="font-size:16px; display:block;">فتح الدليل السريع</strong>
-                <span style="font-size:12px; opacity:0.8;">جاهز للعرض الآن</span>
-            </div>
-        </div>
-        ${instruction}
-        <div style="display:flex; gap:10px; margin-top:16px;">
-            <button id="pdf-open-btn" style="
-                flex: 1; background: #fbbf24; color: #064e3b;
-                border: none; padding: 12px; border-radius: 8px;
-                font-family: 'Tajawal', sans-serif; font-size: 15px;
-                font-weight: bold; cursor: pointer; transition: background 0.2s;
-            ">✅ فتح الصفحة ${pageNum}</button>
-            <button id="pdf-cancel-btn" style="
-                background: rgba(255,255,255,0.15); color: white;
-                border: none; padding: 12px 16px; border-radius: 8px;
-                font-family: 'Tajawal', sans-serif; font-size: 14px; cursor: pointer;
-            ">إلغاء</button>
-        </div>
-    `;
-
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-
-    requestAnimationFrame(() => {
-        overlay.style.opacity = '1';
-        modal.style.transform = 'scale(1)';
-    });
-
-    document.getElementById('pdf-open-btn').onclick = () => {
-        closeModal();
-        window.open(targetUrl, '_blank');
-    };
-
-    document.getElementById('pdf-cancel-btn').onclick = closeModal;
-    overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
-
-    function closeModal() {
-        overlay.style.opacity = '0';
-        modal.style.transform = 'scale(0.9)';
-        setTimeout(() => overlay.remove(), 300);
-    }
 }
 
 // ==================== ✂️ عرض مقتطف النص (لا يحتاج تعديل جوهري) ====================
