@@ -1867,7 +1867,11 @@ overlay.style.fontFamily = 'sans-serif';
         </div>
     `;
     alert('تم إضافة overlay للـ body ✅');
+    setTimeout(function() {
+        alert('overlay موجود بعد ثانية؟ ' + !!document.getElementById('mobile-viewer-overlay'));
+    }, 1000);
 }
+
 
 function updateStatus(msg, showSpinner) {
     const el = document.getElementById('status-msg');
