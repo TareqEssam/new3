@@ -1796,7 +1796,7 @@ function renderPage(num) {
         // حساب القياسات للموبايل بدقة
         const containerWidth = container.clientWidth - 20;
         const viewportUnscaled = page.getViewport({scale: 1});
-        const scale = containerWidth / viewportUnscaled.width;
+        const scale = (containerWidth / viewportUnscaled.width) * 2;
         const viewport = page.getViewport({scale: scale});
 
         canvas.height = viewport.height;
