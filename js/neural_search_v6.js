@@ -1828,48 +1828,45 @@ window.changePdfPage = function(offset) {
 function showViewerUI(title, pageNum) {
     const existing = document.getElementById('mobile-viewer-overlay');
     if (existing) existing.remove();
-
+    
     const overlay = document.createElement('div');
     overlay.id = 'mobile-viewer-overlay';
-    document.body.appendChild(overlay); // أضفه أولاً
-    alert('z-index overlay: ' + overlay.style.zIndex + ' | body children: ' + document.body.children.length);
-    // ثم طبّق الـ style
-overlay.style.position = 'fixed';
-overlay.style.top = '0';
-overlay.style.left = '0';
-overlay.style.right = '0';
-overlay.style.bottom = '0';
-overlay.style.background = '#121212';
-overlay.style.zIndex = '999999';
-overlay.style.display = 'flex';
-overlay.style.flexDirection = 'column';
-overlay.style.fontFamily = 'sans-serif';
-  
+    document.body.appendChild(overlay);
+    
+    overlay.setAttribute('style', 
+        'position:fixed !important;' +
+        'top:0 !important;' +
+        'left:0 !important;' +
+        'right:0 !important;' +
+        'bottom:0 !important;' +
+        'width:100% !important;' +
+        'height:100% !important;' +
+        'background:#121212 !important;' +
+        'z-index:2147483647 !important;' +
+        'display:flex !important;' +
+        'flex-direction:column !important;' +
+        'font-family:sans-serif !important;'
+    );
 
     overlay.innerHTML = `
-        <div style="height: 50px; background: #065f46; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; color: white;">
-            <div style="font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; direction: rtl;">${title}</div>
-            <button onclick="document.getElementById('mobile-viewer-overlay').remove()" style="background:none; border:none; color:white; font-size: 28px;">&times;</button>
+        <div style="height:50px;background:#065f46;display:flex;align-items:center;justify-content:space-between;padding:0 15px;color:white;">
+            <div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%;direction:rtl;">${title}</div>
+            <button onclick="document.getElementById('mobile-viewer-overlay').remove()" style="background:none;border:none;color:white;font-size:28px;">&times;</button>
         </div>
-        <div id="pdf-wrapper" style="flex: 1; overflow: auto; display: flex; flex-direction: column; align-items: center; padding: 20px 0; background: #222;">
-            <div id="status-msg" style="color: #fbbf24; margin-top: 50px; text-align: center;"></div>
-            <canvas id="the-canvas" style="display: none; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></canvas>
-            
-            <div id="fallback-container" style="display:none; margin-top: 20px; text-align: center;">
-                <p style="color: white; margin-bottom: 10px; font-size: 12px;">تعذر العرض المباشر. اضغط لفتح الملف:</p>
-                <a id="fallback-link" href="#" target="_blank" style="background: #fbbf24; color: #065f46; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">فتح الملف الأصلي</a>
+        <div id="pdf-wrapper" style="flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:20px 0;background:#222;">
+            <div id="status-msg" style="color:#fbbf24;margin-top:50px;text-align:center;"></div>
+            <canvas id="the-canvas" style="display:none;background:white;box-shadow:0 0 10px rgba(0,0,0,0.5);"></canvas>
+            <div id="fallback-container" style="display:none;margin-top:20px;text-align:center;">
+                <p style="color:white;margin-bottom:10px;font-size:12px;">تعذر العرض المباشر. اضغط لفتح الملف:</p>
+                <a id="fallback-link" href="#" target="_blank" style="background:#fbbf24;color:#065f46;padding:10px 20px;text-decoration:none;border-radius:5px;font-weight:bold;">فتح الملف الأصلي</a>
             </div>
         </div>
-        <div style="height: 60px; background: #1a1a1a; display: flex; align-items: center; justify-content: center; gap: 20px;">
-            <button onclick="window.changePdfPage(-1)" style="background: #333; color: white; padding: 8px 20px; border-radius: 6px;">السابق</button>
-            <span id="page-count" style="color: white; font-weight: bold;">-- / --</span>
-            <button onclick="window.changePdfPage(1)" style="background: #fbbf24; color: #065f46; padding: 8px 20px; border-radius: 6px; font-weight: bold;">التالي</button>
+        <div style="height:60px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;gap:20px;">
+            <button onclick="window.changePdfPage(-1)" style="background:#333;color:white;padding:8px 20px;border-radius:6px;">السابق</button>
+            <span id="page-count" style="color:white;font-weight:bold;">-- / --</span>
+            <button onclick="window.changePdfPage(1)" style="background:#fbbf24;color:#065f46;padding:8px 20px;border-radius:6px;font-weight:bold;">التالي</button>
         </div>
     `;
-    alert('تم إضافة overlay للـ body ✅');
-    setTimeout(function() {
-        alert('overlay موجود بعد ثانية؟ ' + !!document.getElementById('mobile-viewer-overlay'));
-    }, 1000);
 }
 
 
