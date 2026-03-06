@@ -547,16 +547,17 @@ window.openGuidePage = function(guideId, pageNum) {
     || ('ontouchstart' in window);
 
   if (isMobile) {
-    // استخدام الدالة الموجودة في neural_search_v6.js مباشرة
-    if (typeof openMobilePdfViewer === 'function') {
-      window.openMobilePdfViewer(finalUrl, pageNum, fileName.replace('.pdf', ''));
+    alert('موبايل - سيفتح PDF viewer');
+    if (typeof window.openMobilePdfViewer === 'function') {
+        alert('الدالة موجودة ✅');
+        window.openMobilePdfViewer(finalUrl, pageNum, fileName.replace('.pdf', ''));
     } else {
-      // fallback إذا لم تكـــن الدالة محملة
-      window.open(`${finalUrl}#page=${pageNum}`, '_blank');
+        alert('الدالة غير موجودة ❌');
     }
-  } else {
+} else {
+    alert('كمبيوتر - سيفتح تاب جديد');
     window.open(`${finalUrl}#page=${pageNum}`, '_blank');
-  }
+}
 };
 
 // =====================================================
