@@ -1792,20 +1792,21 @@ function renderPage(num) {
 
     document.getElementById('page-count').innerText = `${num} / ${window.currentPdf.numPages}`;
 
-    window.currentPdf.getPage(num).then(function(page) {
-        // حساب القياسات للموبايل بدقة
-        const containerWidth = container.clientWidth - 20;
-        const viewportUnscaled = page.getViewport({scale: 1});
-        const scale = (containerWidth / viewportUnscaled.width) * window.pdfZoom;
-        const viewport = page.getViewport({scale: scale});
+   window.currentPdf.getPage(num).then(function(page) {
+    const baseWidth = container.clientWidth - 20;
+    const viewportUnscaled = page.getViewport({scale: 1});
+    const scale = (baseWidth / viewportUnscaled.width) * window.pdfZoom;
+    const viewport = page.getViewport({scale: scale});
 
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    canvas.style.maxWidth = 'none';
+    canvas.style.width = viewport.width + 'px';
 
-        const renderContext = {
-            canvasContext: ctx,
-            viewport: viewport
-        };
+    const renderContext = {
+        canvasContext: ctx,
+        viewport: viewport
+    };
         
         const renderTask = page.render(renderContext);
 
@@ -1854,7 +1855,7 @@ function showViewerUI(title, pageNum) {
         </div>
         <div id="pdf-wrapper" style="flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:10px 0;background:#222;">
             <div id="status-msg" style="color:#fbbf24;margin-top:50px;text-align:center;"></div>
-            <canvas id="the-canvas" style="display:none;background:white;box-shadow:0 0 10px rgba(0,0,0,0.5);max-width:100%;"></canvas>
+            <canvas id="the-canvas" style="display:none;background:white;box-shadow:0 0 10px rgba(0,0,0,0.5);"></canvas>
             <div id="fallback-container" style="display:none;margin-top:20px;text-align:center;">
                 <p style="color:white;margin-bottom:10px;font-size:12px;">تعذر العرض المباشر. اضغط لفتح الملف:</p>
                 <a id="fallback-link" href="#" target="_blank" style="background:#fbbf24;color:#065f46;padding:10px 20px;text-decoration:none;border-radius:5px;font-weight:bold;">فتح الملف الأصلي</a>
