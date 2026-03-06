@@ -1662,6 +1662,7 @@ const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.mi
 const PDFJS_WORKER_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 window.openGuidePage = function(filename, pageNum) {
+     alert('userAgent: ' + navigator.userAgent);
     // 1. تنظيف اسم الملف (حذف الامتداد وحذف أي نقاط في النهاية)
     let cleanName = filename.replace(/\.pdf$/i, '').replace(/[.\s]+$/, '').trim();
     
