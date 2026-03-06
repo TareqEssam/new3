@@ -1662,7 +1662,6 @@ const PDFJS_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.mi
 const PDFJS_WORKER_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
 window.openGuidePage = function(filename, pageNum) {
-     alert('userAgent: ' + navigator.userAgent);
     // 1. تنظيف اسم الملف (حذف الامتداد وحذف أي نقاط في النهاية)
     let cleanName = filename.replace(/\.pdf$/i, '').replace(/[.\s]+$/, '').trim();
     
@@ -1714,7 +1713,7 @@ window.openGuidePage = function(filename, pageNum) {
     || window.innerWidth <= 768 
     || ('ontouchstart' in window);
     
-     alert('isMobile = ' + isMobile + ' | userAgent = ' + navigator.userAgent);
+    
     if (isMobile) {
         // ✅ تشغيل العارض المدمج
         openMobilePdfViewer(finalUrl, pageNum, cleanName);
@@ -1726,11 +1725,11 @@ window.openGuidePage = function(filename, pageNum) {
 
 // ==================== 📱 عارض PDF المدمج (Engineered Viewer) ====================
 window.openMobilePdfViewer = async function(url, pageNum, title) {
-    alert('viewer بدأ | url: ' + url);
+    
     // عرض الواجهة فوراً
     showViewerUI(title, pageNum);
     updateStatus('جاري تهيئة المكتبة...', true);
-    alert('بعد showViewerUI');
+    
 
     // 1. تحميل المكتبة
     if (typeof pdfjsLib === 'undefined') {
@@ -1759,12 +1758,10 @@ window.openMobilePdfViewer = async function(url, pageNum, title) {
         };
 
         loadingTask.promise.then(function(pdf) {
-            alert('pageNum = ' + pageNum + ' | type = ' + typeof pageNum);
-            window.currentPdf = pdf;
+           window.currentPdf = pdf;
             window.currentPage = parseInt(pageNum);
             renderPage(window.currentPage);
         }).catch(function(error) {
-           alert('❌ خطأ: ' + error.name + ' | ' + error.message); // أضف هذا
             console.error('PDF Load Error:', error);
             // هنا يظهر الخطأ الحقيقي بدلاً من إخفائه
             if (error.name === 'MissingPDFException') {
