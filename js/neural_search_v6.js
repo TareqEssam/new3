@@ -1758,6 +1758,7 @@ async function openMobilePdfViewer(url, pageNum, title) {
             window.currentPage = parseInt(pageNum);
             renderPage(window.currentPage);
         }).catch(function(error) {
+           alert('❌ خطأ: ' + error.name + ' | ' + error.message); // أضف هذا
             console.error('PDF Load Error:', error);
             // هنا يظهر الخطأ الحقيقي بدلاً من إخفائه
             if (error.name === 'MissingPDFException') {
