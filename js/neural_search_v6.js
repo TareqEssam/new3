@@ -1753,6 +1753,7 @@ async function openMobilePdfViewer(url, pageNum, title) {
         };
 
         loadingTask.promise.then(function(pdf) {
+            alert('pageNum = ' + pageNum + ' | type = ' + typeof pageNum);
             window.currentPdf = pdf;
             window.currentPage = parseInt(pageNum);
             renderPage(window.currentPage);
