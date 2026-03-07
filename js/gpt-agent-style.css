@@ -702,7 +702,7 @@
 
 .choice-btn:hover { 
     background: var(--ai-gradient); 
-    color: white;
+    color: Red ;
     transform: translateX(-8px); 
     box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
 }
