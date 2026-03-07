@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * مـــحرك البحث في الأدلة الرسمية
+ * محرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -385,59 +385,84 @@ const GuideFormatter = {
   formatChunkText(text, highlightWords = []) {
     if (!text) return '';
 
-    // تقسيم إلى أسطر
+    // ① بناء HTML أولاً بدون تلوين
     let lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     let html = '';
 
-    lines.forEach((line, idx) => {
-      // عنوان المادة
+    lines.forEach((line) => {
       if (/^مادة\s*[\(\[]*\s*[\d٠-٩]+/.test(line) || /^المادة\s+[\d٠-٩]+/.test(line)) {
         html += `<div class="guide-article-title">📋 ${line}</div>`;
-      }
-      // بنود أرقام عربية (١- ٢- ...)
-      else if (/^[١٢٣٤٥٦٧٨٩٠]+\s*[-–.]/.test(line)) {
+      } else if (/^[١٢٣٤٥٦٧٨٩٠]+\s*[-–.]/.test(line)) {
         const num = line.match(/^([١٢٣٤٥٦٧٨٩٠]+)/)[1];
         const content = line.replace(/^[١٢٣٤٥٦٧٨٩٠]+\s*[-–.]\s*/, '');
         html += `<div class="guide-item"><span class="guide-item-num">${num}</span><span class="guide-item-text">${content}</span></div>`;
-      }
-      // بنود أرقام لاتينية (1. 2. ...)
-      else if (/^\d+\s*[-–.]/.test(line)) {
+      } else if (/^\d+\s*[-–.]/.test(line)) {
         const num = line.match(/^(\d+)/)[1];
         const content = line.replace(/^\d+\s*[-–.]\s*/, '');
         html += `<div class="guide-item"><span class="guide-item-num">${num}</span><span class="guide-item-text">${content}</span></div>`;
-      }
-      // بنود أبجدية (أ) (ب) ...
-      else if (/^\([أ-ي]\)/.test(line)) {
+      } else if (/^\([أ-ي]\)/.test(line)) {
         const letter = line.match(/^\(([أ-ي])\)/)[1];
         const content = line.replace(/^\([أ-ي]\)\s*/, '');
         html += `<div class="guide-item guide-item-alpha"><span class="guide-item-num">${letter}</span><span class="guide-item-text">${content}</span></div>`;
-      }
-      // عناوين (أولاً، ثانياً...)
-      else if (/^(أولاً|ثانياً|ثالثاً|رابعاً|خامساً|سادساً)/.test(line)) {
+      } else if (/^(أولاً|ثانياً|ثالثاً|رابعاً|خامساً|سادساً)/.test(line)) {
         html += `<div class="guide-section-title">◆ ${line}</div>`;
-      }
-      // خط فاصل
-      else if (/^[-─━]{3,}$/.test(line)) {
+      } else if (/^[-─━]{3,}$/.test(line)) {
         html += `<hr class="guide-divider">`;
-      }
-      // نص عادي
-      else {
+      } else {
         html += `<div class="guide-paragraph">${line}</div>`;
       }
     });
 
-    // تلوين كلمات البحث إذا وُجدت
+    // ② تلوين كلمات البحث — بطريقة آمنة لا تكسر HTML
     if (highlightWords && highlightWords.length > 0) {
+
+      // نبني قائمة شاملة: الكلمة الأصلية + جذرها + بدائل ة/ه
+      const allVariants = new Set();
+      const stemWord = w => w.replace(/^(ال|وال|بال|كال|فال|لل)/, '');
+
       highlightWords.forEach(word => {
-        if (!word || word.length < 3) return;
-        // تلوين بدون كسر HTML tags
-        const safeWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${safeWord})`, 'gi');
-        html = html.replace(regex, (match, p1) => {
-          // تجنب التلوين داخل attributes
-          return `<mark class="guide-highlight">${p1}</mark>`;
-        });
+        if (!word || word.length < 2) return;
+        const stem = stemWord(word);
+
+        // الكلمة كما هي
+        allVariants.add(word);
+        // جذرها بدون أل
+        if (stem !== word) allVariants.add(stem);
+        // بديل ة ↔ ه
+        if (word.endsWith('ة'))  { allVariants.add(word.slice(0,-1) + 'ه'); allVariants.add(stem.slice(0,-1) + 'ه'); }
+        if (word.endsWith('ه'))  { allVariants.add(word.slice(0,-1) + 'ة'); allVariants.add(stem.slice(0,-1) + 'ة'); }
+        // بديل ى ↔ ي
+        if (word.endsWith('ى'))  allVariants.add(word.slice(0,-1) + 'ي');
+        if (word.endsWith('ي'))  allVariants.add(word.slice(0,-1) + 'ى');
+        // بديل أ ↔ ا
+        allVariants.add(word.replace(/[أإآ]/g, 'ا'));
       });
+
+      // ③ التلوين الآمن: نعمل فقط داخل محتوى tags وليس داخل attributes
+      //    الفكرة: نقسم الـ HTML عند >...< ونلوّن فقط الأجزاء النصية
+      const safeHighlight = (htmlStr, variants) => {
+        // نبني regex واحد يجمع كل البدائل (الأطول أولاً لتفادي التعارض)
+        const sorted = [...variants]
+          .filter(v => v && v.length >= 2)
+          .sort((a, b) => b.length - a.length);
+
+        if (sorted.length === 0) return htmlStr;
+
+        const pattern = sorted
+          .map(v => v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+          .join('|');
+
+        // نقسم عند الـ tags: الأجزاء الزوجية (0,2,4...) نص — الفردية tags
+        return htmlStr.replace(/>([^<]+)</g, (match, textContent) => {
+          const highlighted = textContent.replace(
+            new RegExp(`(${pattern})`, 'g'),
+            '<mark class="guide-highlight">$1</mark>'
+          );
+          return `>${highlighted}<`;
+        });
+      };
+
+      html = safeHighlight(html, allVariants);
     }
 
     return html;
@@ -1083,13 +1108,14 @@ window.openGuidePage = function(guideId, pageNum) {
 
     /* ===== تلوين كلمات البحث ===== */
     mark.guide-highlight {
-      background: linear-gradient(120deg, #fef08a 0%, #fde047 100%);
-      color: #713f12;
-      padding: 1px 3px;
-      border-radius: 3px;
+      background: linear-gradient(120deg, #fbbf24 0%, #f59e0b 100%);
+      color: #1c1917;
+      padding: 2px 4px;
+      border-radius: 4px;
       font-weight: bold;
       font-style: normal;
-      box-shadow: 0 1px 3px rgba(234,179,8,0.3);
+      box-shadow: 0 1px 4px rgba(245,158,11,0.4);
+      border-bottom: 2px solid #d97706;
     }
   `;
   
