@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محرك البحث في الأدلة الرسمية
+ * محـــرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
