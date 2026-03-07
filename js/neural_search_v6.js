@@ -1853,7 +1853,7 @@ function showViewerUI(title, pageNum) {
             <div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%;direction:rtl;">${title}</div>
             <button onclick="document.getElementById('mobile-viewer-overlay').remove()" style="background:none;border:none;color:white;font-size:28px;">&times;</button>
         </div>
-        <div id="pdf-wrapper" style="flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:10px 0;background:#222;">
+        <div id="pdf-wrapper" style="flex:1;overflow:auto;display:flex;flex-direction:column;align-items:flex-start;padding:10px;background:#222;">
             <div id="status-msg" style="color:#fbbf24;margin-top:50px;text-align:center;"></div>
             <canvas id="the-canvas" style="display:none;background:white;box-shadow:0 0 10px rgba(0,0,0,0.5);"></canvas>
             <div id="fallback-container" style="display:none;margin-top:20px;text-align:center;">
