@@ -259,7 +259,6 @@ const GuideFormatter = {
       else if (/^\d+\s*[-–.]/.test(line)) {
         const num = line.match(/^(\d+)/)[1];
         const content = line.replace(/^\d+\s*[-–.]\s*/, '');
-        const content = line.replace(/ه(\s|$)/g, 'ة$1')
         html += `<div class="guide-item"><span class="guide-item-num">${num}</span><span class="guide-item-text">${content}</span></div>`;
       }
       // بنود أبجدية (أ) (ب) ...
