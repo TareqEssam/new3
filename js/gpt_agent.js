@@ -64,8 +64,8 @@ const chatHTML = `
                     ✅ القرار 104 والحوافز الاستثمارية...<br>
                     ✅ الملاحظات الفنية لفريق اللجنة<br>
                     ✅ الجهات الصادرة للتراخيص والسند التشريعي...<br>
-                    ✅ البحث فى الأدلة والقوانين <br><br>
-                    <em style="color: #10a37f;">جرب أن تسأل: "صناعة مستحضرات التجميل"</em>
+                    ✅ النظام لا يعتمد على أي نموذج ذكاء اصطناعي (لا يوجد تسريب بيانات)<br><br>
+                    <em style="color: #10a37f;">جرب أن تسأل: "مصنع مستحضرات طبية"</em>
                 </div>
             </div>
         </div>
@@ -230,7 +230,7 @@ window.detectQuestionType = function(query) {
         isLicense: hasLicenseKeywords,
         isAuthority: /جهه|جهة|هيئه|هيئة|وزاره|وزارة|مسئول|مسؤول|من يصدر/.test(q),
         isLaw: /قانون|سند|تشريع|قرار|تشريعي/.test(q),
-        isGuide: /دليل|جايد|guide|رابط|لينك|تحميل|مجلد/.test(q),
+        isGuide: /دليل|الدليل|ادله|الادله|ادلة|الادلة|جايد|guide|رابط|لينك|تحميل|تنزيل|مجلد|مصدر|المصدر|مصادر|المصادر|ملف|الملف|ملفات|الملفات|وثيقه|الوثيقه|وثائق|الوثائق|مرجع|المرجع|مراجع|المراجع|pdf/.test(q),
         isTechnical: /ملاحظات|فنيه|فنية|معاينه|معاينة|لجنه|لجنة|فحص/.test(q),
         isDecision104: isDecision104,
         isDependency: /تابع|تبعيه|تبعية|ولايه|ولاية|جهه ولايه|جهة ولاية/.test(q),
@@ -885,6 +885,8 @@ function isQueryRelatedToContext(query, context) {
             q === 'قرار' || q === 'قانون' || q === 'المحافظه' || q === 'المحافظة' || q.includes('محافظه') ||
             q.includes('محافظة') || q.includes('تبعيه') || q.includes('تبعية') || q === 'جهه' || q === 'جهة' ||
             q === 'الجهه المصدره' || q === 'دليل' || q === 'رابط' || q === 'ملاحظات' || q === 'ملاحظات فنيه' ||
+            q === 'المصادر' || q === 'الادله' || q === 'الادلة' || q === 'مصادر' || q === 'ادله' || q === 'ادلة' ||
+            q === 'الملفات' || q === 'ملفات' || q === 'الوثائق' || q === 'وثائق' || q === 'المراجع' || q === 'مراجع' ||
             q === '104' || q === 'قرار 104' || q === 'حوافز' || q === 'خريطه' || q === 'خريطة' || q === 'احداثيات' ||
             q === 'هل هو وارد بالقرار 104' || q === 'هل هوارد بالقرار 104' || q === 'هل هو وارد' ||
             q === 'هل موجود' || q === 'وارد بالقرار 104' || q === 'هل موجود بالقرار 104' || q === 'هل مدرج بالقرار 104' ||
@@ -1314,7 +1316,11 @@ async function handleContextualQuery(query, questionType, context) {
         if (questionType.isLaw || q.includes('قانون') || q.includes('سند') || q.includes('تشريع')) {
             return formatLegislation(details);
         }
-        if (questionType.isGuide || q.includes('دليل') || q.includes('جايد') || q.includes('رابط')) {
+        if (questionType.isGuide || q.includes('دليل') || q.includes('جايد') || q.includes('رابط') ||
+            q.includes('مصادر') || q.includes('المصادر') || q.includes('مصدر') || q.includes('المصدر') ||
+            q.includes('ادله') || q.includes('الادله') || q.includes('ادلة') || q.includes('الادلة') ||
+            q.includes('ملفات') || q.includes('الملفات') || q.includes('وثائق') || q.includes('الوثائق') ||
+            q.includes('مراجع') || q.includes('المراجع') || q.includes('pdf') || q.includes('تحميل')) {
             return formatGuideInfo(details);
         }
         if (questionType.isTechnical || q.includes('ملاحظات') || q.includes('فنيه') || q.includes('لجنه')) {
