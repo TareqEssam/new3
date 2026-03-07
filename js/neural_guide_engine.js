@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محرك البحث في الأدلة الرسمية
+ * محــرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -609,6 +609,7 @@ const GuideFormatter = {
       <div class="guide-article-links-btns">${buttons}</div>
     </div>`;
   },
+  /**
    * - يعرض كل النتائج ذات الصلة (حتى 8) مرتبةً تنازلياً
    * - يُظهر مقتطف نصي + رقم الصفحة + نسبة التطابق لكل نتيجة
    * - يحدد "الأقرب" تلقائياً بأيقونة 🎯
