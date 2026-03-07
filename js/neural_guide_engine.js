@@ -821,7 +821,7 @@ window.showAllGuideResults = function(query, guideId) {
   let html = `
   <div class="guide-clarification-card">
     <div class="guide-clarify-header">
-      <div class="guide-clarify-icon">📋</div>
+      <div class="guide-clarify-icon">🔘</div>
       <div>
         <div class="guide-clarify-title">كل النتائج (${allResults.length})</div>
         <div class="guide-clarify-subtitle">للسؤال: <strong>${query}</strong></div>
