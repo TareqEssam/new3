@@ -5705,11 +5705,31 @@ if (document.readyState === 'loading') {
     if(adminBtn) adminBtn.style.display = 'none';
 }
 
+    // -- إضافة الدالة الجديدة لفتح وإغلاق القائمة في الموبايل --
+    function toggleAdminSidebar() {
+        const sidebar = document.getElementById('adminSidebar');
+        const overlay = document.getElementById('adminSidebarOverlay');
+        
+        if (sidebar && overlay) {
+            sidebar.classList.toggle('show-sidebar');
+            overlay.classList.toggle('show-overlay');
+        }
+    }
+
+    // -- تعديل الدالة القديمة --
     function showAdminSection(id, btn) {
         document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
         document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
         document.getElementById(id).style.display = 'block';
         btn.classList.add('active');
+        
+        // إغلاق القائمة الجانبية تلقائياً في شاشات الموبايل بعد اختيار أي قسم
+        const sidebar = document.getElementById('adminSidebar');
+        const overlay = document.getElementById('adminSidebarOverlay');
+        if (window.innerWidth <= 768 && sidebar.classList.contains('show-sidebar')) {
+            sidebar.classList.remove('show-sidebar');
+            overlay.classList.remove('show-overlay');
+        }
     }
 
     function switchSmartTab(id, btn) {
@@ -5834,3 +5854,4 @@ if (document.readyState === 'loading') {
             if (biCharts.waste) biCharts.waste.destroy();
             biCharts.waste = new Chart(ctx6, { type: 'bar', data: { labels: ['عضوية', 'معادن', 'بلاستيك', 'ورق', 'كيماويات'], datasets: [{ label: 'الكمية (طن)', data: [4200, 3100, 2450, 1800, 900], backgroundColor: '#95a5a6' }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
+
