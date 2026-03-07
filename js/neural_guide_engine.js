@@ -555,7 +555,7 @@ const GuideFormatter = {
 
       html += `
       <div class="guide-alternatives">
-        <div class="guide-alternatives-label">🔍 وجدت أيضاً في (${altResults.length}):</div>
+        <div class="guide-alternatives-label">🔍 وجدت أيضاً فيه (${altResults.length}):</div>
         ${altItems}
       </div>`;
     }
