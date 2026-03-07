@@ -1,30 +1,10 @@
 // gpt_activities.js
 window.GPT_AGENT = window.GPT_AGENT || {};
 
-// ==================== 🆕 دالة كشـــف طلب الدليل/المصادر ====================
-function isGuideRequest(query) {
-    const guideKeywords = [
-        'دليل', 'الدليل', 'ادله', 'الادله', 'أدلة', 'الأدلة',
-        'مصدر', 'المصدر', 'مصادر', 'المصادر',
-        'ملف', 'الملف', 'ملفات', 'الملفات',
-        'وثيقة', 'الوثيقة', 'وثائق', 'الوثائق',
-        'مرجع', 'المرجع', 'مراجع', 'المراجع',
-        'pdf', 'تحميل', 'تنزيل'
-    ];
-    const q = (query || '').toLowerCase();
-    return guideKeywords.some(keyword => q.includes(keyword));
-}
-
 // ==================== معــالج أسئلة الأنشطة - الإصدار الأصلي ====================
 async function handleActivityQuery(query, questionType, preComputedContext, preComputedEntities) {
     if (typeof NeuralSearch === 'undefined' || typeof masterActivityDB === 'undefined') {
         return "⚠️ نظام البحث عن الأنشطة غير متوفر حالياً.";
-    }
-
-    // ⭐ كشف تلقائي لطلبات الأدلة والمصادر والملفات
-    if (isGuideRequest(query) && questionType !== 'guide') {
-        questionType = 'guide';
-        console.log("📚 تم اكتشاف طلب دليل/مصادر تلقائياً من الكلمات المفتاحية");
     }
 
     // ⭐ استخدام البيانات المحسوبة إن وُجدت
@@ -633,7 +613,6 @@ function findGuideInDB(guideNameOrLink) {
 }
 // ==================== تصدير الدوال العامة ====================
 window.handleActivityQuery = handleActivityQuery;
-window.isGuideRequest = isGuideRequest;
 window.formatActivityResponse = formatActivityResponse;
 window.formatLicensesDetailed = formatLicensesDetailed;
 window.formatAuthority = formatAuthority;
