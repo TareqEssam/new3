@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محرك البحث في الأدلة الرسمية
+ * مـــحرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -456,7 +456,7 @@ const GuideFormatter = {
     let html = `
     <div class="guide-answer-card">
       <div class="guide-answer-header">
-        <div class="guide-answer-icon">🔴</div>
+        <div class="guide-answer-icon">📄</div>
         <div class="guide-answer-meta">
           <div class="guide-answer-source">${top.guide_name.replace('.pdf', '').replace('.pdf.pdf', '')}</div>
           <div class="guide-answer-page">صفحة ${top.chunk.page_num}</div>
@@ -470,22 +470,25 @@ const GuideFormatter = {
         ${this.formatChunkText(getChunkText(top.chunk), intent.rawWords)}
       </div>`;
 
-    // ===== نتائج بديلة مع مقتطف =====
+    // ===== نتائج بديلة مع مقتطف ونسبة تطابق =====
     if (hasAlternatives) {
-      const altItems = results.slice(1, 4).map(r => {
-        // استخراج أول جملة مفيدة من النص (تتجاوز العنوان)
+      const topScore = results[0].score;
+      // نعرض كل النتائج التي نسبتها > 40% — وليس 3 فقط
+      const altResults = results.slice(1).filter(r => r.score / topScore >= 0.40);
+
+      const altItems = altResults.map(r => {
+        const matchPct  = Math.min(Math.round((r.score / topScore) * 100), 100);
+        const barColor  = matchPct >= 70 ? '#0369a1' : (matchPct >= 50 ? '#0891b2' : '#94a3b8');
+
         const fullText = getChunkText(r.chunk) || '';
         const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 15);
-        // تخطي العنوان (أول سطر) وأخذ أول جملة حقيقية
         const snippetLine = lines.length > 1 ? lines[1] : lines[0] || '';
-        // اقتطاع بذكاء عند نهاية جملة
         let snippet = snippetLine.substring(0, 110);
         if (snippetLine.length > 110) {
           const lastStop = Math.max(snippet.lastIndexOf('،'), snippet.lastIndexOf('.'));
           if (lastStop > 60) snippet = snippet.substring(0, lastStop + 1);
           else snippet += '...';
         }
-        // تلوين كلمات البحث في المقتطف
         let coloredSnippet = snippet;
         (intent.rawWords || []).forEach(word => {
           if (!word || word.length < 3) return;
@@ -495,7 +498,7 @@ const GuideFormatter = {
             '<mark class="guide-highlight">$1</mark>'
           );
         });
-        const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'.pdf').replace(/\.pdf$/i,'');
+        const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'').replace(/\.pdf$/i,'');
         const shortName = guideName.length > 38 ? guideName.substring(0,38)+'...' : guideName;
         return `
           <div class="guide-alt-item" onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}')">
@@ -503,9 +506,9 @@ const GuideFormatter = {
             <div class="guide-alt-content">
               <div class="guide-alt-header">
                 <strong>${shortName}</strong>
-                <span class="guide-alt-page">ص ${r.chunk.page_num}</span>
+                <span class="guide-alt-page" style="background:${barColor};">${matchPct}% — ص ${r.chunk.page_num}</span>
               </div>
-              <div class="guide-alt-title">${r.chunk.title.substring(0,60)}</div>
+              <div class="guide-alt-title">${(r.chunk.title || '').substring(0,60)}</div>
               ${coloredSnippet ? `<div class="guide-alt-snippet">${coloredSnippet}</div>` : ''}
             </div>
           </div>`;
@@ -513,7 +516,7 @@ const GuideFormatter = {
 
       html += `
       <div class="guide-alternatives">
-        <div class="guide-alternatives-label">🔍 وجدت أيضاً في:</div>
+        <div class="guide-alternatives-label">🔍 وجدت أيضاً في (${altResults.length}):</div>
         ${altItems}
       </div>`;
     }
@@ -675,14 +678,15 @@ window.handleGuideSearch = function(query, activeGuide) {
     </div>`;
   }
 
-  // تحقق من الالتباس: نتيجتان متقاربتان جداً من أدلة مختلفة
-  const topScore = results[0].score;
+  // تحقق من الالتباس:
+  // الحالة ①: نتيجتان متقاربتان من أدلة مختلفة
+  // الحالة ②: نتائج متعددة حتى من نفس الدليل لكن النقاط متقاربة جداً
+  const topScore    = results[0].score;
   const secondScore = results[1]?.score || 0;
+
   const isAmbiguous = (
     results.length >= 2 &&
-    results[0].guide_id !== results[1].guide_id &&
-    secondScore > topScore * 0.85 &&
-    topScore < 500
+    secondScore > topScore * 0.75   // ← كان 0.85 وكان يشترط < 500 — أزلنا القيد
   );
 
   if (isAmbiguous) {
