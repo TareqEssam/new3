@@ -1,10 +1,26 @@
 /**
  * 🧠 neural_guide_engine.js
  * محرك البحث في الأدلة الرسمية
- * 
- * يعمل مع: processed_guides.js + gpt_agent.js + neural_search_v6.js
- * بدون أي نموذج ذكاء اصطناعي خارجي — 100% Client-Side
+ *
+ * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
+ *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
+ *                                     jaroWinkler, autoCorrectKeyboardLayout,
+ *                                     IntelligentCache
+ *   2. processed_guides.js   ← يوفر: PROCESSED_GUIDES, FULL_GUIDES_DB
+ *   3. gpt_agent.js          ← يوفر: AgentMemory
+ *
+ * ✅ لا يوجد أي تكرار للكود — كل الأدوات تُستدعى من neural_search_v6
  */
+
+// =====================================================
+// 🔌 طبقة التوافق — تضمن وجود الأدوات من v6
+//    إذا لم يُحمَّل v6 بعد، تُعرِّف نسخة احتياطية بسيطة
+// =====================================================
+const _guideNormalize   = () => window.advancedNormalize   || window.normalizeArabic  || (t => t);
+const _guideLevenshtein = () => window.smartLevenshtein    || (() => 99);
+const _guideJaro        = () => window.jaroWinkler         || (() => 0);
+const _guideCache       = () => window.IntelligentCache    || { get: () => undefined, set: () => {} };
+const _guideKeyboard    = () => window.autoCorrectKeyboardLayout || (t => t);
 
 // =====================================================
 // ① المصفوفة الدلالية المخصصة للأدلة القانونية
@@ -123,61 +139,67 @@ const GuideIntentDetector = {
   },
 
   analyze(query) {
-    const q = window.normalizeArabic ? window.normalizeArabic(query) : query;
+    // ✅ نستخدم advancedNormalize من v6 مباشرة (أقوى من normalizeArabic)
+    //    تطبّع: أ/إ/آ→ا، ة/ه→ه، ى/ي→ي، تشكيل، أرقام هندية→عربية
+    const normalize = _guideNormalize();
+
+    // تصحيح لوحة المفاتيح أولاً (لو كتب بالإنجليزي بالغلط) — من v6
+    const keyboardFixed = _guideKeyboard()(query);
+    const q = normalize(keyboardFixed);
 
     const toLatinNum = n => n ? n.toString().replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)) : null;
 
     // ① البحث عن مادة/بند/فقرة + رقم (أرقام عربية أو لاتينية)
     //    مثال: "مادة 12"، "المادة ١٢"، "الماده12"
     const articleMatchNum = q.match(
-      /(?:مادة|ماده|المادة|الماده|بند|الفقرة|الفقره|فقرة|فقره)\s*[\(\[]*\s*([٠-٩\d]+)\s*[\)\]]*/i
+      /(?:ماده|ماد[ةه]|ماد|بند|فقر[ةه])\s*[\(\[]*\s*([٠-٩\d]+)\s*[\)\]]*/i
     );
 
     // ② البحث عن مادة/بند/فقرة + رقم مكتوب بالكلمات
     //    مثال: "المادة الثانية"، "مادة التانية"، "المادة الثاني عشر"
     const articlePrefixMatch = q.match(
-      /(?:مادة|ماده|المادة|الماده|بند|الفقرة|الفقره|فقرة|فقره)\s+(.{2,25})/i
+      /(?:ماده|ماد[ةه]|ماد|بند|فقر[ةه])\s+(.{2,25})/i
     );
     let wordNum = null;
     if (!articleMatchNum && articlePrefixMatch) {
       wordNum = this.wordToNumber(articlePrefixMatch[1].trim());
     }
 
-    // ③ البحث عن رقم منفرد فقط (مثال: يكتب "12" فقط)
-    const numOnlyMatch = !articleMatchNum && !wordNum && query.match(/^[\s]*([٠-٩\d]+)[\s]*$/) 
+    // ③ رقم منفرد فقط (مثال: يكتب "12" فقط)
+    const numOnlyMatch = !articleMatchNum && !wordNum && query.match(/^[\s]*([٠-٩\d]+)[\s]*$/)
                        ? query.match(/([٠-٩\d]+)/) : null;
 
-    const articleNum = articleMatchNum 
+    const articleNum = articleMatchNum
       ? toLatinNum(articleMatchNum[1])
-      : wordNum 
+      : wordNum
         ? String(wordNum)
         : (numOnlyMatch ? toLatinNum(numOnlyMatch[1]) : null);
 
-    // ③ استخراج الكلمات + تصحيح الأخطاء + التوسيع الدلالي
+    // ④ استخراج الكلمات + تصحيح + توسيع دلالي
     const stopWords = new Set(['في','من','الى','على','عن','هل','ما','هو','هي',
       'ذلك','تلك','لي','لك','كيف','ماذا','متى','اين','لماذا','كم','وفي',
-      'وعلى','ومن','وان','أن','إذا','حيث','التي','الذي','بعد','قبل']);
+      'وعلى','ومن','وان','ان','اذا','حيث','التي','الذي','بعد','قبل']);
+
+    const stemWord = w => w.replace(/^(ال|وال|بال|كال|فال|لل)/, '');
 
     const rawWords = q.split(/\s+/)
       .filter(w => w.length > 2 && !stopWords.has(w))
-      .map(w => this.fixTypos(w)); // ← تصحيح الأخطاء
+      .map(w => this.fixTypos(w));
 
-    // توليد جذور الكلمات (إزالة أل التعريف والسوابق الشائعة)
-    const stemWord = w => w.replace(/^(ال|وال|بال|كال|فال|لل)/, '');
     const stems = rawWords.map(stemWord).filter(w => w.length > 2);
 
-    // التوسيع الدلالي
+    // التوسيع الدلالي — يستخدم normalize من v6 على المرادفات
     const expandedWords = new Set([...rawWords, ...stems]);
     rawWords.forEach(word => {
       const synonyms = GuideSemantic[word] || GuideSemantic[stemWord(word)] || [];
       synonyms.forEach(s => {
-        const norm = window.normalizeArabic ? window.normalizeArabic(s) : s;
+        const norm = normalize(s);
         expandedWords.add(norm);
         expandedWords.add(stemWord(norm));
       });
     });
 
-    // ④ نوع الاستعلام
+    // ⑤ نوع الاستعلام
     let queryType = 'semantic';
     if (articleNum) queryType = 'article';
     else if (rawWords.length <= 2) queryType = 'keyword';
@@ -207,68 +229,106 @@ const GuideScorer = {
    * يحسب نقاط تطابق قطعة معرفية مع الاستعلام
    */
   scoreChunk(chunk, intent) {
+    // ✅ نستخدم أدوات v6 مباشرة بدون تكرار
+    const normalize    = _guideNormalize();
+    const levenshtein  = _guideLevenshtein();
+    const jaro         = _guideJaro();
+    const cache        = _guideCache();
+
+    // --- Cache: إذا حسبنا هذه القطعة مع هذه النية من قبل ---
+    const cacheKey = `guide_score_${chunk.id}_${intent.normalizedQuery}`;
+    const cached = cache.get(cacheKey);
+    if (cached !== undefined) return cached;
+
     let score = 0;
     const rawText = getChunkText(chunk);
-    const text = window.normalizeArabic ? window.normalizeArabic(rawText) : rawText;
-    const chunkKeywords = new Set(chunk.keywords || []);
+    const text = normalize(rawText);
+    const chunkKeywords = new Set((chunk.keywords || []).map(k => normalize(k)));
 
     // ① تطابق رقم المادة (أعلى أولوية)
     if (intent.queryType === 'article' && intent.articleNum) {
       if (chunk.article_num == intent.articleNum) {
-        score += 2000; // تطابق مباشر
+        score += 2000;
       } else {
-        // البحث عن الرقم في النص
         const numAr = intent.articleNum.toString().split('').map(d => '٠١٢٣٤٥٦٧٨٩'[d] ?? d).join('');
-        const articleRegex = new RegExp(`مادة\\s*[\\(\\[]*\\s*(?:${intent.articleNum}|${numAr})\\s*[\\)\\]]*`, 'i');
-        if (articleRegex.test(chunk.text)) score += 1500;
+        const articleRegex = new RegExp(`(?:ماد[ةه]|ماده)\\s*[\\(\\[]*\\s*(?:${intent.articleNum}|${numAr})\\s*[\\)\\]]*`, 'i');
+        if (articleRegex.test(rawText)) score += 1500;
       }
     }
 
-    // ② تطابق الكلمات الموسعة مع الجذور
+    // ② تطابق الكلمات الموسعة
     intent.expandedWords.forEach(word => {
       if (word.length < 3) return;
-      if (chunkKeywords.has(word)) score += 30;
-      const regex = new RegExp(word, 'g');
+      const normWord = normalize(word);
+      if (chunkKeywords.has(normWord)) score += 30;
+      const regex = new RegExp(normWord, 'g');
       const matches = text.match(regex);
       if (matches) {
         score += matches.length * 8;
-        if (text.startsWith(word) || text.includes('\n' + word)) score += 15;
+        if (text.startsWith(normWord) || text.includes('\n' + normWord)) score += 15;
       }
     });
 
     // ③ الكلمات الأصلية — وزن أعلى
     intent.rawWords.forEach(word => {
-      if (text.includes(word)) score += 25;
+      const normWord = normalize(word);
+      if (text.includes(normWord)) score += 25;
     });
 
-    // ③-ب الجذور — تطابق جزئي
+    // ③-ب الجذور
     (intent.stems || []).forEach(stem => {
       if (stem.length < 3) return;
-      const stemRegex = new RegExp(stem, 'g');
-      const stemMatches = text.match(stemRegex);
+      const normStem = normalize(stem);
+      const stemMatches = text.match(new RegExp(normStem, 'g'));
       if (stemMatches) score += stemMatches.length * 12;
     });
 
-    // ③-ج بونص التجاور: كلمتان من السؤال بجانب بعض في النص
+    // ③-ج بونص التجاور
     if (intent.rawWords.length >= 2) {
       for (let i = 0; i < intent.rawWords.length - 1; i++) {
-        const phrase = intent.rawWords[i] + '.{0,20}' + intent.rawWords[i+1];
-        if (new RegExp(phrase).test(text)) score += 150;
+        const w1 = normalize(intent.rawWords[i]);
+        const w2 = normalize(intent.rawWords[i + 1]);
+        if (new RegExp(`${w1}.{0,20}${w2}`).test(text)) score += 150;
       }
     }
 
     // ④ بونص نوع القطعة
     if (chunk.type === 'article') score += 100;
-    if (chunk.type === 'list') score += 60;
-    if (chunk.has_items) score += 40;
+    if (chunk.type === 'list')    score += 60;
+    if (chunk.has_items)          score += 40;
 
-    // ⑤ بونص الكثافة (نص أقصر مع نقاط أعلى = أدق)
+    // ⑤ بونص الكثافة
     if (score > 0 && chunk.char_count > 0) {
       const density = score / (chunk.char_count / 100);
       score += Math.min(density * 3, 200);
     }
 
-    return Math.round(score);
+    // ⑥ 🆕 تشابه تقريبي Fuzzy (من v6) — للكلمات الطويلة التي لم تتطابق بعد
+    if (score < 80 && intent.normalizedQuery && intent.normalizedQuery.length > 4) {
+      // Jaro-Winkler مع عنوان القطعة
+      const titleSim = jaro(intent.normalizedQuery, normalize(chunk.title || ''));
+      if (titleSim > 0.82) score += Math.round(titleSim * 120);
+
+      // Levenshtein مع الكلمات المفتاحية
+      if (score < 60) {
+        for (const kw of chunkKeywords) {
+          if (kw.length < 3) continue;
+          const dist = levenshtein(intent.normalizedQuery, kw);
+          const maxDist = Math.floor(intent.normalizedQuery.length * 0.3);
+          if (dist <= maxDist && dist > 0) {
+            score += Math.max(80 - dist * 15, 20);
+            break; // نكتفي بأول تطابق
+          }
+        }
+      }
+    }
+
+    const finalScore = Math.round(score);
+
+    // حفظ في Cache
+    cache.set(cacheKey, finalScore);
+
+    return finalScore;
   },
 
   /**
@@ -280,7 +340,15 @@ const GuideScorer = {
       return [];
     }
 
-    // تحديد نطاق البحث
+    // ✅ Cache على مستوى البحث الكامل (من v6)
+    const cache = _guideCache();
+    const searchCacheKey = `guide_search_${guideId || 'all'}_${intent.normalizedQuery}`;
+    const cachedSearch = cache.get(searchCacheKey);
+    if (cachedSearch) {
+      console.log('⚡ guide search من الذاكرة المؤقتة');
+      return cachedSearch;
+    }
+
     const guidesToSearch = guideId
       ? window.PROCESSED_GUIDES.filter(g => g.id === guideId)
       : window.PROCESSED_GUIDES;
@@ -290,21 +358,18 @@ const GuideScorer = {
     guidesToSearch.forEach(guide => {
       (guide.chunks || []).forEach(chunk => {
         const score = this.scoreChunk(chunk, intent);
-        if (score > 50) { // عتبة دنيا للنتائج
-          results.push({
-            score,
-            chunk,
-            guide_name: guide.guide_name,
-            guide_id: guide.id
-          });
+        if (score > 50) {
+          results.push({ score, chunk, guide_name: guide.guide_name, guide_id: guide.id });
         }
       });
     });
 
-    // ترتيب تنازلياً ثم أخذ أفضل 5
-    return results
+    const sorted = results
       .sort((a, b) => b.score - a.score)
       .slice(0, 8);
+
+    cache.set(searchCacheKey, sorted);
+    return sorted;
   }
 };
 
@@ -391,7 +456,7 @@ const GuideFormatter = {
     let html = `
     <div class="guide-answer-card">
       <div class="guide-answer-header">
-        <div class="guide-answer-icon">🔘</div>
+        <div class="guide-answer-icon">📄</div>
         <div class="guide-answer-meta">
           <div class="guide-answer-source">${top.guide_name.replace('.pdf', '').replace('.pdf.pdf', '')}</div>
           <div class="guide-answer-page">صفحة ${top.chunk.page_num}</div>
