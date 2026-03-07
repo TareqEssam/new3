@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محـــرك البحث في الأدلة الرسمية
+ * محرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -609,7 +609,6 @@ const GuideFormatter = {
       <div class="guide-article-links-btns">${buttons}</div>
     </div>`;
   },
-  /**
    * - يعرض كل النتائج ذات الصلة (حتى 8) مرتبةً تنازلياً
    * - يُظهر مقتطف نصي + رقم الصفحة + نسبة التطابق لكل نتيجة
    * - يحدد "الأقرب" تلقائياً بأيقونة 🎯
@@ -693,10 +692,12 @@ const GuideFormatter = {
 
     // زر "عرض المزيد" إذا كانت النتائج أكثر من ما يُعرض
     if (results.length > toShow.length) {
-      const safeGuideId = guideId ? `'${guideId}'` : 'null';
+      const safeGuideId = guideId || '';
       html += `
       <div style="text-align:center;margin-top:8px;">
-        <button onclick="window.showAllGuideResults(${JSON.stringify(query)}, ${safeGuideId})"
+        <button class="guide-show-all-btn"
+                data-query="${encodeURIComponent(query)}"
+                data-guide-id="${safeGuideId}"
                 style="background:none;border:1px dashed #94a3b8;color:#64748b;
                        border-radius:8px;padding:6px 14px;font-size:0.78rem;cursor:pointer;">
           🔍 عرض كل النتائج (${results.length})
@@ -959,8 +960,10 @@ window.searchAllGuides = function(encodedQuery, currentGuideId) {
     if (snipLine.length > 100) snippet += '…';
 
     html += `
-    <div class="choice-btn${i === 0 ? ' choice-btn--top' : ''}"
-         onclick="window.jumpToGuideResult('${r.guide_id}', '${r.chunk.id}', ${JSON.stringify(query)})">
+    <div class="choice-btn${i === 0 ? ' choice-btn--top' : ''} guide-jump-btn"
+         data-guide-id="${r.guide_id}"
+         data-chunk-id="${r.chunk.id}"
+         data-query="${encodeURIComponent(query)}">
       <span class="choice-icon">${i === 0 ? '🎯' : '📋'}</span>
       <div class="choice-content" style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px;">
@@ -979,7 +982,20 @@ window.searchAllGuides = function(encodedQuery, currentGuideId) {
   });
 
   html += `</div>`;
-  if (window.typeWriterResponse) window.typeWriterResponse(html, false);
+  if (window.typeWriterResponse) {
+    window.typeWriterResponse(html, false);
+    // نربط الأحداث بعد إدراج الـ HTML في DOM
+    setTimeout(() => {
+      document.querySelectorAll('.guide-jump-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const guideId = this.dataset.guideId;
+          const chunkId = this.dataset.chunkId;
+          const query   = decodeURIComponent(this.dataset.query);
+          window.jumpToGuideResult(guideId, chunkId, query);
+        });
+      });
+    }, 300);
+  }
 };
 
 // ③-ب الانتقال لنتيجة من دليل آخر مع تحديث AgentMemory مؤقتاً
@@ -1467,8 +1483,37 @@ window.openGuidePage = function(guideId, pageNum) {
 })();
 
 // =====================================================
-// ⑨ تحقق من التهيئة
+// ⑩ Event Delegation مركزية — تتعامل مع كل الأزرار الديناميكية
+//    بدلاً من onclick inline الذي يكسر عند وجود محارف خاصة
 // =====================================================
+
+(function initGuideDelegation() {
+  if (typeof document === 'undefined') return;
+
+  document.addEventListener('click', function(e) {
+    const el = e.target.closest('[data-guide-id][data-chunk-id]');
+    if (!el) {
+      // زر "عرض كل النتائج"
+      const showAll = e.target.closest('.guide-show-all-btn');
+      if (showAll) {
+        const q  = decodeURIComponent(showAll.dataset.query || '');
+        const gId = showAll.dataset.guideId || null;
+        if (q) window.showAllGuideResults(q, gId || null);
+      }
+      return;
+    }
+
+    // أزرار .guide-jump-btn (نتائج searchAllGuides)
+    if (el.classList.contains('guide-jump-btn')) {
+      const guideId = el.dataset.guideId;
+      const chunkId = el.dataset.chunkId;
+      const query   = decodeURIComponent(el.dataset.query || '');
+      window.jumpToGuideResult(guideId, chunkId, query);
+    }
+  });
+
+  console.log('✅ Guide Event Delegation جاهز');
+})();
 
 (function checkInit() {
   if (typeof window === 'undefined') return;
