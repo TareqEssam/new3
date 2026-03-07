@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * مــحرك البحث في الأدلة الرسمية
+ * محرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -477,11 +477,16 @@ const GuideFormatter = {
     const top = results[0];
     const hasAlternatives = results.length > 1 && results[1].score > results[0].score * 0.5;
 
+    // ② استخراج روابط المواد من النص الرئيسي
+    const rawText       = getChunkText(top.chunk);
+    const articleLinks  = this.extractArticleLinks(rawText);
+    const linksBar      = this.buildArticleLinksBar(articleLinks, top.guide_id, top.chunk.article_num);
+
     // ===== الإجابة الرئيسية =====
     let html = `
     <div class="guide-answer-card">
       <div class="guide-answer-header">
-        <div class="guide-answer-icon">🔘</div>
+        <div class="guide-answer-icon">📄</div>
         <div class="guide-answer-meta">
           <div class="guide-answer-source">${top.guide_name.replace('.pdf', '').replace('.pdf.pdf', '')}</div>
           <div class="guide-answer-page">صفحة ${top.chunk.page_num}</div>
@@ -490,9 +495,18 @@ const GuideFormatter = {
           <i class="fas fa-external-link-alt"></i>
         </button>
       </div>
-      
+
       <div class="guide-answer-body">
-        ${this.formatChunkText(getChunkText(top.chunk), intent.rawWords)}
+        ${this.formatChunkText(rawText, intent.rawWords)}
+      </div>
+
+      ${linksBar}
+
+      <div class="guide-search-all-bar">
+        <button class="guide-search-all-btn"
+                onclick="window.searchAllGuides('${encodeURIComponent(intent.originalQuery || '')}', '${top.guide_id}')">
+          🔍 هل هذا الموضوع موجود في أدلة أخرى؟
+        </button>
       </div>`;
 
     // ===== نتائج بديلة مع مقتطف ونسبة تطابق =====
@@ -550,8 +564,51 @@ const GuideFormatter = {
     return html;
   },
 
+  // =====================================================
+  // ② استخراج روابط المواد من النص وعرضها كأزرار
+  // =====================================================
   /**
-   * يبني سؤال التوضيح عند التساوي
+   * يبحث في النص عن أنماط "المادة X" أو "البند X" ويعيد قائمة الأرقام المُحال إليها
+   * مثال: "وفقاً لأحكام المادة 5 والمادة 47" → [5, 47]
+   */
+  extractArticleLinks(text) {
+    const pattern = /(?:المادة|مادة|الماده|ماده|البند|الفقرة|فقرة)\s*[\(\[]*\s*([٠-٩\d]+)\s*[\)\]]*/g;
+    const found = new Map(); // Map لتفادي التكرار
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const normalize = _guideNormalize();
+      const numStr = normalize(match[1]).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+      const num = parseInt(numStr, 10);
+      if (!isNaN(num) && num > 0 && num <= 999) {
+        found.set(num, match[0].trim()); // نحفظ النص الأصلي للعرض
+      }
+    }
+    return [...found.entries()].sort((a, b) => a[0] - b[0]); // مرتبة تصاعدياً
+  },
+
+  /**
+   * يبني شريط أزرار الإحالة السريعة
+   */
+  buildArticleLinksBar(articleLinks, currentGuideId, currentArticleNum = null) {
+    if (!articleLinks || articleLinks.length === 0) return '';
+
+    // نستثني رقم المادة الحالية من الأزرار
+    const filtered = articleLinks.filter(([num]) => num != currentArticleNum);
+    if (filtered.length === 0) return '';
+
+    const buttons = filtered.map(([num, label]) => `
+      <button class="guide-article-link-btn"
+              onclick="window.jumpToArticle(${num}, '${currentGuideId}')"
+              title="انتقل إلى ${label}">
+        📎 م ${num}
+      </button>`).join('');
+
+    return `
+    <div class="guide-article-links">
+      <span class="guide-article-links-label">🔗 إحالات في النص:</span>
+      <div class="guide-article-links-btns">${buttons}</div>
+    </div>`;
+  },
    * - يعرض كل النتائج ذات الصلة (حتى 8) مرتبةً تنازلياً
    * - يُظهر مقتطف نصي + رقم الصفحة + نسبة التطابق لكل نتيجة
    * - يحدد "الأقرب" تلقائياً بأيقونة 🎯
@@ -797,9 +854,160 @@ window.showAllGuideResults = function(query, guideId) {
   if (window.typeWriterResponse) window.typeWriterResponse(html, false);
 };
 
-/**
- * عرض قطعة محددة بعد اختيار المستخدم
- */
+// =====================================================
+// ② الانتقال السريع لمادة محددة بالرقم (روابط الإحالة)
+// =====================================================
+
+window.jumpToArticle = function(articleNum, guideId) {
+  if (!window.PROCESSED_GUIDES) return;
+
+  const guide = window.PROCESSED_GUIDES.find(g => g.id === guideId);
+  if (!guide) return;
+
+  // ① أولاً: ابحث عن chunk يحمل article_num مطابق
+  let chunk = (guide.chunks || []).find(c => c.article_num == articleNum);
+
+  // ② ثانياً: ابحث في النصوص
+  if (!chunk) {
+    const numAr = String(articleNum).split('').map(d => '٠١٢٣٤٥٦٧٨٩'[d] ?? d).join('');
+    const pattern = new RegExp(`(?:مادة|ماده|المادة|الماده)\\s*[\\(\\[]*\\s*(?:${articleNum}|${numAr})\\s*[\\)\\]]*`);
+    chunk = (guide.chunks || []).find(c => pattern.test(getChunkText(c) || ''));
+  }
+
+  if (!chunk) {
+    if (window.typeWriterResponse) {
+      window.typeWriterResponse(`
+      <div class="guide-no-result">
+        <div class="guide-no-result-icon">🔍</div>
+        <div class="guide-no-result-text">
+          لم أجد <strong>المادة ${articleNum}</strong> في هذا الدليل.
+          <small>ربما الرقم خارج نطاق هذا القانون</small>
+        </div>
+      </div>`, false);
+    }
+    return;
+  }
+
+  const result = [{ score: 2000, chunk, guide_name: guide.guide_name, guide_id: guide.id }];
+  const html = GuideFormatter.buildAnswerCard(result, { rawWords: [`المادة ${articleNum}`], originalQuery: `المادة ${articleNum}` });
+  if (html && window.typeWriterResponse) window.typeWriterResponse(html, false);
+};
+
+// =====================================================
+// ③ البحث في كل الأدلة دفعة واحدة
+// =====================================================
+
+window.searchAllGuides = function(encodedQuery, currentGuideId) {
+  const query = decodeURIComponent(encodedQuery);
+  if (!query || !window.PROCESSED_GUIDES) return;
+
+  const intent     = GuideIntentDetector.analyze(query);
+  // نبحث في كل الأدلة (guideId = null)
+  const allResults = GuideScorer.search(intent, null);
+
+  // نستثني نتائج الدليل الحالي لأنها ظاهرة بالفعل
+  const otherResults = allResults.filter(r => r.guide_id !== currentGuideId);
+
+  if (otherResults.length === 0) {
+    if (window.typeWriterResponse) {
+      window.typeWriterResponse(`
+      <div class="guide-no-result">
+        <div class="guide-no-result-icon">📚</div>
+        <div class="guide-no-result-text">
+          لم أجد موضوع <strong>"${query}"</strong> في الأدلة الأخرى المتاحة.
+          <small>الموضوع خاص بهذا الدليل فقط</small>
+        </div>
+      </div>`, false);
+    }
+    return;
+  }
+
+  const topScore = otherResults[0].score;
+
+  // نجمّع النتائج حسب الدليل — أفضل نتيجة من كل دليل
+  const byGuide = new Map();
+  otherResults.forEach(r => {
+    if (!byGuide.has(r.guide_id) || r.score > byGuide.get(r.guide_id).score) {
+      byGuide.set(r.guide_id, r);
+    }
+  });
+
+  const grouped = [...byGuide.values()].sort((a, b) => b.score - a.score);
+
+  let html = `
+  <div class="guide-clarification-card">
+    <div class="guide-clarify-header">
+      <div class="guide-clarify-icon">📚</div>
+      <div>
+        <div class="guide-clarify-title">وجدت في ${grouped.length} دليل آخر</div>
+        <div class="guide-clarify-subtitle">موضوع: <strong>${query}</strong></div>
+      </div>
+    </div>`;
+
+  grouped.forEach((r, i) => {
+    const matchPct  = Math.min(Math.round((r.score / topScore) * 100), 100);
+    const barColor  = matchPct >= 70 ? '#0369a1' : (matchPct >= 50 ? '#0891b2' : '#94a3b8');
+    const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'').replace(/\.pdf$/i,'');
+    const shortName = guideName.length > 42 ? guideName.substring(0,42)+'…' : guideName;
+
+    // مقتطف من النص
+    const fullText  = getChunkText(r.chunk) || '';
+    const lines     = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 10);
+    const snipLine  = lines.length > 1 ? lines[1] : (lines[0] || '');
+    let   snippet   = snipLine.substring(0, 100);
+    if (snipLine.length > 100) snippet += '…';
+
+    html += `
+    <div class="choice-btn${i === 0 ? ' choice-btn--top' : ''}"
+         onclick="window.jumpToGuideResult('${r.guide_id}', '${r.chunk.id}', ${JSON.stringify(query)})">
+      <span class="choice-icon">${i === 0 ? '🎯' : '📋'}</span>
+      <div class="choice-content" style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px;">
+          <strong style="font-size:0.82rem;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            ${shortName}
+          </strong>
+          <span style="font-size:0.72rem;background:${barColor};color:white;
+                       padding:1px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
+            ${matchPct}% — ص ${r.chunk.page_num}
+          </span>
+        </div>
+        ${r.chunk.title ? `<div style="font-size:0.75rem;color:#0369a1;margin-bottom:3px;">${r.chunk.title.substring(0,50)}</div>` : ''}
+        ${snippet ? `<div style="font-size:0.78rem;color:#64748b;line-height:1.5;border-right:2px solid #e2e8f0;padding-right:7px;">${snippet}</div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  html += `</div>`;
+  if (window.typeWriterResponse) window.typeWriterResponse(html, false);
+};
+
+// ③-ب الانتقال لنتيجة من دليل آخر مع تحديث AgentMemory مؤقتاً
+window.jumpToGuideResult = function(guideId, chunkId, query) {
+  if (!window.PROCESSED_GUIDES) return;
+
+  const guide = window.PROCESSED_GUIDES.find(g => g.id === guideId);
+  if (!guide) return;
+
+  const chunk = (guide.chunks || []).find(c => c.id === chunkId);
+  if (!chunk) return;
+
+  // نغيّر الدليل النشط مؤقتاً حتى تعمل روابط الإحالة داخل الدليل الجديد
+  const prevGuide = window.AgentMemory?.activeGuide;
+  if (window.AgentMemory) {
+    window.AgentMemory.activeGuide = { id: guideId, name: guide.guide_name };
+  }
+
+  const intent = GuideIntentDetector.analyze(query);
+  const result = [{ score: 999, chunk, guide_name: guide.guide_name, guide_id: guideId }];
+  const html   = GuideFormatter.buildAnswerCard(result, intent);
+
+  // نعيد الدليل الأصلي بعد البناء
+  if (window.AgentMemory && prevGuide) {
+    window.AgentMemory.activeGuide = prevGuide;
+  }
+
+  if (html && window.typeWriterResponse) window.typeWriterResponse(html, false);
+};
 window.showGuideChunk = function(guideId, chunkId) {
   if (!window.PROCESSED_GUIDES) return;
   
@@ -933,6 +1141,70 @@ window.openGuidePage = function(guideId, pageNum) {
     /* ===== محتوى الإجابة ===== */
     .guide-answer-body {
       padding: 16px;
+    }
+
+    /* ===== ② شريط روابط الإحالة ===== */
+    .guide-article-links {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 16px;
+      background: #f0f9ff;
+      border-top: 1px solid #bae6fd;
+      direction: rtl;
+    }
+    .guide-article-links-label {
+      font-size: 0.78rem;
+      color: #0369a1;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .guide-article-links-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .guide-article-link-btn {
+      background: white;
+      border: 1px solid #0369a1;
+      color: #0369a1;
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 0.78rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .guide-article-link-btn:hover {
+      background: #0369a1;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(3,105,161,0.3);
+    }
+
+    /* ===== ③ زر البحث في كل الأدلة ===== */
+    .guide-search-all-bar {
+      padding: 10px 16px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+    }
+    .guide-search-all-btn {
+      background: none;
+      border: 1px dashed #0891b2;
+      color: #0891b2;
+      border-radius: 8px;
+      padding: 6px 16px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .guide-search-all-btn:hover {
+      background: #f0f9ff;
+      border-style: solid;
+      color: #0369a1;
     }
 
     .guide-article-title {
