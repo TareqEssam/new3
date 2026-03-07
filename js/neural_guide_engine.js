@@ -456,7 +456,7 @@ const GuideFormatter = {
     let html = `
     <div class="guide-answer-card">
       <div class="guide-answer-header">
-        <div class="guide-answer-icon">🔘</div>
+        <div class="guide-answer-icon">📄</div>
         <div class="guide-answer-meta">
           <div class="guide-answer-source">${top.guide_name.replace('.pdf', '').replace('.pdf.pdf', '')}</div>
           <div class="guide-answer-page">صفحة ${top.chunk.page_num}</div>
@@ -524,26 +524,98 @@ const GuideFormatter = {
 
   /**
    * يبني سؤال التوضيح عند التساوي
+   * - يعرض كل النتائج ذات الصلة (حتى 8) مرتبةً تنازلياً
+   * - يُظهر مقتطف نصي + رقم الصفحة + نسبة التطابق لكل نتيجة
+   * - يحدد "الأقرب" تلقائياً بأيقونة 🎯
    */
   buildClarificationCard(results, query) {
+    const normalize = _guideNormalize();
+    const topScore  = results[0]?.score || 1;
+
+    // نعرض كل النتائج التي نسبتها > 40% من أعلى نتيجة (حتى 8)
+    const toShow = results
+      .filter((r, i) => i === 0 || (r.score / topScore) >= 0.40)
+      .slice(0, 8);
+
+    // دالة مساعدة: استخرج أول جملة مفيدة من النص
+    const getSnippet = (chunk) => {
+      const fullText = getChunkText(chunk) || '';
+      const lines = fullText.split('\n').map(l => l.trim()).filter(l => l.length > 10);
+      const line = lines.length > 1 ? lines[1] : (lines[0] || '');
+      let snip = line.substring(0, 90);
+      if (line.length > 90) {
+        const cut = Math.max(snip.lastIndexOf('،'), snip.lastIndexOf('.'));
+        snip = cut > 40 ? snip.substring(0, cut + 1) : snip + '…';
+      }
+      // تلوين كلمات البحث في المقتطف
+      (query.split(/\s+/).filter(w => w.length > 2)).forEach(word => {
+        const safe = normalize(word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (!safe) return;
+        snip = snip.replace(new RegExp(`(${safe})`, 'gi'),
+          '<mark class="guide-highlight">$1</mark>');
+      });
+      return snip;
+    };
+
     let html = `
     <div class="guide-clarification-card">
       <div class="guide-clarify-header">
         <div class="guide-clarify-icon">🤔</div>
-        <div class="guide-clarify-title">وجدت هذا الموضوع في أكثر من دليل</div>
-      </div>
-      <div class="guide-clarify-subtitle">أي الأدلة تقصد؟</div>`;
+        <div>
+          <div class="guide-clarify-title">وجدت هذا الموضوع في ${toShow.length} مصدر</div>
+          <div class="guide-clarify-subtitle">اختر الدليل الذي تقصده:</div>
+        </div>
+      </div>`;
 
-    results.slice(0, 4).forEach((r, i) => {
+    toShow.forEach((r, i) => {
+      const matchPct  = Math.min(Math.round((r.score / topScore) * 100), 100);
+      const isTop     = i === 0;
+      const icon      = isTop ? '🎯' : (matchPct >= 70 ? '📋' : '📄');
+      const barColor  = isTop ? '#0369a1' : (matchPct >= 70 ? '#0891b2' : '#94a3b8');
+      const guideName = r.guide_name.replace(/\.pdf\.pdf$/i, '').replace(/\.pdf$/i, '');
+      const shortName = guideName.length > 42 ? guideName.substring(0, 42) + '…' : guideName;
+      const snippet   = getSnippet(r.chunk);
+
       html += `
-      <div class="choice-btn" onclick="window.selectGuideResult('${r.guide_id}', '${r.chunk.id}', '${encodeURIComponent(query)}')">
-        <span class="choice-icon">${i === 0 ? '🎯' : '📋'}</span>
-        <div class="choice-content">
-          <strong>${r.guide_name.replace('.pdf', '').replace('.pdf.pdf', '').substring(0, 45)}</strong>
-          <small>صفحة ${r.chunk.page_num} — ${r.chunk.title.substring(0, 50)}</small>
+      <div class="choice-btn${isTop ? ' choice-btn--top' : ''}"
+           onclick="window.selectGuideResult('${r.guide_id}', '${r.chunk.id}', '${encodeURIComponent(query)}')">
+        <span class="choice-icon">${icon}</span>
+        <div class="choice-content" style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px;">
+            <strong style="font-size:0.82rem;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              ${shortName}
+            </strong>
+            <span style="font-size:0.72rem;background:${barColor};color:white;
+                         padding:1px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
+              ${matchPct}%
+            </span>
+          </div>
+          <div style="font-size:0.75rem;color:#64748b;margin-bottom:4px;">
+            صفحة ${r.chunk.page_num}
+            ${r.chunk.title ? ` — ${r.chunk.title.substring(0, 45)}` : ''}
+          </div>
+          ${snippet ? `
+          <div style="font-size:0.78rem;color:#475569;line-height:1.5;
+                      border-right:2px solid #e2e8f0;padding-right:7px;
+                      display:-webkit-box;-webkit-line-clamp:2;
+                      -webkit-box-orient:vertical;overflow:hidden;">
+            ${snippet}
+          </div>` : ''}
         </div>
       </div>`;
     });
+
+    // زر "بحث في كل الأدلة" إذا كانت النتائج أكثر من ما يُعرض
+    if (results.length > toShow.length) {
+      html += `
+      <div style="text-align:center;margin-top:8px;">
+        <button onclick="window.handleGuideSearch('${encodeURIComponent(query)}', {id:null,name:'كل الأدلة'})"
+                style="background:none;border:1px dashed #94a3b8;color:#64748b;
+                       border-radius:8px;padding:6px 14px;font-size:0.78rem;cursor:pointer;">
+          🔍 عرض كل النتائج (${results.length})
+        </button>
+      </div>`;
+    }
 
     html += `</div>`;
     return html;
@@ -948,6 +1020,35 @@ window.openGuidePage = function(guideId, pageNum) {
       margin-bottom: 12px;
       padding-right: 4px;
     }
+
+    /* choice-btn الأساسي والمميز */
+    .choice-btn {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 10px 12px;
+      margin: 5px 0;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      direction: rtl;
+    }
+    .choice-btn:hover {
+      border-color: #0369a1;
+      background: #f0f9ff;
+      transform: translateX(-2px);
+    }
+    .choice-btn--top {
+      border-color: #0369a1;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      box-shadow: 0 2px 8px rgba(3,105,161,0.12);
+    }
+    .choice-btn--top:hover {
+      background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    }
+    .choice-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
 
     /* ===== لا توجد نتيجة ===== */
     .guide-no-result {
