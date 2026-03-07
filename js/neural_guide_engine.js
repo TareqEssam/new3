@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محرك البحث في الأدلة الرسمية
+ * مــحرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -365,8 +365,8 @@ const GuideScorer = {
     });
 
     const sorted = results
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 8);
+      .sort((a, b) => b.score - a.score);
+      // ✅ لا نقطع هنا — القرار يتم في handleGuideSearch حسب نوع الحالة
 
     cache.set(searchCacheKey, sorted);
     return sorted;
@@ -556,14 +556,14 @@ const GuideFormatter = {
    * - يُظهر مقتطف نصي + رقم الصفحة + نسبة التطابق لكل نتيجة
    * - يحدد "الأقرب" تلقائياً بأيقونة 🎯
    */
-  buildClarificationCard(results, query) {
+  buildClarificationCard(results, query, guideId = null) {
     const normalize = _guideNormalize();
     const topScore  = results[0]?.score || 1;
 
-    // نعرض كل النتائج التي نسبتها > 40% من أعلى نتيجة (حتى 8)
+    // نعرض النتائج التي نسبتها > 40% — بحد أقصى 10 في البطاقة، والباقي في زر "عرض الكل"
     const toShow = results
       .filter((r, i) => i === 0 || (r.score / topScore) >= 0.40)
-      .slice(0, 8);
+      .slice(0, 10);
 
     // دالة مساعدة: استخرج أول جملة مفيدة من النص
     const getSnippet = (chunk) => {
@@ -633,11 +633,12 @@ const GuideFormatter = {
       </div>`;
     });
 
-    // زر "بحث في كل الأدلة" إذا كانت النتائج أكثر من ما يُعرض
+    // زر "عرض المزيد" إذا كانت النتائج أكثر من ما يُعرض
     if (results.length > toShow.length) {
+      const safeGuideId = guideId ? `'${guideId}'` : 'null';
       html += `
       <div style="text-align:center;margin-top:8px;">
-        <button onclick="window.handleGuideSearch('${encodeURIComponent(query)}', {id:null,name:'كل الأدلة'})"
+        <button onclick="window.showAllGuideResults(${JSON.stringify(query)}, ${safeGuideId})"
                 style="background:none;border:1px dashed #94a3b8;color:#64748b;
                        border-radius:8px;padding:6px 14px;font-size:0.78rem;cursor:pointer;">
           🔍 عرض كل النتائج (${results.length})
@@ -683,16 +684,14 @@ function getChunkText(chunk) {
 window.handleGuideSearch = function(query, activeGuide) {
   console.log(`🔍 بحث في الدليل: "${activeGuide.name}" — السؤال: "${query}"`);
 
-  // تحليل النية
   const intent = GuideIntentDetector.analyze(query);
   console.log('🧠 Intent:', intent);
 
-  // البحث في الدليل المحدد
-  const results = GuideScorer.search(intent, activeGuide.id);
-  console.log(`📊 النتائج: ${results.length} — أعلى نقاط: ${results[0]?.score}`);
+  const allResults = GuideScorer.search(intent, activeGuide.id);
+  console.log(`📊 النتائج الكلية: ${allResults.length} — أعلى نقاط: ${allResults[0]?.score}`);
 
-  // لا نتائج
-  if (results.length === 0) {
+  // ① لا نتائج
+  if (allResults.length === 0) {
     return `
     <div class="guide-no-result">
       <div class="guide-no-result-icon">🔍</div>
@@ -703,29 +702,100 @@ window.handleGuideSearch = function(query, activeGuide) {
     </div>`;
   }
 
-  // تحقق من الالتباس:
-  // الحالة ①: نتيجتان متقاربتان من أدلة مختلفة
-  // الحالة ②: نتائج متعددة حتى من نفس الدليل لكن النقاط متقاربة جداً
-  const topScore    = results[0].score;
-  const secondScore = results[1]?.score || 0;
+  const topScore    = allResults[0].score;
+  const secondScore = allResults[1]?.score || 0;
 
+  // ② سؤال ناقص: كلمة "مادة" أو "بند" وحدها بدون رقم أو موضوع
+  //    علامتها: rawWords قصيرة + النتائج كثيرة + النقاط متقاربة كلها
+  const isVagueQuery = (
+    intent.rawWords.length <= 1 &&
+    intent.articleNum === null &&
+    allResults.length >= 5 &&
+    secondScore > topScore * 0.70
+  );
+
+  if (isVagueQuery) {
+    console.log('💬 سؤال ناقص — اطلب توضيح');
+    return `
+    <div class="guide-clarification-card">
+      <div class="guide-clarify-header">
+        <div class="guide-clarify-icon">💬</div>
+        <div>
+          <div class="guide-clarify-title">السؤال غير محدد كفاية</div>
+          <div class="guide-clarify-subtitle">وجدت <strong>${allResults.length}</strong> نتيجة لكلمة "<strong>${query}</strong>".<br>حدد أكثر — مثلاً: رقم المادة أو موضوعها</div>
+        </div>
+      </div>
+      <div style="padding:10px 14px;background:#fef9c3;border-radius:8px;margin-top:8px;font-size:0.85rem;color:#713f12;direction:rtl;">
+        💡 أمثلة: <strong>المادة 5</strong> &nbsp;|&nbsp; <strong>مادة الترخيص</strong> &nbsp;|&nbsp; <strong>المادة الثانية</strong>
+      </div>
+    </div>`;
+  }
+
+  // ③ التباس: نتيجتان متقاربتان — اعرض بطاقة الاختيار
   const isAmbiguous = (
-    results.length >= 2 &&
-    secondScore > topScore * 0.75   // ← كان 0.85 وكان يشترط < 500 — أزلنا القيد
+    allResults.length >= 2 &&
+    secondScore > topScore * 0.75
   );
 
   if (isAmbiguous) {
     console.log('🤔 السؤال ملتبس — طلب توضيح');
-    return GuideFormatter.buildClarificationCard(results, query);
+    return GuideFormatter.buildClarificationCard(allResults, query, activeGuide.id);
   }
 
-  // إجابة واضحة
-  return GuideFormatter.buildAnswerCard(results, intent);
+  // ④ إجابة واضحة — أعطِ buildAnswerCard أفضل 8 فقط
+  return GuideFormatter.buildAnswerCard(allResults.slice(0, 8), intent);
 };
 
 // =====================================================
-// ⑦ دوال مساعدة
+// ⑥-ب عرض كل النتائج بدون حد أقصى
 // =====================================================
+
+window.showAllGuideResults = function(query, guideId) {
+  const intent     = GuideIntentDetector.analyze(query);
+  const allResults = GuideScorer.search(intent, guideId);
+
+  if (!allResults.length) return;
+
+  // نبني قائمة كاملة كبطاقات مضغوطة قابلة للنقر
+  const topScore = allResults[0].score;
+  let html = `
+  <div class="guide-clarification-card">
+    <div class="guide-clarify-header">
+      <div class="guide-clarify-icon">📋</div>
+      <div>
+        <div class="guide-clarify-title">كل النتائج (${allResults.length})</div>
+        <div class="guide-clarify-subtitle">للسؤال: <strong>${query}</strong></div>
+      </div>
+    </div>`;
+
+  allResults.forEach((r, i) => {
+    const matchPct = Math.min(Math.round((r.score / topScore) * 100), 100);
+    const barColor = matchPct >= 70 ? '#0369a1' : (matchPct >= 50 ? '#0891b2' : '#94a3b8');
+    const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'').replace(/\.pdf$/i,'');
+    const shortName = guideName.length > 42 ? guideName.substring(0,42)+'…' : guideName;
+    html += `
+    <div class="choice-btn${i===0 ? ' choice-btn--top' : ''}"
+         onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}')">
+      <span class="choice-icon">${i===0 ? '🎯' : '📄'}</span>
+      <div class="choice-content" style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+          <strong style="font-size:0.82rem;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            ${shortName}
+          </strong>
+          <span style="font-size:0.72rem;background:${barColor};color:white;
+                       padding:1px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
+            ${matchPct}% — ص ${r.chunk.page_num}
+          </span>
+        </div>
+        ${r.chunk.title ? `<div style="font-size:0.75rem;color:#0369a1;margin-top:2px;">${r.chunk.title.substring(0,55)}</div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  html += `</div>`;
+
+  if (window.typeWriterResponse) window.typeWriterResponse(html, false);
+};
 
 /**
  * عرض قطعة محددة بعد اختيار المستخدم
