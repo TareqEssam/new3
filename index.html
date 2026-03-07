@@ -1719,13 +1719,48 @@ input.bg-success {
         background: var(--admin-primary);
         height: 100vh;
         position: fixed;
+        right: 0; /* التثبيت لليمين */
+        top: 0;
         color: white;
         padding: 20px 0;
+        z-index: 100005; /* ضمان ظهورها فوق كل شيء */
+        transition: transform 0.3s ease; /* حركة انزلاق ناعمة */
     }
     
     .admin-main {
         margin-right: 250px;
         padding: 30px;
+        transition: margin 0.3s ease;
+    }
+
+    /* طبقة تظليل تظهر خلف القائمة في الموبايل */
+    .admin-sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 100004;
+    }
+
+    /* === التنسيق الخاص بالهواتف المحمولة فقط === */
+    @media (max-width: 768px) {
+        .admin-sidebar {
+            transform: translateX(100%); /* إخفاء القائمة لليمين خارج الشاشة */
+        }
+        
+        /* كلاس يتم إضافته بالجافاسكربت لإظهار القائمة */
+        .admin-sidebar.show-sidebar {
+            transform: translateX(0); 
+        }
+
+        .admin-main {
+            margin-right: 0; /* جعل المحتوى يأخذ العرض بالكامل */
+            padding: 70px 15px 15px; /* زيادة المساحة العلوية لتجنب تداخل الأزرار */
+        }
+
+        .admin-sidebar-overlay.show-overlay {
+            display: block; /* إظهار التظليل عند فتح القائمة */
+        }
     }
     
     .sidebar-link {
@@ -1964,9 +1999,18 @@ input.bg-success {
     </head>
 <body>
 <div id="adminDashboardBI" class="admin-dashboard-wrapper">
+    <!-- زر إغلاق لوحة التحكم (القديم - يسار) -->
     <button class="btn-close-admin" onclick="closeAdminBI()"><i class="fas fa-times"></i> إغلاق لوحة التحكم</button>
     
-    <div class="admin-sidebar">
+    <!-- الزر الجديد: يظهر فقط في الموبايل (d-md-none) لفتح القائمة الجانبية (يمين) -->
+    <button id="mobileMenuBtn" class="btn btn-primary d-md-none" onclick="toggleAdminSidebar()" style="position: fixed; top: 20px; right: 20px; z-index: 100000; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+        <i class="fas fa-bars"></i> القائمة
+    </button>
+
+    <!-- طبقة التظليل التي تغلق القائمة عند الضغط عليها في الموبايل -->
+    <div id="adminSidebarOverlay" class="admin-sidebar-overlay" onclick="toggleAdminSidebar()"></div>
+    
+    <div class="admin-sidebar" id="adminSidebar">
         <div class="text-center mb-5">
             <h4 class="fw-bold">منظومه المواقف التنفيذية للشركات</h4>
             <small class="opacity-50">نظام دعم اتخاذ القرار</small>
