@@ -107,7 +107,7 @@ const masterActivityDB = [
         },
              {
             "name": "دليل اتحاد الصناعات المصرية ",
-            "link": "guides/dalil_etihad.pdf"
+            "link": "guides/دليل اتحاد الصناعات المصرية.pdf"
         },
              {
             "name": "دليل تقييم التأثير البيئى الخاص بالانشطه الاستثمارية",
@@ -8074,6 +8074,7 @@ const masterActivityDB = [
 
 // نشر قاعدة البيانات للمساعد
 window.masterActivityDB = masterActivityDB;
+
 
 
 
