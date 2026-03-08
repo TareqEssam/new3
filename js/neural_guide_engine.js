@@ -538,7 +538,7 @@ const GuideFormatter = {
           );
         });
         const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'').replace(/\.pdf$/i,'');
-        const shortName = guideName.length > 38 ? guideName.substring(0,38)+'...' : guideName;
+        const shortName = guideName;
         return `
           <div class="guide-alt-item" onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}')">
             <span class="guide-alt-icon">📋</span>
@@ -659,7 +659,7 @@ const GuideFormatter = {
       const icon      = isTop ? '🎯' : (matchPct >= 70 ? '📋' : '📄');
       const barColor  = isTop ? '#0369a1' : (matchPct >= 70 ? '#0891b2' : '#94a3b8');
       const guideName = r.guide_name.replace(/\.pdf\.pdf$/i, '').replace(/\.pdf$/i, '');
-      const shortName = guideName.length > 42 ? guideName.substring(0, 42) + '…' : guideName;
+      const shortName = guideName;
       const snippet   = getSnippet(r.chunk);
 
       html += `
@@ -668,7 +668,7 @@ const GuideFormatter = {
         <span class="choice-icon">${icon}</span>
         <div class="choice-content" style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px;">
-            <strong style="font-size:0.82rem;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            <strong style="font-size:0.82rem;color:#1e293b;white-space:normal;overflow:visible;">
               ${shortName}
             </strong>
             <span style="font-size:0.72rem;background:${barColor};color:white;
@@ -832,14 +832,14 @@ window.showAllGuideResults = function(query, guideId) {
     const matchPct = Math.min(Math.round((r.score / topScore) * 100), 100);
     const barColor = matchPct >= 70 ? '#0369a1' : (matchPct >= 50 ? '#0891b2' : '#94a3b8');
     const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'').replace(/\.pdf$/i,'');
-    const shortName = guideName.length > 42 ? guideName.substring(0,42)+'…' : guideName;
+    const shortName = guideName;
     html += `
     <div class="choice-btn${i===0 ? ' choice-btn--top' : ''}"
          onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}')">
       <span class="choice-icon">${i===0 ? '🎯' : '📄'}</span>
       <div class="choice-content" style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-          <strong style="font-size:0.82rem;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          <strong style="font-size:0.82rem;color:#1e293b;white-space:normal;overflow:visible;">
             ${shortName}
           </strong>
           <span style="font-size:0.72rem;background:${barColor};color:white;
@@ -951,7 +951,7 @@ window.searchAllGuides = function(encodedQuery, currentGuideId) {
     const matchPct  = Math.min(Math.round((r.score / topScore) * 100), 100);
     const barColor  = matchPct >= 70 ? '#0369a1' : (matchPct >= 50 ? '#0891b2' : '#94a3b8');
     const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'').replace(/\.pdf$/i,'');
-    const shortName = guideName.length > 42 ? guideName.substring(0,42)+'…' : guideName;
+    const shortName = guideName;
 
     // مقتطف من النص
     const fullText  = getChunkText(r.chunk) || '';
@@ -968,7 +968,7 @@ window.searchAllGuides = function(encodedQuery, currentGuideId) {
       <span class="choice-icon">${i === 0 ? '🎯' : '📋'}</span>
       <div class="choice-content" style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px;">
-          <strong style="font-size:0.82rem;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          <strong style="font-size:0.82rem;color:#1e293b;white-space:normal;overflow:visible;">
             ${shortName}
           </strong>
           <span style="font-size:0.72rem;background:${barColor};color:white;
