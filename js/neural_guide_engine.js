@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محــرك البحث في الأدلة الرسمية
+ * مـــــــــحــرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -14,13 +14,13 @@
 
 // =====================================================
 // 🔌 طبقة التوافق — تضمن وجود الأدوات من v6
-//    إذا لم يُحمَّل v6 بعد، تُعرِّف نسخة احتياطية بسيطة
+//    Lazy-resolved مرة واحدة عند أول استخدام (لا تُعيد البحث في window كل مرة)
 // =====================================================
-const _guideNormalize   = () => window.advancedNormalize   || window.normalizeArabic  || (t => t);
-const _guideLevenshtein = () => window.smartLevenshtein    || (() => 99);
-const _guideJaro        = () => window.jaroWinkler         || (() => 0);
-const _guideCache       = () => window.IntelligentCache    || { get: () => undefined, set: () => {} };
-const _guideKeyboard    = () => window.autoCorrectKeyboardLayout || (t => t);
+const _guideNormalize   = (() => { let fn; return () => fn || (fn = window.advancedNormalize   || window.normalizeArabic  || (t => t)); })();
+const _guideLevenshtein = (() => { let fn; return () => fn || (fn = window.smartLevenshtein    || (() => 99)); })();
+const _guideJaro        = (() => { let fn; return () => fn || (fn = window.jaroWinkler         || (() => 0)); })();
+const _guideCache       = (() => { let c;  return () => c  || (c  = window.IntelligentCache    || { get: () => undefined, set: () => {} }); })();
+const _guideKeyboard    = (() => { let fn; return () => fn || (fn = window.autoCorrectKeyboardLayout || (t => t)); })();
 
 // =====================================================
 // ① المصفوفة الدلالية المخصصة للأدلة القانونية
@@ -50,7 +50,45 @@ const GuideSemantic = {
 // ② كاشف نية السؤال الذكي
 // =====================================================
 
+// ✅ تحسين: خريطة الأرقام والمفاتيح المركبة محسوبة مرة واحدة فقط عند تحميل الملف
+const _wordNumMap = {
+  'الأول':1,'الأولى':1,'اول':1,'أول':1,'أولى':1,'اولي':1,'اولى':1,
+  'الثاني':2,'الثانية':2,'ثاني':2,'ثانية':2,
+  'التاني':2,'التانية':2,'تاني':2,'تانية':2,'تانيه':2,
+  'الثالث':3,'الثالثة':3,'ثالث':3,'ثالثة':3,'ثالثه':3,
+  'الرابع':4,'الرابعة':4,'رابع':4,'رابعة':4,'رابعه':4,
+  'الخامس':5,'الخامسة':5,'خامس':5,'خامسة':5,'خامسه':5,
+  'السادس':6,'السادسة':6,'سادس':6,'سادسة':6,'سادسه':6,
+  'السابع':7,'السابعة':7,'سابع':7,'سابعة':7,'سابعه':7,
+  'الثامن':8,'الثامنة':8,'ثامن':8,'ثامنة':8,'ثامنه':8,
+  'التاسع':9,'التاسعة':9,'تاسع':9,'تاسعة':9,'تاسعه':9,
+  'العاشر':10,'العاشرة':10,'عاشر':10,'عاشرة':10,'عاشره':10,
+  'الحادي عشر':11,'حادي عشر':11,'الحاديه عشر':11,
+  'الثاني عشر':12,'ثاني عشر':12,'التاني عشر':12,'تاني عشر':12,
+  'الثالث عشر':13,'ثالث عشر':13,
+  'الرابع عشر':14,'رابع عشر':14,
+  'الخامس عشر':15,'خامس عشر':15,
+  'السادس عشر':16,'سادس عشر':16,
+  'السابع عشر':17,'سابع عشر':17,
+  'الثامن عشر':18,'ثامن عشر':18,
+  'التاسع عشر':19,'تاسع عشر':19,
+  'العشرون':20,'العشرين':20,'عشرون':20,'عشرين':20,
+};
+const _wordNumMultiKeys = Object.keys(_wordNumMap).filter(k => k.includes(' ')).sort((a,b)=>b.length-a.length);
+const _wordNumSingleEntries = Object.entries(_wordNumMap).filter(([k]) => !k.includes(' '));
+
 const GuideIntentDetector = {
+
+  // دالة داخلية static تستخدم الخرائط المُحسَّبة مسبقاً
+  _wordToNum(text) {
+    for (const key of _wordNumMultiKeys) {
+      if (text.includes(key)) return _wordNumMap[key];
+    }
+    for (const [key, val] of _wordNumSingleEntries) {
+      if (text.includes(key)) return val;
+    }
+    return null;
+  },
 
   /**
    * يحلل السؤال ويستخرج:
@@ -82,60 +120,8 @@ const GuideIntentDetector = {
   // يدعم: الأولى/الأول، الثانية/الثاني، التانية/التاني ... إلخ
   // =====================================================
   wordToNumber(text) {
-    const map = {
-      // الأول / الأولى
-      'الأول':1,'الأولى':1,'اول':1,'أول':1,'أولى':1,'اولي':1,'اولى':1,
-      // الثاني / الثانية / التاني / التانية (عامية)
-      'الثاني':2,'الثانية':2,'ثاني':2,'ثانية':2,
-      'التاني':2,'التانية':2,'تاني':2,'تانية':2,'تانيه':2,
-      // الثالث / الثالثة
-      'الثالث':3,'الثالثة':3,'ثالث':3,'ثالثة':3,'ثالثه':3,
-      // الرابع / الرابعة
-      'الرابع':4,'الرابعة':4,'رابع':4,'رابعة':4,'رابعه':4,
-      // الخامس / الخامسة
-      'الخامس':5,'الخامسة':5,'خامس':5,'خامسة':5,'خامسه':5,
-      // السادس / السادسة
-      'السادس':6,'السادسة':6,'سادس':6,'سادسة':6,'سادسه':6,
-      // السابع / السابعة
-      'السابع':7,'السابعة':7,'سابع':7,'سابعة':7,'سابعه':7,
-      // الثامن / الثامنة
-      'الثامن':8,'الثامنة':8,'ثامن':8,'ثامنة':8,'ثامنه':8,
-      // التاسع / التاسعة
-      'التاسع':9,'التاسعة':9,'تاسع':9,'تاسعة':9,'تاسعه':9,
-      // العاشر / العاشرة
-      'العاشر':10,'العاشرة':10,'عاشر':10,'عاشرة':10,'عاشره':10,
-      // الحادي عشر
-      'الحادي عشر':11,'حادي عشر':11,'الحاديه عشر':11,
-      // الثاني عشر
-      'الثاني عشر':12,'ثاني عشر':12,'التاني عشر':12,'تاني عشر':12,
-      // الثالث عشر
-      'الثالث عشر':13,'ثالث عشر':13,
-      // الرابع عشر
-      'الرابع عشر':14,'رابع عشر':14,
-      // الخامس عشر
-      'الخامس عشر':15,'خامس عشر':15,
-      // السادس عشر
-      'السادس عشر':16,'سادس عشر':16,
-      // السابع عشر
-      'السابع عشر':17,'سابع عشر':17,
-      // الثامن عشر
-      'الثامن عشر':18,'ثامن عشر':18,
-      // التاسع عشر
-      'التاسع عشر':19,'تاسع عشر':19,
-      // العشرون
-      'العشرون':20,'العشرين':20,'عشرون':20,'عشرين':20,
-    };
-
-    // نحاول أولاً الأرقام المركبة (الحادي عشر، الثاني عشر ...)
-    const multiWordKeys = Object.keys(map).filter(k => k.includes(' ')).sort((a,b)=>b.length-a.length);
-    for (const key of multiWordKeys) {
-      if (text.includes(key)) return map[key];
-    }
-    // ثم الأرقام المفردة
-    for (const [key, val] of Object.entries(map)) {
-      if (!key.includes(' ') && text.includes(key)) return val;
-    }
-    return null;
+    // ✅ تحسين الأداء: الخريطة والمفاتيح المركبة محسوبة مرة واحدة فقط (لا تُعاد كل استدعاء)
+    return GuideIntentDetector._wordToNum(text);
   },
 
   analyze(query) {
@@ -257,11 +243,15 @@ const GuideScorer = {
     }
 
     // ② تطابق الكلمات الموسعة
+    // ✅ تحسين: normalize يُستدعى مرة واحدة لكل كلمة، والـ RegExp لا يُنشأ إلا إذا لم يكن في الكلمات المفتاحية
     intent.expandedWords.forEach(word => {
       if (word.length < 3) return;
       const normWord = normalize(word);
-      if (chunkKeywords.has(normWord)) score += 30;
-      const regex = new RegExp(normWord, 'g');
+      if (chunkKeywords.has(normWord)) {
+        score += 30;
+        return; // لا داعي لبناء Regex إذا وُجد في keywords مباشرة
+      }
+      const regex = new RegExp(normWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
       const matches = text.match(regex);
       if (matches) {
         score += matches.length * 8;
@@ -279,15 +269,17 @@ const GuideScorer = {
     (intent.stems || []).forEach(stem => {
       if (stem.length < 3) return;
       const normStem = normalize(stem);
-      const stemMatches = text.match(new RegExp(normStem, 'g'));
+      // ✅ escape المحارف الخاصة قبل بناء الـ RegExp
+      const stemRegex = new RegExp(normStem.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+      const stemMatches = text.match(stemRegex);
       if (stemMatches) score += stemMatches.length * 12;
     });
 
     // ③-ج بونص التجاور
     if (intent.rawWords.length >= 2) {
       for (let i = 0; i < intent.rawWords.length - 1; i++) {
-        const w1 = normalize(intent.rawWords[i]);
-        const w2 = normalize(intent.rawWords[i + 1]);
+        const w1 = normalize(intent.rawWords[i]).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const w2 = normalize(intent.rawWords[i + 1]).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         if (new RegExp(`${w1}.{0,20}${w2}`).test(text)) score += 150;
       }
     }
@@ -376,6 +368,11 @@ const GuideScorer = {
 // =====================================================
 // ④ مُنسّق الإجابات الذكي
 // =====================================================
+
+// ✅ تحسين: دالة مشتركة لتنظيف اسم الدليل بدلاً من تكرار replace في كل مكان
+function cleanGuideName(name) {
+  return (name || '').replace(/\.pdf\.pdf$/i, '').replace(/\.pdf$/i, '');
+}
 
 const GuideFormatter = {
 
@@ -488,7 +485,7 @@ const GuideFormatter = {
       <div class="guide-answer-header">
         <div class="guide-answer-icon">📄</div>
         <div class="guide-answer-meta">
-          <div class="guide-answer-source">${top.guide_name.replace('.pdf', '').replace('.pdf.pdf', '')}</div>
+          <div class="guide-answer-source">${cleanGuideName(top.guide_name)}</div>
           <div class="guide-answer-page">صفحة ${top.chunk.page_num}</div>
         </div>
         <button class="guide-open-btn" onclick="window.openGuidePage('${top.guide_id}', ${top.chunk.page_num})" title="فتح الصفحة في الدليل">
@@ -537,7 +534,7 @@ const GuideFormatter = {
             '<mark class="guide-highlight">$1</mark>'
           );
         });
-        const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'').replace(/\.pdf$/i,'');
+        const guideName = cleanGuideName(r.guide_name);
         const shortName = guideName;
         return `
           <div class="guide-alt-item" onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}')">
@@ -573,17 +570,18 @@ const GuideFormatter = {
    */
   extractArticleLinks(text) {
     const pattern = /(?:المادة|مادة|الماده|ماده|البند|الفقرة|فقرة)\s*[\(\[]*\s*([٠-٩\d]+)\s*[\)\]]*/g;
-    const found = new Map(); // Map لتفادي التكرار
+    const found = new Map();
+    // ✅ تحسين: استدعاء normalize مرة واحدة خارج الحلقة
+    const normalize = _guideNormalize();
     let match;
     while ((match = pattern.exec(text)) !== null) {
-      const normalize = _guideNormalize();
       const numStr = normalize(match[1]).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
       const num = parseInt(numStr, 10);
       if (!isNaN(num) && num > 0 && num <= 999) {
-        found.set(num, match[0].trim()); // نحفظ النص الأصلي للعرض
+        found.set(num, match[0].trim());
       }
     }
-    return [...found.entries()].sort((a, b) => a[0] - b[0]); // مرتبة تصاعدياً
+    return [...found.entries()].sort((a, b) => a[0] - b[0]);
   },
 
   /**
@@ -658,7 +656,7 @@ const GuideFormatter = {
       const isTop     = i === 0;
       const icon      = isTop ? '🎯' : (matchPct >= 70 ? '📋' : '📄');
       const barColor  = isTop ? '#0369a1' : (matchPct >= 70 ? '#0891b2' : '#94a3b8');
-      const guideName = r.guide_name.replace(/\.pdf\.pdf$/i, '').replace(/\.pdf$/i, '');
+      const guideName = cleanGuideName(r.guide_name);
       const shortName = guideName;
       const snippet   = getSnippet(r.chunk);
 
@@ -715,17 +713,34 @@ const GuideFormatter = {
 // ⑤ دالة استرجاع النص الفعلي من FULL_GUIDES_DB
 // =====================================================
 
+// ✅ تحسين: فهرسة FULL_GUIDES_DB في Map للوصول O(1) بدلاً من find() O(n) في كل استدعاء
+let _fullGuidesMap = null;
+let _fullGuidesPagesMap = null;
+
+function _buildFullGuidesIndex() {
+  if (!window.FULL_GUIDES_DB) return;
+  _fullGuidesMap = new Map(window.FULL_GUIDES_DB.map(g => [g.id, g]));
+  _fullGuidesPagesMap = new Map();
+  window.FULL_GUIDES_DB.forEach(g => {
+    const pagesMap = new Map((g.pages || []).map(p => [p.page_num, p]));
+    _fullGuidesPagesMap.set(g.id, pagesMap);
+  });
+}
+
 function getChunkText(chunk) {
   // إذا كان النص مخزناً مباشرة (للتوافق مع النسخ القديمة)
   if (chunk.text) return chunk.text;
 
-  // استرجاع النص بالإحداثيات من FULL_GUIDES_DB
   if (!window.FULL_GUIDES_DB) return '';
 
-  const guide = window.FULL_GUIDES_DB.find(g => g.id === chunk.guide_id);
+  // ✅ بناء الفهرس عند أول استدعاء (lazy init)
+  if (!_fullGuidesMap) _buildFullGuidesIndex();
+
+  const guide = _fullGuidesMap.get(chunk.guide_id);
   if (!guide) return '';
 
-  const page = (guide.pages || []).find(p => p.page_num === chunk.page_num);
+  const pagesMap = _fullGuidesPagesMap.get(chunk.guide_id);
+  const page = pagesMap?.get(chunk.page_num);
   if (!page || !page.text) return '';
 
   // استخراج القطعة بالإحداثيات
@@ -831,7 +846,7 @@ window.showAllGuideResults = function(query, guideId) {
   allResults.forEach((r, i) => {
     const matchPct = Math.min(Math.round((r.score / topScore) * 100), 100);
     const barColor = matchPct >= 70 ? '#0369a1' : (matchPct >= 50 ? '#0891b2' : '#94a3b8');
-    const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'').replace(/\.pdf$/i,'');
+    const guideName = cleanGuideName(r.guide_name);
     const shortName = guideName;
     html += `
     <div class="choice-btn${i===0 ? ' choice-btn--top' : ''}"
@@ -950,7 +965,7 @@ window.searchAllGuides = function(encodedQuery, currentGuideId) {
   grouped.forEach((r, i) => {
     const matchPct  = Math.min(Math.round((r.score / topScore) * 100), 100);
     const barColor  = matchPct >= 70 ? '#0369a1' : (matchPct >= 50 ? '#0891b2' : '#94a3b8');
-    const guideName = r.guide_name.replace(/\.pdf\.pdf$/i,'').replace(/\.pdf$/i,'');
+    const guideName = cleanGuideName(r.guide_name);
     const shortName = guideName;
 
     // مقتطف من النص
@@ -984,18 +999,9 @@ window.searchAllGuides = function(encodedQuery, currentGuideId) {
 
   html += `</div>`;
   if (window.typeWriterResponse) {
+    // ✅ تحسين: لا حاجة لـ setTimeout + addEventListener يدوي
+    //    لأن initGuideDelegation() تتعامل مع .guide-jump-btn عبر event delegation
     window.typeWriterResponse(html, false);
-    // نربط الأحداث بعد إدراج الـ HTML في DOM
-    setTimeout(() => {
-      document.querySelectorAll('.guide-jump-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          const guideId = this.dataset.guideId;
-          const chunkId = this.dataset.chunkId;
-          const query   = decodeURIComponent(this.dataset.query);
-          window.jumpToGuideResult(guideId, chunkId, query);
-        });
-      });
-    }, 300);
   }
 };
 
