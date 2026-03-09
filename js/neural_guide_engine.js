@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * مــحــرك البحث في الأدلة الرسمية
+ * محــرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -1093,27 +1093,25 @@ window.searchAllGuides = function(encodedQuery, currentGuideId) {
 // دالة مساعدة: شريط السياق — يوضح أي دليل نشط الآن + زر العودة
 // =====================================================
 function _buildGuideContextBar(targetGuideName, prevGuide, prevGuideName, query) {
-  // query هنا دائماً نص عربي واضح (decoded قبل الاستدعاء)
   const backBtn = prevGuide
     ? `<button class="guide-ctx-back-btn"
                data-action="return-to-guide"
                data-query="${encodeURIComponent(query)}"
                title="العودة للبحث في ${prevGuideName || 'الدليل الأصلي'}">
-         <span class="guide-ctx-back-arrow">← العودة إلى:</span>
-         <span class="guide-ctx-back-name">${prevGuideName || 'الدليل الأصلي'}</span>
+         ↩ العودة إلى: <strong>${prevGuideName || 'الدليل الأصلي'}</strong>
        </button>`
     : '';
 
   return `
   <div class="guide-context-bar">
-    <div class="guide-ctx-info">
+    <div class="guide-ctx-current">
       <span class="guide-ctx-icon">📖</span>
-      <div class="guide-ctx-info-text">
+      <div class="guide-ctx-current-text">
         <span class="guide-ctx-label">تعرض الآن نتيجة من:</span>
         <span class="guide-ctx-name">${targetGuideName}</span>
       </div>
     </div>
-    ${backBtn}
+    ${backBtn ? `<div class="guide-ctx-back-wrap">${backBtn}</div>` : ''}
   </div>`;
 }
 
@@ -1256,91 +1254,80 @@ window.openGuidePage = function(guideId, pageNum) {
     /* ===== شريط السياق — أي دليل نشط الآن ===== */
     .guide-context-bar {
       display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 8px;
-      padding: 10px 14px;
+      padding: 12px 14px;
       background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
       border: 1px solid #f59e0b;
       border-radius: 10px;
       margin-bottom: 8px;
       direction: rtl;
-      font-size: 0.82rem;
     }
-    .guide-ctx-info {
+
+    /* الجزء العلوي: أيقونة + اسم الدليل الحالي */
+    .guide-ctx-current {
       display: flex;
       align-items: flex-start;
-      gap: 6px;
-      flex: 1;
-      min-width: 0;
+      gap: 8px;
     }
-    .guide-ctx-icon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
-    .guide-ctx-info-text {
+    .guide-ctx-icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .guide-ctx-current-text {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
       min-width: 0;
       flex: 1;
     }
-    .guide-ctx-label { color: #78350f; white-space: nowrap; flex-shrink: 0; }
+    .guide-ctx-label {
+      font-size: 0.78rem;
+      color: #78350f;
+      font-weight: normal;
+    }
     .guide-ctx-name {
-      display: inline-block;
+      font-size: 0.85rem;
       font-weight: bold;
-      color: #92400e;
-      background: rgba(255,255,255,0.65);
-      border: 1px solid #f59e0b;
-      border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 0.8rem;
+      color: #1c1917;
       line-height: 1.5;
       word-break: break-word;
       white-space: normal;
-      max-width: 100%;
+    }
+
+    /* الجزء السفلي: زر العودة — يمتد بالعرض الكامل */
+    .guide-ctx-back-wrap {
+      width: 100%;
     }
     .guide-ctx-back-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
+      display: block;
+      width: 100%;
       background: white;
       border: 1px solid #d97706;
-      color: #b45309;
+      color: #92400e;
       border-radius: 8px;
-      padding: 7px 12px;
-      font-size: 0.78rem;
-      font-weight: bold;
+      padding: 8px 12px;
+      font-size: 0.82rem;
       cursor: pointer;
       transition: all 0.2s;
       direction: rtl;
-      line-height: 1.4;
-      max-width: 220px;
-      flex-shrink: 0;
+      text-align: right;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: normal;
+      box-sizing: border-box;
     }
     .guide-ctx-back-btn:hover {
       background: #d97706;
       color: white;
     }
-    .guide-ctx-back-btn:hover .guide-ctx-back-name {
-      color: white;
-    }
-    .guide-ctx-back-arrow {
-      font-size: 0.78rem;
-      font-weight: bold;
-    }
     .guide-ctx-back-name {
-      display: inline-block;
-      font-size: 0.75rem;
+      display: block;
+      font-size: 0.76rem;
       font-weight: normal;
-      color: #92400e;
-      background: #fef3c7;
-      border: 1px solid #fde68a;
-      border-radius: 5px;
-      padding: 2px 7px;
-      line-height: 1.5;
-      word-break: break-word;
-      white-space: normal;
-      max-width: 200px;
+      opacity: 0.9;
+      margin-top: 2px;
     }
 
     /* ===== شريط البحث في أدلة أخرى ===== */
