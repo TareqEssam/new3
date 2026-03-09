@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * مـــــــــحــرك البحث في الأدلة الرسمية
+ * محــرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -477,7 +477,7 @@ const GuideFormatter = {
     // ② استخراج روابط المواد من النص الرئيسي
     const rawText       = getChunkText(top.chunk);
     const articleLinks  = this.extractArticleLinks(rawText);
-    const linksBar      = this.buildArticleLinksBar(articleLinks, top.guide_id, top.chunk.article_num);
+    const linksBar      = this.buildArticleLinksBar(articleLinks, top.guide_id, top.chunk.article_num, top.guide_name);
 
     // ===== الإجابة الرئيسية =====
     let html = `
@@ -501,8 +501,10 @@ const GuideFormatter = {
 
       <div class="guide-search-all-bar">
         <button class="guide-search-all-btn"
-                onclick="window.searchAllGuides('${encodeURIComponent(intent.originalQuery || '')}', '${top.guide_id}')">
-          🔍 هل هذا الموضوع موجود في أدلة أخرى؟
+                data-action="search-all-guides"
+                data-query="${encodeURIComponent(intent.originalQuery || '')}"
+                data-guide-id="${top.guide_id}">
+          🔍 هل هذا الموضوع موجود في أدلة أخرى؟ &nbsp;<span style="opacity:0.8;font-weight:normal;">"${(intent.originalQuery || '').substring(0,30)}${(intent.originalQuery||'').length>30?'…':''}"</span>
         </button>
       </div>`;
 
@@ -537,7 +539,7 @@ const GuideFormatter = {
         const guideName = cleanGuideName(r.guide_name);
         const shortName = guideName;
         return `
-          <div class="guide-alt-item" onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}')">
+          <div class="guide-alt-item" onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}', '${encodeURIComponent(intent.originalQuery || '')}')">
             <span class="guide-alt-icon">📋</span>
             <div class="guide-alt-content">
               <div class="guide-alt-header">
@@ -587,23 +589,31 @@ const GuideFormatter = {
   /**
    * يبني شريط أزرار الإحالة السريعة
    */
-  buildArticleLinksBar(articleLinks, currentGuideId, currentArticleNum = null) {
+  buildArticleLinksBar(articleLinks, currentGuideId, currentArticleNum = null, guideName = '') {
     if (!articleLinks || articleLinks.length === 0) return '';
 
     // نستثني رقم المادة الحالية من الأزرار
     const filtered = articleLinks.filter(([num]) => num != currentArticleNum);
     if (filtered.length === 0) return '';
 
+    const cleanName = cleanGuideName(guideName);
+    const guideLabel = cleanName
+      ? `<span class="guide-article-links-guide">📖 ${cleanName}</span>`
+      : '';
+
     const buttons = filtered.map(([num, label]) => `
       <button class="guide-article-link-btn"
               onclick="window.jumpToArticle(${num}, '${currentGuideId}')"
-              title="انتقل إلى ${label}">
-        📎 م ${num}
+              title="انتقل إلى ${label} في نفس الدليل">
+        <span class="guide-link-arrow">↗</span> م&nbsp;${num}
       </button>`).join('');
 
     return `
     <div class="guide-article-links">
-      <span class="guide-article-links-label">🔗 إحالات في النص:</span>
+      <div class="guide-article-links-top">
+        <span class="guide-article-links-label">🔗 إحالات في النص:</span>
+        ${guideLabel}
+      </div>
       <div class="guide-article-links-btns">${buttons}</div>
     </div>`;
   },
@@ -1005,6 +1015,28 @@ window.searchAllGuides = function(encodedQuery, currentGuideId) {
   }
 };
 
+// =====================================================
+// دالة مساعدة: شريط السياق — يوضح أي دليل نشط الآن + زر العودة
+// =====================================================
+function _buildGuideContextBar(targetGuideName, prevGuide, prevGuideName, query) {
+  const backBtn = prevGuide
+    ? `<button class="guide-ctx-back-btn"
+               onclick="window.returnToOriginalGuide('${encodeURIComponent(query)}')"
+               title="العودة للبحث في ${prevGuideName || 'الدليل الأصلي'}">
+         ← العودة إلى: ${prevGuideName || 'الدليل الأصلي'}
+       </button>`
+    : '';
+
+  return `
+  <div class="guide-context-bar">
+    <span class="guide-ctx-icon">📖</span>
+    <span class="guide-ctx-label">تعرض الآن نتيجة من:</span>
+    <span class="guide-ctx-name">${targetGuideName}</span>
+    ${backBtn}
+  </div>`;
+}
+
+// =====================================================
 // ③-ب الانتقال لنتيجة من دليل آخر مع تحديث AgentMemory مؤقتاً
 window.jumpToGuideResult = function(guideId, chunkId, query) {
   if (!window.PROCESSED_GUIDES) return;
@@ -1015,15 +1047,24 @@ window.jumpToGuideResult = function(guideId, chunkId, query) {
   const chunk = (guide.chunks || []).find(c => c.id === chunkId);
   if (!chunk) return;
 
-  // نغيّر الدليل النشط مؤقتاً حتى تعمل روابط الإحالة داخل الدليل الجديد
+  // نحفظ الدليل الأصلي قبل التغيير
   const prevGuide = window.AgentMemory?.activeGuide;
+  const prevGuideName = prevGuide
+    ? cleanGuideName(prevGuide.name || prevGuide.guide_name || '')
+    : null;
+  const targetGuideName = cleanGuideName(guide.guide_name);
+
   if (window.AgentMemory) {
     window.AgentMemory.activeGuide = { id: guideId, name: guide.guide_name };
   }
 
   const intent = GuideIntentDetector.analyze(query);
   const result = [{ score: 999, chunk, guide_name: guide.guide_name, guide_id: guideId }];
-  const html   = GuideFormatter.buildAnswerCard(result, intent);
+  let html = GuideFormatter.buildAnswerCard(result, intent);
+
+  // ✅ شريط السياق: يوضح أين يبحث الآن + زر العودة للدليل الأصلي
+  const contextBar = _buildGuideContextBar(targetGuideName, prevGuide, prevGuideName, query);
+  html = contextBar + html;
 
   // نعيد الدليل الأصلي بعد البناء
   if (window.AgentMemory && prevGuide) {
@@ -1032,7 +1073,17 @@ window.jumpToGuideResult = function(guideId, chunkId, query) {
 
   if (html && window.typeWriterResponse) window.typeWriterResponse(html, false);
 };
-window.showGuideChunk = function(guideId, chunkId) {
+
+// ③-ج العودة للدليل الأصلي وإعادة البحث فيه
+window.returnToOriginalGuide = function(encodedQuery) {
+  const query = decodeURIComponent(encodedQuery);
+  if (!query || !window.AgentMemory?.activeGuide) return;
+  const activeGuide = window.AgentMemory.activeGuide;
+  const html = window.handleGuideSearch(query, activeGuide);
+  if (html && window.typeWriterResponse) window.typeWriterResponse(html, false);
+};
+
+window.showGuideChunk = function(guideId, chunkId, query) {
   if (!window.PROCESSED_GUIDES) return;
   
   const guide = window.PROCESSED_GUIDES.find(g => g.id === guideId);
@@ -1048,7 +1099,9 @@ window.showGuideChunk = function(guideId, chunkId) {
     guide_id: guide.id
   }];
 
-  const html = GuideFormatter.buildAnswerCard(result, {});
+  // ✅ إذا توفر query نحلله لنمرره للبطاقة (يُفعِّل زر "هل هذا الموضوع...")
+  const intent = query ? GuideIntentDetector.analyze(query) : {};
+  const html = GuideFormatter.buildAnswerCard(result, intent);
   if (html && window.typeWriterResponse) {
     window.typeWriterResponse(html);
   }
@@ -1065,13 +1118,13 @@ window.selectGuideResult = function(guideId, chunkId, encodedQuery) {
     const originalId = window.AgentMemory.activeGuide.id;
     window.AgentMemory.activeGuide.id = guideId;
     
-    // عرض الإجابة
-    window.showGuideChunk(guideId, chunkId);
+    // ✅ تمرير query حتى يعمل زر "هل هذا الموضوع..." بعد الاختيار
+    window.showGuideChunk(guideId, chunkId, query);
     
     // إعادة الدليل الأصلي
     window.AgentMemory.activeGuide.id = originalId;
   } else {
-    window.showGuideChunk(guideId, chunkId);
+    window.showGuideChunk(guideId, chunkId, query);
   }
 };
 
@@ -1115,6 +1168,106 @@ window.openGuidePage = function(guideId, pageNum) {
   const style = document.createElement('style');
   style.id = 'guide-engine-styles';
   style.textContent = `
+    /* ===== شريط السياق — أي دليل نشط الآن ===== */
+    .guide-context-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 8px 14px;
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 1px solid #f59e0b;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      direction: rtl;
+      font-size: 0.82rem;
+    }
+    .guide-ctx-icon { font-size: 1rem; }
+    .guide-ctx-label { color: #78350f; }
+    .guide-ctx-name {
+      font-weight: bold;
+      color: #92400e;
+      flex: 1;
+    }
+    .guide-ctx-back-btn {
+      background: white;
+      border: 1px solid #d97706;
+      color: #b45309;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .guide-ctx-back-btn:hover {
+      background: #d97706;
+      color: white;
+    }
+
+    /* ===== شريط البحث في أدلة أخرى ===== */
+    .guide-search-all-bar {
+      padding: 10px 14px;
+      border-top: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .guide-search-all-btn {
+      width: 100%;
+      background: none;
+      border: 1px dashed #0369a1;
+      color: #0369a1;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      direction: rtl;
+      text-align: right;
+    }
+    .guide-search-all-btn:hover {
+      background: #f0f9ff;
+      border-color: #0284c7;
+    }
+
+    /* ===== شريط إحالات المواد — محسَّن ===== */
+    .guide-article-links {
+      padding: 10px 16px;
+      background: #f0f9ff;
+      border-top: 1px solid #bae6fd;
+      direction: rtl;
+    }
+    .guide-article-links-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .guide-article-links-label {
+      font-size: 0.78rem;
+      color: #0369a1;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+    .guide-article-links-guide {
+      font-size: 0.74rem;
+      color: #64748b;
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 2px 8px;
+    }
+    .guide-article-links-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .guide-link-arrow {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
     /* ===== بطاقة الإجابة الرئيسية ===== */
     .guide-answer-card {
       background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
@@ -1167,28 +1320,7 @@ window.openGuidePage = function(guideId, pageNum) {
       padding: 16px;
     }
 
-    /* ===== ② شريط روابط الإحالة ===== */
-    .guide-article-links {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 10px 16px;
-      background: #f0f9ff;
-      border-top: 1px solid #bae6fd;
-      direction: rtl;
-    }
-    .guide-article-links-label {
-      font-size: 0.78rem;
-      color: #0369a1;
-      font-weight: bold;
-      flex-shrink: 0;
-    }
-    .guide-article-links-btns {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
+    /* ===== ② شريط روابط الإحالة (الأنماط الإضافية فقط) ===== */
     .guide-article-link-btn {
       background: white;
       border: 1px solid #0369a1;
@@ -1206,29 +1338,6 @@ window.openGuidePage = function(guideId, pageNum) {
       color: white;
       transform: translateY(-1px);
       box-shadow: 0 2px 6px rgba(3,105,161,0.3);
-    }
-
-    /* ===== ③ زر البحث في كل الأدلة ===== */
-    .guide-search-all-bar {
-      padding: 10px 16px;
-      border-top: 1px solid #e2e8f0;
-      text-align: center;
-    }
-    .guide-search-all-btn {
-      background: none;
-      border: 1px dashed #0891b2;
-      color: #0891b2;
-      border-radius: 8px;
-      padding: 6px 16px;
-      font-size: 0.82rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      width: 100%;
-    }
-    .guide-search-all-btn:hover {
-      background: #f0f9ff;
-      border-style: solid;
-      color: #0369a1;
     }
 
     .guide-article-title {
@@ -1498,20 +1607,27 @@ window.openGuidePage = function(guideId, pageNum) {
   if (typeof document === 'undefined') return;
 
   document.addEventListener('click', function(e) {
-    const el = e.target.closest('[data-guide-id][data-chunk-id]');
-    if (!el) {
-      // زر "عرض كل النتائج"
-      const showAll = e.target.closest('.guide-show-all-btn');
-      if (showAll) {
-        const q  = decodeURIComponent(showAll.dataset.query || '');
-        const gId = showAll.dataset.guideId || null;
-        if (q) window.showAllGuideResults(q, gId || null);
-      }
+    // ① زر "هل هذا الموضوع موجود في أدلة أخرى؟"
+    const searchAllBtn = e.target.closest('[data-action="search-all-guides"]');
+    if (searchAllBtn) {
+      const q   = decodeURIComponent(searchAllBtn.dataset.query || '');
+      const gId = searchAllBtn.dataset.guideId || null;
+      if (q) window.searchAllGuides(searchAllBtn.dataset.query, gId);
       return;
     }
 
-    // أزرار .guide-jump-btn (نتائج searchAllGuides)
-    if (el.classList.contains('guide-jump-btn')) {
+    // ② زر "عرض كل النتائج" القديم (توافق)
+    const showAll = e.target.closest('.guide-show-all-btn');
+    if (showAll) {
+      const q   = decodeURIComponent(showAll.dataset.query || '');
+      const gId = showAll.dataset.guideId || null;
+      if (q) window.showAllGuideResults(q, gId || null);
+      return;
+    }
+
+    // ③ أزرار .guide-jump-btn (نتائج searchAllGuides)
+    const el = e.target.closest('[data-guide-id][data-chunk-id]');
+    if (el && el.classList.contains('guide-jump-btn')) {
       const guideId = el.dataset.guideId;
       const chunkId = el.dataset.chunkId;
       const query   = decodeURIComponent(el.dataset.query || '');
