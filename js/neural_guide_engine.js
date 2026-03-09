@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * مــــحــرك البحث في الأدلة الرسمية
+ * محــرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -1006,27 +1006,33 @@ window.searchAllGuides = function(encodedQuery, currentGuideId) {
 // دالة مساعدة: شريط السياق — يوضح أي دليل نشط الآن + زر العودة
 // =====================================================
 function _buildGuideContextBar(targetGuideName, prevGuide, prevGuideName, query) {
+  // query هنا دائماً نص عربي واضح (decoded قبل الاستدعاء)
   const backBtn = prevGuide
     ? `<button class="guide-ctx-back-btn"
-               onclick="window.returnToOriginalGuide('${encodeURIComponent(query)}')"
+               data-action="return-to-guide"
+               data-query="${encodeURIComponent(query)}"
                title="العودة للبحث في ${prevGuideName || 'الدليل الأصلي'}">
-         ← العودة إلى: ${prevGuideName || 'الدليل الأصلي'}
+         ← العودة إلى:<br><span class="guide-ctx-back-name">${prevGuideName || 'الدليل الأصلي'}</span>
        </button>`
     : '';
 
   return `
   <div class="guide-context-bar">
-    <span class="guide-ctx-icon">📖</span>
-    <span class="guide-ctx-label">تعرض الآن نتيجة من:</span>
-    <span class="guide-ctx-name">${targetGuideName}</span>
+    <div class="guide-ctx-info">
+      <span class="guide-ctx-icon">📖</span>
+      <span class="guide-ctx-label">تعرض الآن نتيجة من:</span>
+      <span class="guide-ctx-name">${targetGuideName}</span>
+    </div>
     ${backBtn}
   </div>`;
 }
 
-// =====================================================
 // ③-ب الانتقال لنتيجة من دليل آخر مع تحديث AgentMemory مؤقتاً
-window.jumpToGuideResult = function(guideId, chunkId, query) {
+window.jumpToGuideResult = function(guideId, chunkId, rawQuery) {
   if (!window.PROCESSED_GUIDES) return;
+
+  // ✅ decode مرة واحدة عند الدخول — يمنع تمرير encoded text لأي دالة أخرى
+  const query = _safeDecodeQuery(rawQuery);
 
   const guide = window.PROCESSED_GUIDES.find(g => g.id === guideId);
   if (!guide) return;
@@ -1049,7 +1055,7 @@ window.jumpToGuideResult = function(guideId, chunkId, query) {
   const result = [{ score: 999, chunk, guide_name: guide.guide_name, guide_id: guideId }];
   let html = GuideFormatter.buildAnswerCard(result, intent);
 
-  // ✅ شريط السياق: يوضح أين يبحث الآن + زر العودة للدليل الأصلي
+  // ✅ شريط السياق — query هنا نص عربي واضح (بعد الـ decode)
   const contextBar = _buildGuideContextBar(targetGuideName, prevGuide, prevGuideName, query);
   html = contextBar + html;
 
@@ -1062,11 +1068,12 @@ window.jumpToGuideResult = function(guideId, chunkId, query) {
 };
 
 // ③-ج العودة للدليل الأصلي وإعادة البحث فيه
-window.returnToOriginalGuide = function(encodedQuery) {
-  const query = _safeDecodeQuery(encodedQuery);
-  if (!query || !window.AgentMemory?.activeGuide) return;
+window.returnToOriginalGuide = function(query) {
+  // query يصل هنا decoded من event delegation
+  const safeQuery = _safeDecodeQuery(query);
+  if (!safeQuery || !window.AgentMemory?.activeGuide) return;
   const activeGuide = window.AgentMemory.activeGuide;
-  const html = window.handleGuideSearch(query, activeGuide);
+  const html = window.handleGuideSearch(safeQuery, activeGuide);
   if (html && window.typeWriterResponse) window.typeWriterResponse(html, false);
 };
 
@@ -1158,10 +1165,11 @@ window.openGuidePage = function(guideId, pageNum) {
     /* ===== شريط السياق — أي دليل نشط الآن ===== */
     .guide-context-bar {
       display: flex;
-      align-items: center;
-      gap: 8px;
+      align-items: flex-start;
+      justify-content: space-between;
       flex-wrap: wrap;
-      padding: 8px 14px;
+      gap: 8px;
+      padding: 10px 14px;
       background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
       border: 1px solid #f59e0b;
       border-radius: 10px;
@@ -1169,28 +1177,50 @@ window.openGuidePage = function(guideId, pageNum) {
       direction: rtl;
       font-size: 0.82rem;
     }
-    .guide-ctx-icon { font-size: 1rem; }
-    .guide-ctx-label { color: #78350f; }
+    .guide-ctx-info {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      flex: 1;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+    .guide-ctx-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .guide-ctx-label { color: #78350f; white-space: nowrap; flex-shrink: 0; }
     .guide-ctx-name {
       font-weight: bold;
       color: #92400e;
-      flex: 1;
+      word-break: break-word;
+      white-space: normal;
     }
     .guide-ctx-back-btn {
       background: white;
       border: 1px solid #d97706;
       color: #b45309;
       border-radius: 8px;
-      padding: 4px 10px;
+      padding: 6px 12px;
       font-size: 0.78rem;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.2s;
-      white-space: nowrap;
+      white-space: normal;      /* ✅ يكسر النص على أسطر */
+      word-break: break-word;
+      text-align: right;
+      direction: rtl;
+      line-height: 1.5;
+      max-width: 200px;         /* ✅ يمنع التمدد المفرط */
+      flex-shrink: 0;
     }
     .guide-ctx-back-btn:hover {
       background: #d97706;
       color: white;
+    }
+    .guide-ctx-back-name {
+      display: block;
+      font-size: 0.76rem;
+      font-weight: normal;
+      opacity: 0.9;
+      margin-top: 2px;
     }
 
     /* ===== شريط البحث في أدلة أخرى ===== */
@@ -1668,7 +1698,15 @@ window.openGuidePage = function(guideId, pageNum) {
       return;
     }
 
-    // ② زر "عرض كل النتائج" القديم (توافق)
+    // ② زر "العودة للدليل الأصلي"
+    const returnBtn = e.target.closest('[data-action="return-to-guide"]');
+    if (returnBtn) {
+      const q = _safeDecodeQuery(returnBtn.dataset.query || '');
+      if (q) window.returnToOriginalGuide(q);
+      return;
+    }
+
+    // ③ زر "عرض كل النتائج" القديم (توافق)
     const showAll = e.target.closest('.guide-show-all-btn');
     if (showAll) {
       const q   = decodeURIComponent(showAll.dataset.query || '');
@@ -1677,7 +1715,7 @@ window.openGuidePage = function(guideId, pageNum) {
       return;
     }
 
-    // ③ أزرار .guide-jump-btn (نتائج searchAllGuides)
+    // ④ أزرار .guide-jump-btn (نتائج searchAllGuides)
     const el = e.target.closest('[data-guide-id][data-chunk-id]');
     if (el && el.classList.contains('guide-jump-btn')) {
       const guideId = el.dataset.guideId;
