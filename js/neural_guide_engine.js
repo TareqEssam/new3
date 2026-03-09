@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محــرك البحث في الأدلة الرسمية
+ * محرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -1093,8 +1093,9 @@ window.showGuideChunk = function(guideId, chunkId, query) {
     guide_id: guide.id
   }];
 
-  // ✅ إذا توفر query نحلله لنمرره للبطاقة (يُفعِّل زر "هل هذا الموضوع...")
-  const intent = query ? GuideIntentDetector.analyze(query) : {};
+  // ✅ decode دائماً قبل التحليل — يمنع ظهور %D8%... في الزر
+  const cleanQuery = query ? _safeDecodeQuery(query) : '';
+  const intent = cleanQuery ? GuideIntentDetector.analyze(cleanQuery) : {};
   const html = GuideFormatter.buildAnswerCard(result, intent);
   if (html && window.typeWriterResponse) {
     window.typeWriterResponse(html);
@@ -1105,7 +1106,7 @@ window.showGuideChunk = function(guideId, chunkId, query) {
  * تحديد نتيجة بعد توضيح المستخدم
  */
 window.selectGuideResult = function(guideId, chunkId, encodedQuery) {
-  const query = decodeURIComponent(encodedQuery);
+  const query = _safeDecodeQuery(encodedQuery);
   
   // تعيين الدليل المحدد في الذاكرة مؤقتاً
   if (window.AgentMemory?.activeGuide) {
