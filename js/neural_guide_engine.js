@@ -395,7 +395,7 @@ const GuideFormatter = {
 
     lines.forEach((line) => {
       if (/^مادة\s*[\(\[]*\s*[\d٠-٩]+/.test(line) || /^المادة\s+[\d٠-٩]+/.test(line)) {
-        html += `<div class="guide-article-title">📋 ${line}</div>`;
+      html += `<div class="guide-article-title">⚖️ ${line}</div>`;
       } else if (/^[١٢٣٤٥٦٧٨٩٠]+\s*[-–.]/.test(line)) {
         const num = line.match(/^([١٢٣٤٥٦٧٨٩٠]+)/)[1];
         const content = line.replace(/^[١٢٣٤٥٦٧٨٩٠]+\s*[-–.]\s*/, '');
@@ -495,7 +495,7 @@ const GuideFormatter = {
     let html = `
     <div class="guide-answer-card">
       <div class="guide-answer-header">
-        <div class="guide-answer-icon">📄</div>
+       <div class="guide-answer-icon">📖</div>
         <div class="guide-answer-meta">
           <div class="guide-answer-source">${cleanGuideName(top.guide_name)}</div>
           <div class="guide-answer-page">صفحة ${top.chunk.page_num}</div>
@@ -552,7 +552,7 @@ const GuideFormatter = {
         const guideName = cleanGuideName(r.guide_name);
         return `
           <div class="guide-alt-item" onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}', '${encodeURIComponent(intent.originalQuery || '')}')">
-            <span class="guide-alt-icon">📋</span>
+          <span class="guide-alt-icon">📑</span>
             <div class="guide-alt-content" style="min-width:0;width:0;flex:1;">
               <div class="guide-name-pill" style="font-size:0.78rem;">${guideName}</div>
               <div class="guide-meta-row">
@@ -758,7 +758,7 @@ const GuideFormatter = {
     toShow.forEach((r, i) => {
       const matchPct  = Math.min(Math.round((r.score / topScore) * 100), 100);
       const isTop     = i === 0;
-      const icon      = isTop ? '🎯' : (matchPct >= 70 ? '📋' : '📄');
+      const icon      = isTop ? '🎯' : (matchPct >= 70 ? '📑' : '📔');
       const barColor  = isTop ? '#0369a1' : (matchPct >= 70 ? '#0891b2' : '#94a3b8');
       const guideName = cleanGuideName(r.guide_name);
       const shortName = guideName;
@@ -943,7 +943,7 @@ window.showAllGuideResults = function(query, guideId) {
     html += `
     <div class="choice-btn${i===0 ? ' choice-btn--top' : ''}"
          onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}', '${encodeURIComponent(safeQuery)}')">
-      <span class="choice-icon">${i===0 ? '🎯' : '📄'}</span>
+      <span class="choice-icon">${i===0 ? '🎯' : '📑'}</span>
       <div class="choice-content" style="flex:1;min-width:0;width:0;">
         <div class="guide-name-pill">${guideName}</div>
         <div class="guide-meta-row">
