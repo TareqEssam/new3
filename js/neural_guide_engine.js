@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محرك البحث في الأدلة الرسمية
+ * محــرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -481,10 +481,15 @@ const GuideFormatter = {
     const top = results[0];
     const hasAlternatives = results.length > 1 && results[1].score > results[0].score * 0.5;
 
-    // ② استخراج روابط المواد من النص الرئيسي
+    // ② استخراج روابط المواد من النص الرئيسي (إحالات أمامية)
     const rawText       = getChunkText(top.chunk);
     const articleLinks  = this.extractArticleLinks(rawText);
     const linksBar      = this.buildArticleLinksBar(articleLinks, top.guide_id, top.chunk.article_num, top.guide_name);
+
+    // ③ الإحالات العكسية — المواد التي تُشير إلى هذه المادة (فقط إذا كان لها رقم مادة)
+    const targetNum   = top.chunk.article_num;
+    const backRefs    = targetNum ? this.findBackReferences(targetNum, top.guide_id) : [];
+    const backRefsBar = this.buildBackReferencesBar(backRefs, top.guide_id, targetNum);
 
     // ===== الإجابة الرئيسية =====
     let html = `
@@ -505,6 +510,7 @@ const GuideFormatter = {
       </div>
 
       ${linksBar}
+      ${backRefsBar}
 
       <div class="guide-search-all-bar">
         <button class="guide-search-all-btn"
@@ -580,7 +586,6 @@ const GuideFormatter = {
   extractArticleLinks(text) {
     const pattern = /(?:المادة|مادة|الماده|ماده|البند|الفقرة|فقرة)\s*[\(\[]*\s*([٠-٩\d]+)\s*[\)\]]*/g;
     const found = new Map();
-    // ✅ تحسين: استدعاء normalize مرة واحدة خارج الحلقة
     const normalize = _guideNormalize();
     let match;
     while ((match = pattern.exec(text)) !== null) {
@@ -591,6 +596,53 @@ const GuideFormatter = {
       }
     }
     return [...found.entries()].sort((a, b) => a[0] - b[0]);
+  },
+
+  /**
+   * 🔁 الإحالات العكسية — يبحث في كل الدليل عن المواد التي تُشير إلى مادة معينة
+   * مثال: عند عرض المادة 38، يجد كل المواد الأخرى التي تذكر "المادة 38"
+   * يُعيد: [{articleNum, chunkId, snippet}]
+   */
+  findBackReferences(targetArticleNum, guideId) {
+    if (!window.PROCESSED_GUIDES || !targetArticleNum) return [];
+
+    const guide = window.PROCESSED_GUIDES.find(g => g.id === guideId);
+    if (!guide) return [];
+
+    const normalize = _guideNormalize();
+    const numAr = String(targetArticleNum).split('').map(d => '٠١٢٣٤٥٦٧٨٩'[d] ?? d).join('');
+
+    // regex يتطابق مع "المادة 38" أو "المادة (38)" أو "المادة ٣٨"
+    const backRefPattern = new RegExp(
+      `(?:المادة|مادة|الماده|ماده|البند|الفقرة|فقرة)\\s*[\\(\\[]*\\s*(?:${targetArticleNum}|${numAr})\\s*[\\)\\]]*`,
+      'i'
+    );
+
+    const found = [];
+    (guide.chunks || []).forEach(chunk => {
+      // نتجاهل المادة نفسها
+      if (chunk.article_num == targetArticleNum) return;
+
+      const text = getChunkText(chunk) || '';
+      if (!backRefPattern.test(text)) return;
+
+      // استخرج مقتطفاً حول موضع الإحالة
+      const matchIndex = text.search(backRefPattern);
+      const start = Math.max(0, matchIndex - 30);
+      const end   = Math.min(text.length, matchIndex + 60);
+      const raw   = text.slice(start, end).replace(/\n/g, ' ').trim();
+      const snippet = (start > 0 ? '…' : '') + raw + (end < text.length ? '…' : '');
+
+      found.push({
+        articleNum: chunk.article_num || null,
+        chunkId:    chunk.id,
+        title:      chunk.title || '',
+        pageNum:    chunk.page_num,
+        snippet:    normalize(snippet),
+      });
+    });
+
+    return found;
   },
 
   /**
@@ -624,6 +676,41 @@ const GuideFormatter = {
       <div class="guide-article-links-btns">${buttons}</div>
     </div>`;
   },
+  /**
+   * يبني شريط الإحالات العكسية — المواد التي تُشير إلى المادة الحالية
+   */
+  buildBackReferencesBar(backRefs, guideId, targetArticleNum) {
+    if (!backRefs || backRefs.length === 0) return '';
+
+    const buttons = backRefs.map(ref => {
+      const label = ref.articleNum
+        ? `م ${ref.articleNum}`
+        : (ref.title ? ref.title.substring(0, 20) : `ص ${ref.pageNum}`);
+      const titleAttr = ref.snippet
+        ? ref.snippet.substring(0, 80)
+        : `انتقل إلى ${label}`;
+      return `
+        <button class="guide-backref-btn"
+                data-action="jump-to-chunk"
+                data-guide-id="${guideId}"
+                data-chunk-id="${ref.chunkId}"
+                data-query="${encodeURIComponent(`المادة ${targetArticleNum}`)}"
+                title="${titleAttr.replace(/"/g, '\'')}"
+                >
+          <span class="guide-backref-arrow">↙</span> ${label}
+        </button>`;
+    }).join('');
+
+    return `
+    <div class="guide-article-links guide-backrefs-bar">
+      <div class="guide-article-links-top">
+        <span class="guide-article-links-label">🔁 مُستشهَد بها في:</span>
+        <span class="guide-article-links-guide">${backRefs.length} مادة تُشير إليها</span>
+      </div>
+      <div class="guide-article-links-btns">${buttons}</div>
+    </div>`;
+  },
+
   /**
    * - يعرض كل النتائج ذات الصلة (حتى 8) مرتبةً تنازلياً
    * - يُظهر مقتطف نصي + رقم الصفحة + نسبة التطابق لكل نتيجة
@@ -1286,6 +1373,42 @@ window.openGuidePage = function(guideId, pageNum) {
       opacity: 0.7;
     }
 
+    /* ===== الإحالات العكسية ===== */
+    .guide-backrefs-bar {
+      background: #fdf4ff !important;
+      border-top: 1px solid #e9d5ff !important;
+    }
+    .guide-backrefs-bar .guide-article-links-label {
+      color: #7c3aed !important;
+    }
+    .guide-backrefs-bar .guide-article-links-guide {
+      border-color: #e9d5ff;
+      color: #7c3aed;
+      background: white;
+    }
+    .guide-backref-btn {
+      background: white;
+      border: 1px solid #7c3aed;
+      color: #7c3aed;
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 0.78rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .guide-backref-btn:hover {
+      background: #7c3aed;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(124,58,237,0.3);
+    }
+    .guide-backref-arrow {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
     /* ===== بطاقة الإجابة الرئيسية ===== */
     .guide-answer-card {
       background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 100%);
@@ -1704,6 +1827,16 @@ window.openGuidePage = function(guideId, pageNum) {
     if (returnBtn) {
       const q = _safeDecodeQuery(returnBtn.dataset.query || '');
       if (q) window.returnToOriginalGuide(q);
+      return;
+    }
+
+    // ③ زر الانتقال لـ chunk محدد (الإحالات العكسية)
+    const jumpChunkBtn = e.target.closest('[data-action="jump-to-chunk"]');
+    if (jumpChunkBtn) {
+      const guideId = jumpChunkBtn.dataset.guideId;
+      const chunkId = jumpChunkBtn.dataset.chunkId;
+      const query   = _safeDecodeQuery(jumpChunkBtn.dataset.query || '');
+      window.showGuideChunk(guideId, chunkId, query);
       return;
     }
 
