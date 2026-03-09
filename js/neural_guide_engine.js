@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محــرك البحث في الأدلة الرسمية
+ * مــحــرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -1099,7 +1099,8 @@ function _buildGuideContextBar(targetGuideName, prevGuide, prevGuideName, query)
                data-action="return-to-guide"
                data-query="${encodeURIComponent(query)}"
                title="العودة للبحث في ${prevGuideName || 'الدليل الأصلي'}">
-         ← العودة إلى:<br><span class="guide-ctx-back-name">${prevGuideName || 'الدليل الأصلي'}</span>
+         <span class="guide-ctx-back-arrow">← العودة إلى:</span>
+         <span class="guide-ctx-back-name">${prevGuideName || 'الدليل الأصلي'}</span>
        </button>`
     : '';
 
@@ -1107,8 +1108,10 @@ function _buildGuideContextBar(targetGuideName, prevGuide, prevGuideName, query)
   <div class="guide-context-bar">
     <div class="guide-ctx-info">
       <span class="guide-ctx-icon">📖</span>
-      <span class="guide-ctx-label">تعرض الآن نتيجة من:</span>
-      <span class="guide-ctx-name">${targetGuideName}</span>
+      <div class="guide-ctx-info-text">
+        <span class="guide-ctx-label">تعرض الآن نتيجة من:</span>
+        <span class="guide-ctx-name">${targetGuideName}</span>
+      </div>
     </div>
     ${backBtn}
   </div>`;
@@ -1270,45 +1273,74 @@ window.openGuidePage = function(guideId, pageNum) {
       align-items: flex-start;
       gap: 6px;
       flex: 1;
-      flex-wrap: wrap;
       min-width: 0;
     }
-    .guide-ctx-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .guide-ctx-icon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+    .guide-ctx-info-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+      flex: 1;
+    }
     .guide-ctx-label { color: #78350f; white-space: nowrap; flex-shrink: 0; }
     .guide-ctx-name {
+      display: inline-block;
       font-weight: bold;
       color: #92400e;
+      background: rgba(255,255,255,0.65);
+      border: 1px solid #f59e0b;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.8rem;
+      line-height: 1.5;
       word-break: break-word;
       white-space: normal;
+      max-width: 100%;
     }
     .guide-ctx-back-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
       background: white;
       border: 1px solid #d97706;
       color: #b45309;
       border-radius: 8px;
-      padding: 6px 12px;
+      padding: 7px 12px;
       font-size: 0.78rem;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.2s;
-      white-space: normal;      /* ✅ يكسر النص على أسطر */
-      word-break: break-word;
-      text-align: right;
       direction: rtl;
-      line-height: 1.5;
-      max-width: 200px;         /* ✅ يمنع التمدد المفرط */
+      line-height: 1.4;
+      max-width: 220px;
       flex-shrink: 0;
     }
     .guide-ctx-back-btn:hover {
       background: #d97706;
       color: white;
     }
+    .guide-ctx-back-btn:hover .guide-ctx-back-name {
+      color: white;
+    }
+    .guide-ctx-back-arrow {
+      font-size: 0.78rem;
+      font-weight: bold;
+    }
     .guide-ctx-back-name {
-      display: block;
-      font-size: 0.76rem;
+      display: inline-block;
+      font-size: 0.75rem;
       font-weight: normal;
-      opacity: 0.9;
-      margin-top: 2px;
+      color: #92400e;
+      background: #fef3c7;
+      border: 1px solid #fde68a;
+      border-radius: 5px;
+      padding: 2px 7px;
+      line-height: 1.5;
+      word-break: break-word;
+      white-space: normal;
+      max-width: 200px;
     }
 
     /* ===== شريط البحث في أدلة أخرى ===== */
