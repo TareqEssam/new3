@@ -1,6 +1,6 @@
 /**
  * 🧠 neural_guide_engine.js
- * محــرك البحث في الأدلة الرسمية
+ * مــــحــرك البحث في الأدلة الرسمية
  *
  * ⚙️  الاعتماديات (يجب تحميلها قبل هذا الملف بالترتيب):
  *   1. neural_search_v6.js   ← يوفر: advancedNormalize, smartLevenshtein,
@@ -374,6 +374,13 @@ function cleanGuideName(name) {
   return (name || '').replace(/\.pdf\.pdf$/i, '').replace(/\.pdf$/i, '');
 }
 
+// ✅ decode آمن: يعالج الحالتين — encoded أو plain text عربي
+//    يتجنب خطأ "URIError: malformed URI" عند تمرير نص عادي غير مشفَّر
+function _safeDecodeQuery(q) {
+  if (!q) return '';
+  try { return decodeURIComponent(q); } catch(e) { return q; }
+}
+
 const GuideFormatter = {
 
   /**
@@ -537,16 +544,16 @@ const GuideFormatter = {
           );
         });
         const guideName = cleanGuideName(r.guide_name);
-        const shortName = guideName;
         return `
           <div class="guide-alt-item" onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}', '${encodeURIComponent(intent.originalQuery || '')}')">
             <span class="guide-alt-icon">📋</span>
-            <div class="guide-alt-content">
-              <div class="guide-alt-header">
-                <strong>${shortName}</strong>
-                <span class="guide-alt-page" style="background:${barColor};">${matchPct}% — ص ${r.chunk.page_num}</span>
+            <div class="guide-alt-content" style="min-width:0;width:0;flex:1;">
+              <div class="guide-name-pill" style="font-size:0.78rem;">${guideName}</div>
+              <div class="guide-meta-row">
+                <span class="guide-meta-page">ص ${r.chunk.page_num}</span>
+                <span class="guide-meta-pct" style="background:${barColor};">${matchPct}%</span>
               </div>
-              <div class="guide-alt-title">${(r.chunk.title || '').substring(0,60)}</div>
+              ${r.chunk.title ? `<div class="guide-meta-title">${r.chunk.title.substring(0,60)}</div>` : ''}
               ${coloredSnippet ? `<div class="guide-alt-snippet">${coloredSnippet}</div>` : ''}
             </div>
           </div>`;
@@ -674,27 +681,13 @@ const GuideFormatter = {
       <div class="choice-btn${isTop ? ' choice-btn--top' : ''}"
            onclick="window.selectGuideResult('${r.guide_id}', '${r.chunk.id}', '${encodeURIComponent(query)}')">
         <span class="choice-icon">${icon}</span>
-        <div class="choice-content" style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px;">
-            <strong style="font-size:0.82rem;color:#1e293b;white-space:normal;overflow:visible;">
-              ${shortName}
-            </strong>
-            <span style="font-size:0.72rem;background:${barColor};color:white;
-                         padding:1px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
-              ${matchPct}%
-            </span>
+        <div class="choice-content" style="flex:1;min-width:0;width:0;">
+          <div class="guide-name-pill">${shortName}</div>
+          <div class="guide-meta-row">
+            <span class="guide-meta-page">صفحة ${r.chunk.page_num}${r.chunk.title ? ` — ${r.chunk.title.substring(0, 40)}` : ''}</span>
+            <span class="guide-meta-pct" style="background:${barColor};">${matchPct}%</span>
           </div>
-          <div style="font-size:0.75rem;color:#64748b;margin-bottom:4px;">
-            صفحة ${r.chunk.page_num}
-            ${r.chunk.title ? ` — ${r.chunk.title.substring(0, 45)}` : ''}
-          </div>
-          ${snippet ? `
-          <div style="font-size:0.78rem;color:#475569;line-height:1.5;
-                      border-right:2px solid #e2e8f0;padding-right:7px;
-                      display:-webkit-box;-webkit-line-clamp:2;
-                      -webkit-box-orient:vertical;overflow:hidden;">
-            ${snippet}
-          </div>` : ''}
+          ${snippet ? `<div class="guide-meta-snippet">${snippet}</div>` : ''}
         </div>
       </div>`;
     });
@@ -836,7 +829,9 @@ window.handleGuideSearch = function(query, activeGuide) {
 // =====================================================
 
 window.showAllGuideResults = function(query, guideId) {
-  const intent     = GuideIntentDetector.analyze(query);
+  // ✅ دائماً decode آمن — يعالج الحالتين: encoded أو plain text
+  const safeQuery = _safeDecodeQuery(query);
+  const intent     = GuideIntentDetector.analyze(safeQuery);
   const allResults = GuideScorer.search(intent, guideId);
 
   if (!allResults.length) return;
@@ -849,7 +844,7 @@ window.showAllGuideResults = function(query, guideId) {
       <div class="guide-clarify-icon">🔘</div>
       <div>
         <div class="guide-clarify-title">كل النتائج (${allResults.length})</div>
-        <div class="guide-clarify-subtitle">للسؤال: <strong>${query}</strong></div>
+        <div class="guide-clarify-subtitle">للسؤال: <strong>${safeQuery}</strong></div>
       </div>
     </div>`;
 
@@ -860,19 +855,15 @@ window.showAllGuideResults = function(query, guideId) {
     const shortName = guideName;
     html += `
     <div class="choice-btn${i===0 ? ' choice-btn--top' : ''}"
-         onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}')">
+         onclick="window.showGuideChunk('${r.guide_id}', '${r.chunk.id}', '${encodeURIComponent(safeQuery)}')">
       <span class="choice-icon">${i===0 ? '🎯' : '📄'}</span>
-      <div class="choice-content" style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-          <strong style="font-size:0.82rem;color:#1e293b;white-space:normal;overflow:visible;">
-            ${shortName}
-          </strong>
-          <span style="font-size:0.72rem;background:${barColor};color:white;
-                       padding:1px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
-            ${matchPct}% — ص ${r.chunk.page_num}
-          </span>
+      <div class="choice-content" style="flex:1;min-width:0;width:0;">
+        <div class="guide-name-pill">${guideName}</div>
+        <div class="guide-meta-row">
+          <span class="guide-meta-page">صفحة ${r.chunk.page_num}</span>
+          <span class="guide-meta-pct" style="background:${barColor};">${matchPct}%</span>
         </div>
-        ${r.chunk.title ? `<div style="font-size:0.75rem;color:#0369a1;margin-top:2px;">${r.chunk.title.substring(0,55)}</div>` : ''}
+        ${r.chunk.title ? `<div class="guide-meta-title">${r.chunk.title.substring(0,60)}</div>` : ''}
       </div>
     </div>`;
   });
@@ -926,7 +917,8 @@ window.jumpToArticle = function(articleNum, guideId) {
 // =====================================================
 
 window.searchAllGuides = function(encodedQuery, currentGuideId) {
-  const query = decodeURIComponent(encodedQuery);
+  // ✅ decode آمن يعالج الحالتين
+  const query = _safeDecodeQuery(encodedQuery);
   if (!query || !window.PROCESSED_GUIDES) return;
 
   const intent     = GuideIntentDetector.analyze(query);
@@ -991,18 +983,13 @@ window.searchAllGuides = function(encodedQuery, currentGuideId) {
          data-chunk-id="${r.chunk.id}"
          data-query="${encodeURIComponent(query)}">
       <span class="choice-icon">${i === 0 ? '🎯' : '📋'}</span>
-      <div class="choice-content" style="flex:1;min-width:0;">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px;">
-          <strong style="font-size:0.82rem;color:#1e293b;white-space:normal;overflow:visible;">
-            ${shortName}
-          </strong>
-          <span style="font-size:0.72rem;background:${barColor};color:white;
-                       padding:1px 7px;border-radius:10px;white-space:nowrap;flex-shrink:0;">
-            ${matchPct}% — ص ${r.chunk.page_num}
-          </span>
+      <div class="choice-content" style="flex:1;min-width:0;width:0;">
+        <div class="guide-name-pill">${guideName}</div>
+        <div class="guide-meta-row">
+          <span class="guide-meta-page">صفحة ${r.chunk.page_num}${r.chunk.title ? ` — ${r.chunk.title.substring(0, 40)}` : ''}</span>
+          <span class="guide-meta-pct" style="background:${barColor};">${matchPct}%</span>
         </div>
-        ${r.chunk.title ? `<div style="font-size:0.75rem;color:#0369a1;margin-bottom:3px;">${r.chunk.title.substring(0,50)}</div>` : ''}
-        ${snippet ? `<div style="font-size:0.78rem;color:#64748b;line-height:1.5;border-right:2px solid #e2e8f0;padding-right:7px;">${snippet}</div>` : ''}
+        ${snippet ? `<div class="guide-meta-snippet">${snippet}</div>` : ''}
       </div>
     </div>`;
   });
@@ -1076,7 +1063,7 @@ window.jumpToGuideResult = function(guideId, chunkId, query) {
 
 // ③-ج العودة للدليل الأصلي وإعادة البحث فيه
 window.returnToOriginalGuide = function(encodedQuery) {
-  const query = decodeURIComponent(encodedQuery);
+  const query = _safeDecodeQuery(encodedQuery);
   if (!query || !window.AgentMemory?.activeGuide) return;
   const activeGuide = window.AgentMemory.activeGuide;
   const html = window.handleGuideSearch(query, activeGuide);
@@ -1538,6 +1525,7 @@ window.openGuidePage = function(guideId, pageNum) {
       cursor: pointer;
       transition: all 0.2s;
       direction: rtl;
+      overflow: hidden; /* ✅ منع التمدد الأفقي */
     }
     .choice-btn:hover {
       border-color: #0369a1;
@@ -1552,7 +1540,71 @@ window.openGuidePage = function(guideId, pageNum) {
     .choice-btn--top:hover {
       background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
     }
-    .choice-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .choice-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 3px; }
+
+    /* ✅ اسم الدليل كـ pill ملوَّن يكسر على عدة أسطر */
+    .guide-name-pill {
+      display: inline-block;
+      background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      color: #0c4a6e;
+      line-height: 1.5;
+      white-space: normal;   /* ✅ يكسر على أسطر */
+      word-break: break-word;
+      width: 100%;
+      box-sizing: border-box;
+      margin-bottom: 4px;
+    }
+    .choice-btn--top .guide-name-pill {
+      background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+      border-color: #0284c7;
+      color: white;
+    }
+
+    /* ✅ شريط المعلومات الثانوية (صفحة + نسبة) */
+    .guide-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .guide-meta-page {
+      font-size: 0.74rem;
+      color: #64748b;
+    }
+    .guide-meta-pct {
+      font-size: 0.72rem;
+      color: white;
+      padding: 1px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .guide-meta-title {
+      font-size: 0.76rem;
+      color: #0369a1;
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: normal;
+      word-break: break-word;
+    }
+    .guide-meta-snippet {
+      font-size: 0.78rem;
+      color: #64748b;
+      line-height: 1.5;
+      border-right: 2px solid #e2e8f0;
+      padding-right: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
 
     /* ===== لا توجد نتيجة ===== */
     .guide-no-result {
